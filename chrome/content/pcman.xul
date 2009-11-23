@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="topwin"
+    onload="setup();"
+    onresize="resize();"
+    onmousedown="document.getElementById('input_proxy').focus();"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    style="background: #000000;"
+    >
+    <script type="application/x-javascript"  src="chrome://pcmanfx2/content/conn.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
+    <script type="application/x-javascript">
+    var pcman=null;
+    function setup() {
+        var url=document.location.href;
+        var p=url.indexOf(':/');
+        if(p >= 0) {
+            p += 2;
+            while(url[p] == '/')
+                ++p;
+            pcman=new PCMan();
+            pcman.connect(url.substr(p));
+        }
+        document.getElementById('input_proxy').focus();
+        document.onfocus="document.getElementById('input_proxy').focus();";
+        resize();
+    }
+
+    function resize(){
+        var win=document.getElementById('topwin');
+        var canvas=document.getElementById("canvas");
+        // canvas.width=win.clientWidth;
+        canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
+        pcman.view.onResize();
+        // rc=document.getElementById('topwin').getBoundingClientRect();
+    }
+    </script>
+    <vbox align="center" id='box1'>
+        <box id="box2" orient="vertical">
+           <html:canvas id="canvas" width="800" height="480" style="background-color:#000;"></html:canvas>
+            <box orient="horizontal" id="box3" style="background: #ffffff;">
+                <label value="Type here: "/>
+                <textbox id="input_proxy"/>
+                <label value=" &lt;== Please keep keyboard focus in this text box"/>
+            </box>
+        </box>
+    </vbox>
+</window>
