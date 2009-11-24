@@ -66,6 +66,8 @@ TermView.prototype={
             var y=row * this.chh;
             var x = 0;
             var line = lines[row];
+            var chw = this.chw;
+            var chh = this.chh;
             for(var col=0; col<cols; ++col) {
                 var ch = line[col];
                 if(force || ch.needUpdate) {
@@ -74,23 +76,62 @@ TermView.prototype={
                     if(ch.isLeadByte) {
                         ++col;
                         if(col < cols) {
+                            var ch2 = line[col]; // second byte of DBCS
                             if(bg != old_color) {
                                 ctx.fillStyle=termColors[bg];
                                 old_color=bg;
                             }
-                            ctx.fillRect(x, y, this.chw * 2, this.chh);
+                            var bg2 = ch2.getBg();
+                            if(bg = bg2) { // two bytes has the same bg
+                                ctx.fillRect(x, y, chw * 2, chh);
+                            }
+                            else { // two bytes has different bg
+                                ctx.fillRect(x, y, chw, chh); // lead byte
+                                ctx.fillStyle=termColors[bg2];
+                                old_color=bg2;
+                                ctx.fillRect(x + chw, y, chw, this.chh); // second byte
+                            }
 
-                            var b5=ch.ch + line[col].ch;
-                            var u=this.conv.convertStringToUTF8(b5, 'big5', true);
-                            if(u) {
-                                if(fg != old_color) {
-                                    ctx.fillStyle=termColors[fg];
+                            var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
+                            var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
+                            if(u) { // can be converted to valid UTF-8
+                                var fg2 = ch2.getFg(); // fg of second byte
+                                if( fg == fg2 ) { // two bytes have the same fg
+                                    if(fg != old_color) {
+                                        ctx.fillStyle=termColors[fg];
+                                        ctx.fillText( u, x, y);
+                                        old_color=fg;
+                                    }
+                                }
+                                else {
+                                    // draw first half
+                                    // set clip region
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    ctx.rect(x, y, chw, chh);
+                                    ctx.closePath();
+                                    ctx.clip();
+                                    if(fg != old_color) {
+                                        ctx.fillStyle=termColors[fg];
+                                        ctx.fillText( u, x, y);
+                                        // old_color=fg; // is this needed?
+                                    }
+                                    ctx.restore();
+
+                                    // draw second half
+                                    // set clip region
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    ctx.rect(x + chw, y, chw, chh);
+                                    ctx.closePath();
+                                    ctx.clip();
+                                    ctx.fillStyle=termColors[fg2];
                                     ctx.fillText( u, x, y);
-                                    old_color=fg;
+                                    // old_color=fg2; // is this needed?
+                                    ctx.restore();
                                 }
                             }
-                            x += this.chw;
-
+                            x += chw;
                             line[col].needUpdate=false;
                         }
                     }
@@ -110,7 +151,7 @@ TermView.prototype={
                     }
                     ch.needUpdate=false;
                 }
-                x += this.chw;
+                x += chw;
             }
         }
     },

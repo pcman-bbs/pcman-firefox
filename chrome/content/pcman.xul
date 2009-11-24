@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <window id="topwin"
     onload="setup();"
+    onunload="finalize();"
     onresize="resize();"
     onmousedown="document.getElementById('input_proxy').focus();"
     xmlns:html="http://www.w3.org/1999/xhtml"
@@ -28,6 +29,11 @@
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
+    }
+    
+    function finalize() {
+        pcman.close();
+        pcman=null;
     }
 
     function resize(){
