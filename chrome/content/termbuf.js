@@ -321,14 +321,13 @@ TermBuf.prototype={
     },
 
     queueUpdate: function() {
-        if(this.timeout) {
-            clearTimeout(this.timeout);
+        if(!this.timeout) {
+            var _this=this;
+            var func=function() {
+                _this.onTimeout();
+            }
+            this.timeout = setTimeout(func, 50);
         }
-        var _this=this;
-        var func=function() {
-            _this.onTimeout();
-        }
-        this.timeout = setTimeout(func, 10);
     },
 
     onTimeout: function() {

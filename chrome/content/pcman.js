@@ -20,6 +20,10 @@ PCMan.prototype={
             port=parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
     },
+    
+    close: function() {
+        this.conn.close();
+    },
 
     onConnect: function(conn) {
     },

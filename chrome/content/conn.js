@@ -83,6 +83,14 @@ Conn.prototype={
         this.ipump = pump;
     },
 
+    close: function() {
+        this._ins.close();
+        this.ins.close();
+        this.outs.close();
+        this._ins=this.ins=this.outs=null;
+        this.trans=null;
+    },
+
     // data listener
     onStartRequest: function(req, ctx){
         if( ! this.isConnected ) {
@@ -92,10 +100,8 @@ Conn.prototype={
     },
 
     onStopRequest: function(req, ctx, status){
+        this.close();
         this.listener.onClose(this);
-        this._ins.close();
-        this.ins.close();
-        this.outs.close();
     },
 
     onDataAvailable: function(req, ctx, ins, off, count) {
