@@ -131,8 +131,9 @@ TermBuf.prototype={
             }
         }
         this.updateCharAttr();
-
         this.queueUpdate();
+        if(this.view) // FIXME: should we also queue the update of cursor?
+            this.view.updateCursorPos();
     },
 
     updateCharAttr: function() {
@@ -214,16 +215,19 @@ TermBuf.prototype={
     back: function() {
         if(this.cur_x>0) {
             --this.cur_x;
-            // FIXME: updateCursor
+            if(this.view)
+                this.view.updateCursorPos();
         }
     },
 
     tab: function() {
         var mod = this.cur_x % 4;
         this.cur_x += (this.cur_x - mod)/4 + 4;
-        if(this.cur_x >= this.cols)
+        if(this.cur_x >= this.cols) {
             this.cur_x = this.cols-1;
-        // FIXME: updateCursor
+            if(this.view)
+                this.view.updateCursorPos();
+        }
     },
 
     insert: function() {
@@ -305,11 +309,14 @@ TermBuf.prototype={
         // dump('gotoPos: ' + x + ', ' + y + '\n');
         this.cur_x = x;
         this.cur_y = y;
+        if(this.view)
+            this.view.updateCursorPos();
     },
 
     carriageReturn: function() {
         this.cur_x = 0;
-        // FIXME: updateCursor();
+        if(this.view)
+            this.view.updateCursorPos();
     },
 
     lineFeed: function() {
