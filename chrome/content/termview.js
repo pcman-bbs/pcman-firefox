@@ -5,6 +5,12 @@ function TermView(canvas) {
     this.ctx = canvas.getContext("2d");
     this.buf=null;
 
+    // Cursor
+    this.cursorX=0;
+    this.cursorY=0;
+    this.cursorSaved=null;
+
+    // initialize
     var ctx = this.ctx;
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
@@ -29,6 +35,9 @@ function TermView(canvas) {
         }
     };
     input.addEventListener('input', text_input, false);
+
+    var _this=this;
+    this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
 }
 
 TermView.prototype={
@@ -55,6 +64,8 @@ TermView.prototype={
     },
 
     redraw: function(force) {
+        this.setCursorVisible(false);
+
         var cols=this.buf.cols;
         var rows=this.buf.rows;
         var ctx = this.ctx;
@@ -73,10 +84,12 @@ TermView.prototype={
                 if(force || ch.needUpdate) {
                     var fg = ch.getFg();
                     var bg = ch.getBg();
-                    if(ch.isLeadByte) {
+                    if(ch.isLeadByte) { // first byte of DBCS char
                         ++col;
                         if(col < cols) {
-                            var ch2 = line[col]; // second byte of DBCS
+                            var ch2 = line[col]; // second byte of DBCS char
+                            
+                            // draw background color
                             if(bg != old_color) {
                                 ctx.fillStyle=termColors[bg];
                                 old_color=bg;
@@ -92,14 +105,16 @@ TermView.prototype={
                                 ctx.fillRect(x + chw, y, chw, this.chh); // second byte
                             }
 
+                            // draw text
                             var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
                             var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
                             if(u) { // can be converted to valid UTF-8
+                                var chw2 = this.chw * 2;
                                 var fg2 = ch2.getFg(); // fg of second byte
                                 if( fg == fg2 ) { // two bytes have the same fg
                                     if(fg != old_color) {
                                         ctx.fillStyle=termColors[fg];
-                                        ctx.fillText( u, x, y);
+                                        ctx.fillText( u, x, y, chw2);
                                         old_color=fg;
                                     }
                                 }
@@ -113,7 +128,7 @@ TermView.prototype={
                                     ctx.clip();
                                     if(fg != old_color) {
                                         ctx.fillStyle=termColors[fg];
-                                        ctx.fillText( u, x, y);
+                                        ctx.fillText( u, x, y, chw2);
                                         // old_color=fg; // is this needed?
                                     }
                                     ctx.restore();
@@ -126,7 +141,7 @@ TermView.prototype={
                                     ctx.closePath();
                                     ctx.clip();
                                     ctx.fillStyle=termColors[fg2];
-                                    ctx.fillText( u, x, y);
+                                    ctx.fillText( u, x, y, chw2);
                                     // old_color=fg2; // is this needed?
                                     ctx.restore();
                                 }
@@ -135,16 +150,17 @@ TermView.prototype={
                             line[col].needUpdate=false;
                         }
                     }
-                    else { // FIXME: only draw visible chars to speed up
+                    else {
                         if(bg != old_color) {
                             ctx.fillStyle=termColors[bg];
                             old_color=bg;
                         }
                         ctx.fillRect(x, y, this.chw, this.chh);
+                        // only draw visible chars to speed up
                         if(ch.ch > ' ') {
                             if(fg != old_color) {
                                 ctx.fillStyle=termColors[fg];
-                                ctx.fillText( ch.ch, x, y );
+                                ctx.fillText( ch.ch, x, y, this.chw );
                                 old_color=fg;
                             }
                         }
@@ -154,6 +170,8 @@ TermView.prototype={
                 x += chw;
             }
         }
+        this.cursorSaved=null; // invalidate the cached image
+//        this.setCursorVisible(this.blinkShow);
     },
 
     onTextInput: function(text) {
@@ -231,10 +249,10 @@ TermView.prototype={
     
     onResize: function() {
         var ctx = this.ctx;
-        this.chh = (this.canvas.height - this.canvas.height % 24) / 24;
-        var font = this.chh + "px monospace";
+        this.chh = Math.floor(this.canvas.height / 24);
+        var font = this.chh + 'px monospace';
         ctx.font= font;
-        ctx.textBaseline="top";
+        ctx.textBaseline='top';
 
         var m=ctx.measureText('　'); //全形空白
         this.chw=Math.round(m.width/2);
@@ -243,15 +261,79 @@ TermView.prototype={
             this.canvas.width = this.chw * this.buf.cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
-            ctx.textBaseline="top";
+            ctx.textBaseline='top';
             this.redraw(true);
         }
         else {
-            dump(this.chw + ', ' + this.chw * 80 + '\n');
+            // dump(this.chw + ', ' + this.chw * 80 + '\n');
             this.canvas.width = this.chw * 80;;
             // font needs to be reset after resizing canvas
             ctx.font= font;
-            ctx.textBaseline="top";
+            ctx.textBaseline='top';
         }
+
+        // should we set cursor height according to chh?
+        this.setCursorSize(this.chw, 2);
+    },
+
+    // Cursor
+    setCursorSize: function(w, h){
+        this.cursorW=w;
+        this.cursorH=h;
+        this.updateCursorPos();
+    },
+
+    updateCursorPos: function(){
+        this.setCursorVisible(false);
+        if(this.buf) {
+            this.cursorX=this.buf.cur_x * this.chw;
+            this.cursorY=(this.buf.cur_y + 1)*this.chh - this.cursorH;
+        }
+        else {
+            this.cursorX=0;
+            this.cursorY=this.chh - this.cursorH;
+        }
+        this.cursorSaved=null; // invaldate cacahed image
+        this.setCursorVisible(true);
+    },
+
+    setCursorVisible: function(visible){
+        var ctx=this.ctx;
+        if(this.cursorSaved){ // restore saved block from off-screen buffer if available.
+            var saved=this.cursorSaved;
+            // save cursor block to off-screen buffer
+            // this.cursorSaved=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
+            this.cursorSaved = null;
+            // restore previously saved block
+            ctx.putImageData(saved, this.cursorX, this.cursorY);
+        }
+        else { // otherwise, generate inverted image of cursor block
+            if(visible) {
+                // save cursor block to off-screen buffer
+                // dump(this.cursorX+', '+this.cursorY+', '+this.cursorW+', '+this.cursorH+'\n');
+                this.cursorSaved=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
+                var src=this.cursorSaved.data;
+                var img2=ctx.createImageData(this.cursorW, this.cursorH);
+                var px=img2.data;
+                // invert the image
+                for(var i = 0, n = px.length; i < n; i += 4) {
+                    px[i] = 255 - src[i];
+                    px[i+1] = 255 - src[i+1];
+                    px[i+2] = 255 - src[i+2];
+                    px[i+3] = 255;
+                }
+                ctx.putImageData(img2, this.cursorX, this.cursorY);
+            }
+        }
+    },
+
+    onBlink: function(){
+        // dump('blink\n');
+        this.blinkShow=!this.blinkShow;
+        // FIXME: draw blinking characters
+        this.setCursorVisible(this.blinkShow);
+
+        // set timeout again
+        var _this=this;
     }
 }
