@@ -9,14 +9,30 @@ function TermView(canvas) {
     this.cursorX=0;
     this.cursorY=0;
     this.cursorSaved=null;
+    
+    this.input = document.getElementById('input_proxy');
 
     // initialize
     var ctx = this.ctx;
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
 
-    var input = document.getElementById('input_proxy');
+    var composition_start ={
+        view: this,
+        handleEvent: function(e) {
+            this.view.onCompositionStart(e);
+        }
+    };
+    this.input.addEventListener('compositionstart', composition_start, false);
 
+    var composition_end ={
+        view: this,
+        handleEvent: function(e) {
+            this.view.onCompositionEnd(e);
+        }
+    };
+    this.input.addEventListener('compositionend', composition_end, false);
+    
     var key_press={
         view: this,
         handleEvent: function(e) {
@@ -34,7 +50,7 @@ function TermView(canvas) {
             e.target.value='';
         }
     };
-    input.addEventListener('input', text_input, false);
+    this.input.addEventListener('input', text_input, false);
 
     var _this=this;
     this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
@@ -295,6 +311,16 @@ TermView.prototype={
         }
         this.cursorSaved=null; // invaldate cacahed image
         this.setCursorVisible(true);
+    },
+
+    onCompositionStart: function(e) {
+        var top = (this.buf.cur_y + 1) * this.chh;
+        this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
+        this.input.style.left = (this.canvas.offsetLeft + this.buf.cur_x * this.chw ) + 'px';
+    },
+    
+    onCompositionEnd: function(e) {
+      this.input.style.top = '-100px';
     },
 
     setCursorVisible: function(visible){
