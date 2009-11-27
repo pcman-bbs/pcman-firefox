@@ -11,7 +11,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     style="background: #000000;"
     >
-    <script type="application/x-javascript"  src="chrome://pcmanfx2/content/conn.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
@@ -42,7 +42,8 @@
         var win=document.getElementById('topwin');
         var canvas=document.getElementById("canvas");
         // canvas.width=win.clientWidth;
-        canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
+        //canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
+        canvas.height=win.clientHeight;
         pcman.view.onResize();
         // rc=document.getElementById('topwin').getBoundingClientRect();
     }
