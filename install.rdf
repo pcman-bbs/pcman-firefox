@@ -23,5 +23,16 @@
     <em:description>A GNU/GPL telnet client extension specifically designed for BBS browsing.</em:description>
     <em:creator>洪任諭 (Hong Jen Yee) &lt;pcman.tw@gmail.com&gt;</em:creator>
     <em:homepageURL>http://pcman.sayya.org/</em:homepageURL>
+    
+    <em:localized>
+    	<Description>
+    		<em:locale>zh-TW</em:locale>
+    		<em:name>PCMan Firefox Extension</em:name>
+        <em:description>A GNU/GPL telnet client extension specifically designed for BBS browsing.</em:description>
+        <em:creator>洪任諭 (Hong Jen Yee) &lt;pcman.tw@gmail.com&gt;</em:creator>
+        <em:homepageURL>http://pcman.sayya.org/</em:homepageURL>
+    	</Description>
+  	</em:localized>
+
   </Description>
 </RDF>

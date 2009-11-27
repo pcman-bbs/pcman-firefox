@@ -1,1 +1,4 @@
 content pcmanfx2 chrome/content/
+locale pcmanfx2 en-US chrome/locale/en-US/
+locale pcmanfx2 zh-TW chrome/locale/zh-TW/
+skin pcmanfx2 classic/1.0 chrome/skin/classic/

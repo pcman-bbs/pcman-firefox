@@ -9,6 +9,7 @@ function PCMan() {
     this.view.setBuf(this.buf);
     this.view.setConn(this.conn);
     this.parser=new AnsiParser(this.buf);
+    this.stringBundle = document.getElementById("pcman-string-bundle");
 }
 
 PCMan.prototype={
@@ -35,6 +36,6 @@ PCMan.prototype={
     },
 
     onClose: function(conn) {
-        alert('Disconnected from the server!');
+        alert(this.stringBundle.getString("alert_conn_close"));
     }
 }
