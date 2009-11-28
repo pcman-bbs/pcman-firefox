@@ -225,6 +225,9 @@ TermView.prototype={
                 break;
             case 9:
                 conn.send('\t');
+                // don't move input focus to next control
+                e.preventDefault();
+                e.stopPropagation();
                 break;
             case 13:
                 conn.send('\r');
@@ -265,7 +268,7 @@ TermView.prototype={
             }
         }
     },
-    
+
     onResize: function() {
         var ctx = this.ctx;
         this.chh = Math.floor(this.canvas.height / 24);
