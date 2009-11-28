@@ -5,7 +5,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>pcmanfx2@pcman.org</em:id>
-    <em:version>0.1.3</em:version>
+    <em:version>0.1.4</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into, 
@@ -14,7 +14,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>3.5</em:minVersion>
-        <em:maxVersion>3.9</em:maxVersion>
+        <em:maxVersion>3.6.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -22,15 +22,24 @@
     <em:name>PCMan Firefox Extension</em:name>
     <em:description>A GNU/GPL telnet client extension specifically designed for BBS browsing.</em:description>
     <em:creator>洪任諭 (Hong Jen Yee) &lt;pcman.tw@gmail.com&gt;</em:creator>
-    <em:homepageURL>http://pcman.sayya.org/</em:homepageURL>
-    
+    <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
+    <em:homepageURL>http://code.google.com/p/pcmanfx/</em:homepageURL>
+
     <em:localized>
     	<Description>
     		<em:locale>zh-TW</em:locale>
-    		<em:name>PCMan Firefox Extension</em:name>
-        <em:description>A GNU/GPL telnet client extension specifically designed for BBS browsing.</em:description>
-        <em:creator>洪任諭 (Hong Jen Yee) &lt;pcman.tw@gmail.com&gt;</em:creator>
-        <em:homepageURL>http://pcman.sayya.org/</em:homepageURL>
+    		<em:name>PCMan Firefox 擴充套件</em:name>
+        <em:description>專為 BBS 瀏覽設計，採 GNU/GPL 授權的 telnet 連線程式套件</em:description>
+        <em:creator>洪任諭 &lt;pcman.tw@gmail.com&gt;</em:creator>
+    	</Description>
+  	</em:localized>
+
+    <em:localized>
+    	<Description>
+    		<em:locale>zh-CN</em:locale>
+    		<em:name>PCMan Firefox 扩充</em:name>
+        <em:description>专为 BBS 浏览设计，采 GNU/GPL 授权的 telnet 程序套件</em:description>
+        <em:creator>洪任谕 &lt;pcman.tw@gmail.com&gt;</em:creator>
     	</Description>
   	</em:localized>
 
