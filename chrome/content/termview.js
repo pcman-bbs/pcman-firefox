@@ -8,8 +8,9 @@ function TermView(canvas) {
     // Cursor
     this.cursorX=0;
     this.cursorY=0;
-    this.cursorSaved=null;
-    
+    this.cursorVisible=true; // false to hide the cursor
+    this.cursorShow=false; // blinking state of cursor
+
     this.input = document.getElementById('input_proxy');
 
     // initialize
@@ -32,7 +33,7 @@ function TermView(canvas) {
         }
     };
     this.input.addEventListener('compositionend', composition_end, false);
-    
+
     var key_press={
         view: this,
         handleEvent: function(e) {
@@ -63,7 +64,7 @@ TermView.prototype={
     setBuf: function(buf) {
         this.buf=buf;
     },
-    
+
     setConn: function(conn) {
         this.conn=conn;
     },
@@ -80,7 +81,9 @@ TermView.prototype={
     },
 
     redraw: function(force) {
-        this.setCursorVisible(false);
+        var cursorShow=this.cursorShow;
+        if(cursorShow)
+            this.hideCursor();
 
         var cols=this.buf.cols;
         var rows=this.buf.rows;
@@ -186,8 +189,8 @@ TermView.prototype={
                 x += chw;
             }
         }
-        this.cursorSaved=null; // invalidate the cached image
-//        this.setCursorVisible(this.blinkShow);
+        if(cursorShow)
+            this.showCursor();
     },
 
     onTextInput: function(text) {
@@ -306,13 +309,19 @@ TermView.prototype={
 
     // Cursor
     setCursorSize: function(w, h){
+        var visible=this.cursorVisible;
+        if(visible)
+            this.hideCursor();
         this.cursorW=w;
         this.cursorH=h;
-        this.updateCursorPos();
+        if(visible)
+            this.showCursor();
     },
 
     updateCursorPos: function(){
-        this.setCursorVisible(false);
+        var visible=this.cursorVisible;
+        if(visible)
+            this.hideCursor();
         if(this.buf) {
             this.cursorX=this.buf.cur_x * this.chw;
             this.cursorY=(this.buf.cur_y + 1)*this.chh - this.cursorH;
@@ -321,8 +330,8 @@ TermView.prototype={
             this.cursorX=0;
             this.cursorY=this.chh - this.cursorH;
         }
-        this.cursorSaved=null; // invaldate cacahed image
-        this.setCursorVisible(true);
+        if(visible)
+            this.showCursor();
     },
 
     onCompositionStart: function(e) {
@@ -335,43 +344,47 @@ TermView.prototype={
       this.input.style.top = '-100px';
     },
 
-    setCursorVisible: function(visible){
-        var ctx=this.ctx;
-        if(this.cursorSaved){ // restore saved block from off-screen buffer if available.
-            var saved=this.cursorSaved;
-            // save cursor block to off-screen buffer
-            // this.cursorSaved=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
-            this.cursorSaved = null;
-            // restore previously saved block
-            ctx.putImageData(saved, this.cursorX, this.cursorY);
-        }
-        else { // otherwise, generate inverted image of cursor block
-            if(visible) {
-                // save cursor block to off-screen buffer
-                // dump(this.cursorX+', '+this.cursorY+', '+this.cursorW+', '+this.cursorH+'\n');
-                this.cursorSaved=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
-                var src=this.cursorSaved.data;
-                var img2=ctx.createImageData(this.cursorW, this.cursorH);
-                var px=img2.data;
-                // invert the image
-                for(var i = 0, n = px.length; i < n; i += 4) {
-                    px[i] = 255 - src[i];
-                    px[i+1] = 255 - src[i+1];
-                    px[i+2] = 255 - src[i+2];
-                    px[i+3] = 255;
-                }
-                ctx.putImageData(img2, this.cursorX, this.cursorY);
-            }
-        }
-    },
-
     onBlink: function(){
         // dump('blink\n');
         this.blinkShow=!this.blinkShow;
         // FIXME: draw blinking characters
-        this.setCursorVisible(this.blinkShow);
 
-        // set timeout again
-        var _this=this;
+        if(this.cursorVisible){
+            this.cursorShow=!this.cursorShow;
+            this.drawCursor();
+        }
+    },
+
+    showCursor: function(){
+        this.cursorVisible=true;
+        if( !this.cursorShow ){
+            this.cursorShow=true;
+            this.drawCursor();
+        }
+    },
+
+    hideCursor: function(){
+        if(this.cursorShow){ // the cursor is currently shown
+            this.cursorShow=false;
+            this.drawCursor();
+        }
+        this.cursorVisible=false;
+    },
+
+    drawCursor: function(){
+        // dump('drawCursor\n');
+        var ctx=this.ctx;
+        var img=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
+        var src=img.data;
+        img=ctx.createImageData(this.cursorW, this.cursorH);
+        var px=img.data;
+        // invert the image
+        for(var i = 0, n = px.length; i < n; i += 4) {
+            px[i] = 255 - src[i];
+            px[i+1] = 255 - src[i+1];
+            px[i+2] = 255 - src[i+2];
+            px[i+3] = 255;
+        }
+        ctx.putImageData(img, this.cursorX, this.cursorY);
     }
 }
