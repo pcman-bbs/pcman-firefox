@@ -10,6 +10,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     pack="center"
+    context="popup-menu"
     >
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
@@ -32,7 +33,7 @@
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
     }
-    
+
     function finalize() {
         pcman.close();
         pcman=null;
@@ -58,7 +59,18 @@
             </box>
         </box>
     </vbox>
+
     <stringbundleset id="pcman-stringbundleset">
       <stringbundle id="pcman-string-bundle" src="chrome://pcmanfx2/locale/pcman.properties"/>
     </stringbundleset>
+
+    <popupset>
+      <menupopup id="popup-menu">
+        <menuitem label="Copy" oncommand="pcman.copy();"/>
+        <menuitem label="Paste" oncommand="pcman.paste();"/>
+        <menuitem label="Select All" oncommand="pcman.selAll();"/>
+        <menuitem label="Search" oncommand="alert('Not implemenetd');"/>
+      </menupopup>
+    </popupset>
+
 </window>

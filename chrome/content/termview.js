@@ -107,7 +107,7 @@ TermView.prototype={
                         ++col;
                         if(col < cols) {
                             var ch2 = line[col]; // second byte of DBCS char
-                            
+
                             // draw background color
                             if(bg != old_color) {
                                 ctx.fillStyle=termColors[bg];
@@ -219,6 +219,8 @@ TermView.prototype={
             }
         }
         else {
+            if(e.ctrlKey || e.altKey || e.shiftKey)
+                return;
             switch(e.keyCode){
             case 8:
                 conn.send('\b');
