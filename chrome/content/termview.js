@@ -272,6 +272,18 @@ TermView.prototype={
 
         var m=ctx.measureText('　'); //全形空白
         this.chw=Math.round(m.width/2);
+        
+        // if overflow, resize canvas again
+        var win = document.getElementById('topwin');
+        var overflowX = (this.chw * 80) - win.clientWidth;
+        if(overflowX > 0) {
+          this.canvas.width = win.clientWidth;
+          this.chw = Math.floor(this.canvas.width / 80);
+          this.chh = this.chw*2;  // is it necessary to measureText?
+          font = this.chh + 'px monospace';
+          ctx.font= font;
+          this.canvas.height = this.chh * 24;
+        }
 
         if(this.buf) {
             this.canvas.width = this.chw * this.buf.cols;
@@ -282,7 +294,7 @@ TermView.prototype={
         }
         else {
             // dump(this.chw + ', ' + this.chw * 80 + '\n');
-            this.canvas.width = this.chw * 80;;
+            this.canvas.width = this.chw * 80;
             // font needs to be reset after resizing canvas
             ctx.font= font;
             ctx.textBaseline='top';

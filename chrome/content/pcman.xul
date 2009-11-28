@@ -9,7 +9,7 @@
     onmousedown="document.getElementById('input_proxy').focus();"
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    style="background: #000000;"
+    pack="center"
     >
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
@@ -41,7 +41,7 @@
     function resize(){
         var win=document.getElementById('topwin');
         var canvas=document.getElementById("canvas");
-        // canvas.width=win.clientWidth;
+        //canvas.width=win.clientWidth;
         //canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
         canvas.height=win.clientHeight;
         pcman.view.onResize();
@@ -50,8 +50,8 @@
     </script>
     <vbox align="center" id='box1'>
         <box id="box2" orient="vertical">
-           <html:canvas id="canvas" width="800" height="480" style="background-color:#000;"></html:canvas>
-            <box orient="horizontal" id="box3" align="center" style="background: #ffffff;">
+           <html:canvas id="canvas" width="800" height="480"></html:canvas>
+            <box orient="horizontal" id="box3" align="center">
                 <label value="&input_proxy.label;"/>
                 <textbox id="input_proxy"/>
                 <label value="&input_proxy_description.label;"/>
