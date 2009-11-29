@@ -82,7 +82,7 @@ PCMan.prototype={
     //click to open in a new tab
     click: function(event) {
         var relX = event.pageX - this.view.canvas.offsetLeft;
-        var relY = event.pageY - 0;
+        var relY = event.pageY - this.view.canvas.offsetTop;
         var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
 	var PosY = (relY - relY % this.view.chh) / this.view.chh;
 	var uris = this.buf.lines[PosY].uris;
@@ -95,15 +95,15 @@ PCMan.prototype={
 	    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
 	    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-	    gBrowser.selectedTab = gBrowser.addTab(uri);
-
+	    // gBrowser.selectedTab = gBrowser.addTab(uri);
+        gBrowser.addTab(uri);
 	  }
 	}
   },
     //detect current location and change mouse cursor  
     mousemove: function(event) {
         var relX = event.pageX - this.view.canvas.offsetLeft;
-        var relY = event.pageY - 0;
+        var relY = event.pageY - this.view.canvas.offsetTop;
         var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
 	var PosY = (relY - relY % this.view.chh) / this.view.chh;
 	var uris = this.buf.lines[PosY].uris;
@@ -137,19 +137,30 @@ PCMan.prototype={
       }
     },
     isCommandEnabled: function(cmd){
-      if (cmd == "cmd_paste") return true;
-      return false;
+      switch (cmd) {
+        case "cmd_copy":
+        case "cmd_paste":
+        case "cmd_selectAll":
+          return true;
+        default:
+          return false;
+      }
     },
     doCommand: function(cmd){
       switch (cmd) {
         case "cmd_undo":
         case "cmd_redo":
         case "cmd_cut":
+          return true;
         case "cmd_copy":
+          pcman.copy();
+          break;
         case "cmd_paste":
           pcman.paste();
           break;
         case "cmd_selectAll":
+          pcman.selAll();
+          break;
         case "cmd_delete":
         case "cmd_switchTextDirection":
         case "cmd_find":
