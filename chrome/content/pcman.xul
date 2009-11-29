@@ -21,6 +21,7 @@
     var pcman=null;
     function setup() {
         var url=document.location.href;
+        //if( url.charAt(url.length-1) == '/' ) url = url.substr(0,url.length-1); // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
         var p=url.indexOf(':/');
         if(p >= 0) {
             p += 2;
@@ -51,7 +52,7 @@
     </script>
     <vbox align="center" id='box1'>
         <box id="box2" orient="vertical">
-           <html:canvas id="canvas" width="800" height="480"
+           <html:canvas id="canvas" width="800" height="480" moz-opaque="true"
                         onclick="pcman.click(event);"
 			onmousemove="pcman.mousemove(event);">
            </html:canvas>
