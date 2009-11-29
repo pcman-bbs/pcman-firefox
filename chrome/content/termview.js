@@ -139,7 +139,7 @@ TermView.prototype={
                                     ctx.closePath();
                                     ctx.clip();
                                     ctx.fillStyle=termColors[fg];
-                                    ctx.fillText(u, x, y);
+                                    ctx.fillText(u, x, y, chw2);
                                     ctx.restore();
                                 }
                                 else {
@@ -151,7 +151,7 @@ TermView.prototype={
                                     ctx.closePath();
                                     ctx.clip();
                                     ctx.fillStyle=termColors[fg];
-                                    ctx.fillText(u, x, y);
+                                    ctx.fillText(u, x, y, chw2);
                                     ctx.restore();
 
                                     // draw second half
@@ -162,7 +162,7 @@ TermView.prototype={
                                     ctx.closePath();
                                     ctx.clip();
                                     ctx.fillStyle=termColors[fg2];
-                                    ctx.fillText(u, x, y);
+                                    ctx.fillText(u, x, y, chw2);
                                     ctx.restore();
                                 }
                             }
@@ -185,7 +185,7 @@ TermView.prototype={
                             ctx.rect(x, y, chw, chh);
                             ctx.closePath();
                             ctx.clip();
-                            ctx.fillText( ch.ch, x, y );
+                            ctx.fillText( ch.ch, x, y, chw );
                             ctx.restore();
                         }
                     }
