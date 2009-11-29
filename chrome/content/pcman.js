@@ -68,8 +68,51 @@ PCMan.prototype={
             }
         }
     },
-
+    
     selAll: function() {
         alert('Not yet supported');
-    }
+    },
+
+    //Here comes mouse events
+
+    //click to open in a new tab
+    click: function(event) {
+        var relX = event.pageX - this.view.canvas.offsetLeft;
+        var relY = event.pageY - 0;
+        var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
+	var PosY = (relY - relY % this.view.chh) / this.view.chh;
+	var uris = this.buf.lines[PosY].uris;
+	if (!uris) return;
+	for (var i=0;i<uris.length;i++){
+	  if (PosX >= uris[i][0] && PosX < uris[i][1]){ //@ < or <<
+	    var uri = "";
+	    for (var j=uris[i][0];j<uris[i][1];j++)
+	      uri = uri + this.buf.lines[PosY][j].ch;
+	    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                   .getService(Components.interfaces.nsIWindowMediator);
+	    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
+	    gBrowser.selectedTab = gBrowser.addTab(uri);
+
+	  }
+	}
+  },
+    //detect current location and change mouse cursor  
+    mousemove: function(event) {
+        var relX = event.pageX - this.view.canvas.offsetLeft;
+        var relY = event.pageY - 0;
+        var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
+	var PosY = (relY - relY % this.view.chh) / this.view.chh;
+	var uris = this.buf.lines[PosY].uris;
+	if (!uris) {
+	  this.view.canvas.style.cursor = "default";
+	  return;
+	}
+	for (var i=0;i<uris.length;i++){
+	  if (PosX >= uris[i][0] && PosX < uris[i][1]){ //@ < or <<
+	    this.view.canvas.style.cursor = "pointer";
+	    return
+	  }
+	}
+	this.view.canvas.style.cursor = "default";
+  }
 }
