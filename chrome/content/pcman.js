@@ -96,7 +96,7 @@ PCMan.prototype={
                    .getService(Components.interfaces.nsIWindowMediator);
 	    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
 	    // gBrowser.selectedTab = gBrowser.addTab(uri);
-        gBrowser.addTab(uri);
+	    gBrowser.addTab(uri, gBrowser.currentURI);
 	  }
 	}
   },
