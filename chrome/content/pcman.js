@@ -33,6 +33,9 @@ PCMan.prototype={
         //alert('data('+data.length +') ' +data);
         this.parser.feed(data);
         //alert('end data');
+
+        // FIXME: move this to this place could improve performance.
+        this.view.updateCursorPos();
     },
 
     onClose: function(conn) {
@@ -91,8 +94,7 @@ PCMan.prototype={
 	    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
 	    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-	    //open but not jump to the newly added tab
-	    gBrowser.addTab(uri);
+	    gBrowser.selectedTab = gBrowser.addTab(uri);
 
 	  }
 	}
