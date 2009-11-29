@@ -10,6 +10,7 @@ function PCMan() {
     this.view.setConn(this.conn);
     this.parser=new AnsiParser(this.buf);
     this.stringBundle = document.getElementById("pcman-string-bundle");
+    this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
 }
 
 PCMan.prototype={
@@ -117,5 +118,46 @@ PCMan.prototype={
 	  }
 	}
 	this.view.canvas.style.cursor = "default";
+  },
+  
+  textboxControllers: {
+    supportsCommand: function(cmd){
+      switch (cmd) {
+        case "cmd_undo":
+        case "cmd_redo":
+        case "cmd_cut":
+        case "cmd_copy":
+        case "cmd_paste":
+        case "cmd_selectAll":
+        case "cmd_delete":
+        case "cmd_switchTextDirection":
+        case "cmd_find":
+        case "cmd_findAgain":
+          return true;
+      }
+    },
+    isCommandEnabled: function(cmd){
+      if (cmd == "cmd_paste") return true;
+      return false;
+    },
+    doCommand: function(cmd){
+      switch (cmd) {
+        case "cmd_undo":
+        case "cmd_redo":
+        case "cmd_cut":
+        case "cmd_copy":
+        case "cmd_paste":
+          pcman.paste();
+          break;
+        case "cmd_selectAll":
+        case "cmd_delete":
+        case "cmd_switchTextDirection":
+        case "cmd_find":
+        case "cmd_findAgain":
+          return true;
+      }
+    },
+    onEvent: function(e){ }
   }
+
 }

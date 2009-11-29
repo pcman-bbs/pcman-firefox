@@ -46,11 +46,13 @@ const kPROTOCOL_CID = Components.ID("5FAF83FD-708D-45c0-988B-C7404FB25376");
 
 // Mozilla defined
 const kSIMPLEURI_CONTRACTID = "@mozilla.org/network/simple-uri;1";
+const kSTANDARDURL_CONTRACTID = "@mozilla.org/network/standard-url;1";
 const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const nsISupports = Components.interfaces.nsISupports;
 const nsIIOService = Components.interfaces.nsIIOService;
 const nsIProtocolHandler = Components.interfaces.nsIProtocolHandler;
 const nsIURI = Components.interfaces.nsIURI;
+const nsIStandardURL     = Components.interfaces.nsIStandardURL;
 
 function Protocol()
 {
@@ -81,6 +83,13 @@ Protocol.prototype =
     var uri = Components.classes[kSIMPLEURI_CONTRACTID].createInstance(nsIURI);
     uri.spec = spec;
     return uri;
+    
+    // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
+    /*
+    var url = Components.classes[kSTANDARDURL_CONTRACTID].createInstance(nsIStandardURL);
+    url.init(nsIStandardURL.URLTYPE_STANDARD, -1, spec, charset, baseURI);
+    return url.QueryInterface(nsIURI);
+    */
   },
 
   newChannel: function(aURI)
