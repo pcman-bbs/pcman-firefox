@@ -132,7 +132,6 @@ TermBuf.prototype={
                 }
             }
         }
-        this.updateCharAttr();
         this.queueUpdate();
         if(this.view) // FIXME: should we also queue the update of cursor?
             this.view.updateCursorPos();
@@ -179,6 +178,7 @@ TermBuf.prototype={
                     if(!uris)   uris=new Array();
                     var uri=[res.index, res.index+res[0].length];
                     uris.push(uri);
+                    dump('found URI: ' + res[0] + '\n');
                 }
                 if(uris) {
                     line.uris=uris;
@@ -235,7 +235,6 @@ TermBuf.prototype={
             break;
         }
         this.gotoPos(0, 0);
-        this.updateCharAttr();
         this.queueUpdate();
     },
 
@@ -292,7 +291,6 @@ TermBuf.prototype={
             return;
         }
 
-        this.updateCharAttr();
         this.queueUpdate();
     },
 
@@ -360,11 +358,12 @@ TermBuf.prototype={
             var func=function() {
                 _this.onTimeout();
             }
-            this.timeout = setTimeout(func, 50);
+            this.timeout = setTimeout(func, 40);
         }
     },
 
     onTimeout: function() {
+        this.updateCharAttr();
         if(this.view) {
             this.view.update();
         }
