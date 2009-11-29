@@ -23,6 +23,7 @@
     <em:description>A GNU/GPL telnet client extension specifically designed for BBS browsing.</em:description>
     <em:creator>洪任諭 (Hong Jen Yee) &lt;pcman.tw@gmail.com&gt;</em:creator>
     <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
+    <em:developer>呂康豪 (Kang Hao Lu) &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
     <em:homepageURL>http://code.google.com/p/pcmanfx/</em:homepageURL>
 
     <em:localized>
@@ -32,6 +33,7 @@
         <em:description>專為 BBS 瀏覽設計，採 GNU/GPL 授權的 telnet 連線程式套件</em:description>
         <em:creator>洪任諭 &lt;pcman.tw@gmail.com&gt;</em:creator>
         <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
+	<em:developer>呂康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
     	</Description>
   	</em:localized>
 
@@ -42,6 +44,7 @@
         <em:description>专为 BBS 浏览设计，采 GNU/GPL 授权的 telnet 程序套件</em:description>
         <em:creator>洪任谕 &lt;pcman.tw@gmail.com&gt;</em:creator>
         <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
+	<em:developer>吕康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
         </Description>
   	</em:localized>
 
