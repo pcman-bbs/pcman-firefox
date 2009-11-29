@@ -93,13 +93,16 @@ TermView.prototype={
         var old_color = -1;
 
         for(var row=0; row<rows; ++row) {
-            var y=row * this.chh;
+            var chh = this.chh;
+            var y=row * chh;
             var x = 0;
             var line = lines[row];
             var chw = this.chw;
-            var chh = this.chh;
             for(var col=0; col<cols; ++col) {
                 var ch = line[col];
+                // FIXME: clipping regions are used extensively
+                // when drawing text. This could hurt the performance.
+                // However, this is required due to limitations of Firefox.
                 if(force || ch.needUpdate) {
                     var fg = ch.getFg();
                     var bg = ch.getBg();
@@ -107,7 +110,6 @@ TermView.prototype={
                         ++col;
                         if(col < cols) {
                             var ch2 = line[col]; // second byte of DBCS char
-
                             // draw background color
                             if(bg != old_color) {
                                 ctx.fillStyle=termColors[bg];
@@ -121,21 +123,24 @@ TermView.prototype={
                                 ctx.fillRect(x, y, chw, chh); // lead byte
                                 ctx.fillStyle=termColors[bg2];
                                 old_color=bg2;
-                                ctx.fillRect(x + chw, y, chw, this.chh); // second byte
+                                ctx.fillRect(x + chw, y, chw, chh); // second byte
                             }
 
                             // draw text
                             var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
                             var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
                             if(u) { // can be converted to valid UTF-8
-                                var chw2 = this.chw * 2;
+                                var chw2 = chw * 2;
                                 var fg2 = ch2.getFg(); // fg of second byte
                                 if( fg == fg2 ) { // two bytes have the same fg
-                                    if(fg != old_color) {
-                                        ctx.fillStyle=termColors[fg];
-                                        ctx.fillText( u, x, y, chw2);
-                                        old_color=fg;
-                                    }
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    ctx.rect(x, y, chw2, chh);
+                                    ctx.closePath();
+                                    ctx.clip();
+                                    ctx.fillStyle=termColors[fg];
+                                    ctx.fillText(u, x, y);
+                                    ctx.restore();
                                 }
                                 else {
                                     // draw first half
@@ -145,11 +150,8 @@ TermView.prototype={
                                     ctx.rect(x, y, chw, chh);
                                     ctx.closePath();
                                     ctx.clip();
-                                    if(fg != old_color) {
-                                        ctx.fillStyle=termColors[fg];
-                                        ctx.fillText( u, x, y, chw2);
-                                        // old_color=fg; // is this needed?
-                                    }
+                                    ctx.fillStyle=termColors[fg];
+                                    ctx.fillText(u, x, y);
                                     ctx.restore();
 
                                     // draw second half
@@ -160,8 +162,7 @@ TermView.prototype={
                                     ctx.closePath();
                                     ctx.clip();
                                     ctx.fillStyle=termColors[fg2];
-                                    ctx.fillText( u, x, y, chw2);
-                                    // old_color=fg2; // is this needed?
+                                    ctx.fillText(u, x, y);
                                     ctx.restore();
                                 }
                             }
@@ -174,14 +175,18 @@ TermView.prototype={
                             ctx.fillStyle=termColors[bg];
                             old_color=bg;
                         }
-                        ctx.fillRect(x, y, this.chw, this.chh);
+                        ctx.fillRect(x, y, chw, chh);
                         // only draw visible chars to speed up
                         if(ch.ch > ' ') {
-                            if(fg != old_color) {
-                                ctx.fillStyle=termColors[fg];
-                                ctx.fillText( ch.ch, x, y, this.chw );
-                                old_color=fg;
-                            }
+                            ctx.save();
+                            ctx.fillStyle=termColors[fg];
+                            // set clip region
+                            ctx.beginPath();
+                            ctx.rect(x, y, chw, chh);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.fillText( ch.ch, x, y );
+                            ctx.restore();
                         }
                     }
                     ch.needUpdate=false;
@@ -219,8 +224,6 @@ TermView.prototype={
             }
         }
         else {
-            if(e.ctrlKey || e.altKey || e.shiftKey)
-                return;
             switch(e.keyCode){
             case 8:
                 conn.send('\b');
@@ -377,6 +380,7 @@ TermView.prototype={
     },
 
     drawCursor: function(){
+        // FIXME: this has very poor performance on Linux
         // dump('drawCursor\n');
         var ctx=this.ctx;
         var img=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
