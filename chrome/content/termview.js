@@ -57,6 +57,17 @@ function TermView(canvas) {
     this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
 }
 
+function fillClipText(ctx, text, style, maxw, x, y, w, h){
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.closePath();
+    ctx.clip();
+    ctx.fillStyle=style;
+    ctx.fillText(text, x, y, maxw);
+    ctx.restore();
+}
+
 TermView.prototype={
     conv: Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                                                 .getService(Components.interfaces.nsIUTF8ConverterService),
@@ -68,16 +79,73 @@ TermView.prototype={
     setConn: function(conn) {
         this.conn=conn;
     },
-    /*
-    drawChar: function(ch, x, y) {
-        var ctx = this.ctx;
-        m=ctx.measureText(ch.ch);
-        ctx.fillText(ch.ch, x, y);
-    },
-    */
 
     update: function() {
         this.redraw(false);
+    },
+
+    drawChar: function(row, col, x, y) {
+        var chw = this.chw;
+        var chh = this.chh;
+        var line=this.buf.lines[row];
+        var ch = line[col];
+        if(!ch.isLeadByte) {
+            // if this is second byte of DBCS char
+            if(col >=1 && line[col-1].isLeadByte) {
+                --col;
+                x -= chw;
+                ch = line[col];
+            }
+        }
+        var fg = ch.getFg();
+        var bg = ch.getBg();
+        var ctx = this.ctx;
+        ctx.save();
+
+        if(ch.isLeadByte) { // first byte of DBCS char
+            var cols = this.buf.cols;
+            ++col;
+            if(col < cols) {
+                var ch2 = line[col]; // second byte of DBCS char
+                // draw background color
+                ctx.fillStyle=termColors[bg];
+                var bg2 = ch2.getBg();
+                if(bg = bg2) { // two bytes has the same bg
+                    ctx.fillRect(x, y, chw * 2, chh);
+                }
+                else { // two bytes has different bg
+                    ctx.fillRect(x, y, chw, chh); // lead byte
+                    ctx.fillStyle=termColors[bg2];
+                    ctx.fillRect(x + chw, y, chw, chh); // second byte
+                }
+                // draw text
+                var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
+                var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
+                if(u) { // can be converted to valid UTF-8
+                    var chw2 = chw * 2;
+                    var fg2 = ch2.getFg(); // fg of second byte
+                    if( fg == fg2 ) { // two bytes have the same fg
+                        fillClipText(ctx, u, termColors[fg], chw2, x, y, chw2, chh);
+                    }
+                    else {
+                        // draw first half
+                        fillClipText(ctx, u, termColors[fg], chw2, x, y, chw, chh);
+                        // draw second half
+                        fillClipText(ctx, u, termColors[fg2], chw2, x + chw, y, chw, chh);
+                    }
+                }
+                line[col].needUpdate=false;
+            }
+        }
+        else {
+            ctx.fillStyle=termColors[bg];
+            ctx.fillRect(x, y, chw, chh);
+            // only draw visible chars to speed up
+            if(ch.ch > ' ')
+                fillClipText(ctx, ch.ch, termColors[fg], chw, x, y, chw, chh);
+        }
+        ctx.restore();
+        ch.needUpdate=false;
     },
 
     redraw: function(force) {
@@ -380,9 +448,35 @@ TermView.prototype={
     },
 
     drawCursor: function(){
-        // FIXME: this has very poor performance on Linux
-        // dump('drawCursor\n');
         var ctx=this.ctx;
+        // dump('drawCursor\n');
+        var row = Math.floor(this.cursorY / this.chh);
+        var col = Math.floor(this.cursorX / this.chw);
+        if(this.cursorShow) {
+            if(this.buf) {
+                var ch=this.buf.lines[row][col];
+                var fg=ch.getFg();
+                ctx.save();
+                ctx.fillStyle=termColors[fg];
+                ctx.fillRect(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
+                ctx.restore();
+            }
+            else {
+                
+            }
+        }
+        else {
+            if(this.buf) {
+                // dump(row + ', ' + col + '\n');
+                if(!this.buf.lines[row][col].needUpdate)
+                    this.drawChar(row, col, this.cursorX, row * this.chh);
+            }
+            else {
+                
+            }
+        }
+        /*
+        // FIXME: this has very poor performance on Linux
         var img=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
         var src=img.data;
         img=ctx.createImageData(this.cursorW, this.cursorH);
@@ -395,5 +489,6 @@ TermView.prototype={
             px[i+3] = 255;
         }
         ctx.putImageData(img, this.cursorX, this.cursorY);
+        */
     }
 }
