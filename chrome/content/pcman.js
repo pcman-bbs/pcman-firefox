@@ -91,7 +91,8 @@ PCMan.prototype={
 	    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
 	    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-	    gBrowser.selectedTab = gBrowser.addTab(uri);
+	    //open but not jump to the newly added tab
+	    gBrowser.addTab(uri);
 
 	  }
 	}
