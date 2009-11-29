@@ -79,6 +79,8 @@ function TermBuf(cols, rows) {
 }
 
 TermBuf.prototype={
+    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+
     setView: function(view) {
         this.view = view;
     },
@@ -142,8 +144,11 @@ TermBuf.prototype={
         var lines=this.lines;
         for(var row=0; row<rows; ++row) {
             var line=lines[row];
+            var needUpdate=false;
             for(var col=0; col < cols; ++col) {
                 var ch = line[col];
+                if(ch.needUpdate)
+                    needUpdate=true;
                 // all chars > ASCII code are regarded as lead byte of DBCS.
                 // FIXME: this is not correct, but works most of the times.
                 if( ch.ch.charCodeAt(0) > 128 && (col + 1) < cols ) {
@@ -151,12 +156,34 @@ TermBuf.prototype={
                     ++col;
                     var ch0=ch;
                     ch=line[col];
+                    if(ch.needUpdate)
+                        needUpdate=true;
                     // ensure simutaneous redraw of both bytes
                     if( ch0.needUpdate != ch.needUpdate ) {
                         ch0.needUpdate = ch.needUpdate = true;
                     }
                 }
                 ch.isLeadByte=false;
+            }
+
+            if(needUpdate) { // this line has been changed
+                // perform URI detection again
+                line.uris=null; // remove all previously cached uris
+                var s='';
+                for(var col=0; col < cols; ++col)
+                    s+=line[col].ch;
+                var res;
+                var uris=null;
+                // pairs of URI start and end positions are stored in line.uri.
+                while( (res=this.uriRegEx.exec(s)) != null ) {
+                    if(!uris)   uris=new Array();
+                    var uri=[res.index, res.index+res[0].length];
+                    uris.push(uri);
+                }
+                if(uris) {
+                    line.uris=uris;
+                    // dump(line.uris.length + "uris found\n");
+                }
             }
         }
     },
