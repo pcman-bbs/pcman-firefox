@@ -21,7 +21,7 @@
     var pcman=null;
     function setup() {
         var url=document.location.href;
-        //if( url.charAt(url.length-1) == '/' ) url = url.substr(0,url.length-1); // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
+        if( url.charAt(url.length-1) == '/' ) url = url.substr(0,url.length-1); // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
         var p=url.indexOf(':/');
         if(p >= 0) {
             p += 2;

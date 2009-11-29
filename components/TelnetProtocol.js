@@ -69,9 +69,11 @@ Protocol.prototype =
   },
 
   scheme: kSCHEME,
-  defaultPort: -1,
+  defaultPort: 23,
   protocolFlags: nsIProtocolHandler.URI_NORELATIVE |
-                 nsIProtocolHandler.URI_NOAUTH,
+                 nsIProtocolHandler.URI_NOAUTH |
+                 nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
+                 nsIProtocolHandler.URI_NON_PERSISTABLE, // We can not save URL from telnet :D
   
   allowPort: function(port, scheme)
   {
@@ -80,16 +82,17 @@ Protocol.prototype =
 
   newURI: function(spec, charset, baseURI)
   {
-    var uri = Components.classes[kSIMPLEURI_CONTRACTID].createInstance(nsIURI);
-    uri.spec = spec;
-    return uri;
-    
     // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
-    /*
+    // Parameters:
+    // * aUrlType: URLTYPE_AUTHORITY will always convert telnet:, telnet:/, telnet://, telnet:/// to telnet://
+    // * aDefaultPort: will convert telnet://ptt.cc:23 to telnet://ptt.cc
     var url = Components.classes[kSTANDARDURL_CONTRACTID].createInstance(nsIStandardURL);
-    url.init(nsIStandardURL.URLTYPE_STANDARD, -1, spec, charset, baseURI);
-    return url.QueryInterface(nsIURI);
-    */
+    url.init(nsIStandardURL.URLTYPE_AUTHORITY, 23, spec, charset, baseURI);
+    // Filter and return the pure URI
+    var cleanURI = url.QueryInterface(nsIURI);
+    cleanURI.userPass = '';
+    cleanURI.path = '';
+    return cleanURI;
   },
 
   newChannel: function(aURI)
