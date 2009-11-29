@@ -1,6 +1,6 @@
 // Terminal Screen Buffer, displayed by TermView
 
-const termColors=Array(
+const termColors=[
     // dark
     '#000000', // black
     '#800000', // red
@@ -19,7 +19,7 @@ const termColors=Array(
     '#ff00ff', // magenta
     '#00ffff', // cyan
     '#ffffff' // white
-);
+];
 
 function TermChar(ch) {
     this.ch=ch;
@@ -67,6 +67,8 @@ function TermBuf(cols, rows) {
     this.cur_x=0;
     this.cur_y=0;
     this.attr=new TermChar(' ');
+    this.changed=false;
+    this.posChanged=false;
     this.lines=new Array(rows);
     while(--rows >= 0) {
         var line=new Array(cols);
@@ -110,6 +112,8 @@ TermBuf.prototype={
                 this.lineFeed();
                 line = lines[this.cur_y];
                 continue;
+            case '\0':
+                continue;
             }
             if( ch < ' ')
                 dump('Unhandled invisible char' + ch.charCodeAt(0)+ '\n');
@@ -119,23 +123,23 @@ TermBuf.prototype={
                 this.lineFeed();
                 this.cur_x=0;
                 line = lines[this.cur_y];
+                this.posChanged=true;
             }
             switch(ch) {
             case '\t':
                 this.tab();
                 break;
-            default: {
+            default:
                 var ch2 = line[this.cur_x]; 
                 ch2.ch=ch;
                 ch2.copyAttr(this.attr);
                 ch2.needUpdate=true;
                 ++this.cur_x;
-                }
+                this.changed=true;
+                this.posChanged=true;
             }
         }
         this.queueUpdate();
-//        if(this.view) // FIXME: should we also queue the update of cursor?
-//            this.view.updateCursorPos();
     },
 
     updateCharAttr: function() {
@@ -246,6 +250,7 @@ TermBuf.prototype={
             }
             break;
         }
+        this.changed=true;
         this.gotoPos(0, 0);
         this.queueUpdate();
     },
@@ -253,8 +258,7 @@ TermBuf.prototype={
     back: function() {
         if(this.cur_x>0) {
             --this.cur_x;
-            // if(this.view)
-            //    this.view.updateCursorPos();
+            this.posChanged=true;
         }
     },
 
@@ -263,8 +267,7 @@ TermBuf.prototype={
         this.cur_x += (this.cur_x - mod)/4 + 4;
         if(this.cur_x >= this.cols) {
             this.cur_x = this.cols-1;
-            // if(this.view)
-            //     this.view.updateCursorPos();
+            this.posChanged=true;
         }
     },
 
@@ -302,7 +305,7 @@ TermBuf.prototype={
         default:
             return;
         }
-
+        this.changed=true;
         this.queueUpdate();
     },
 
@@ -339,6 +342,7 @@ TermBuf.prototype={
                 }
             }
         }
+        this.changed=true;
         this.queueUpdate();
     },
 
@@ -346,19 +350,19 @@ TermBuf.prototype={
         // dump('gotoPos: ' + x + ', ' + y + '\n');
         this.cur_x = x;
         this.cur_y = y;
-        // if(this.view)
-        //     this.view.updateCursorPos();
+        this.posChanged=true;
     },
 
     carriageReturn: function() {
         this.cur_x = 0;
-        // if(this.view)
-        //     this.view.updateCursorPos();
+        this.posChanged=true;
     },
 
     lineFeed: function() {
-        if(this.cur_y < (this.rows-1))
+        if(this.cur_y < (this.rows-1)) {
             ++this.cur_y;
+            this.posChanged=true;
+        }
         else { // at bottom of screen
             this.scroll(false, 1);
         }
@@ -375,9 +379,19 @@ TermBuf.prototype={
     },
 
     onTimeout: function() {
-        this.updateCharAttr();
-        if(this.view) {
-            this.view.update();
+        if(this.changed) // content changed
+        {
+            this.updateCharAttr();
+            if(this.view) {
+                this.view.update();
+            }
+            this.changed=false;
+        }
+        if(this.posChanged) { // cursor pos changed
+            if(this.view) {
+                this.view.updateCursorPos();
+            }
+            this.posChanged=false;
         }
         clearTimeout(this.timeout);
         this.timeout=null;

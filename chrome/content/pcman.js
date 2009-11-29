@@ -34,9 +34,6 @@ PCMan.prototype={
         //alert('data('+data.length +') ' +data);
         this.parser.feed(data);
         //alert('end data');
-
-        // FIXME: move this to this place could improve performance.
-        this.view.updateCursorPos();
     },
 
     onClose: function(conn) {
