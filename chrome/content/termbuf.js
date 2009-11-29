@@ -79,6 +79,7 @@ function TermBuf(cols, rows) {
 }
 
 TermBuf.prototype={
+    // From: http://snippets.dzone.com/posts/show/452
     uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
 
     setView: function(view) {
@@ -167,7 +168,18 @@ TermBuf.prototype={
 
             if(needUpdate) { // this line has been changed
                 // perform URI detection again
-                line.uris=null; // remove all previously cached uris
+                // remove all previously cached uri positions
+                if(line.uris) {
+                    var uris=line.uris;
+                    var nuris=uris.length;
+                    // FIXME: this is inefficient
+                    for(var iuri=0; iuri<nuris;++iuri) {
+                        var uri=uris[iuri];
+                        for(col=uri[0]; col < uri[1]; ++col)
+                            line[col].needUpdate=true;
+                    }
+                    line.uris=null;
+                }
                 var s='';
                 for(var col=0; col < cols; ++col)
                     s+=line[col].ch;
@@ -178,7 +190,7 @@ TermBuf.prototype={
                     if(!uris)   uris=new Array();
                     var uri=[res.index, res.index+res[0].length];
                     uris.push(uri);
-                    dump('found URI: ' + res[0] + '\n');
+                    // dump('found URI: ' + res[0] + '\n');
                 }
                 if(uris) {
                     line.uris=uris;
