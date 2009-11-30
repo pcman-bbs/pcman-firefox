@@ -1,2 +1,6 @@
 <!ENTITY input_proxy.label "Type here: ">
 <!ENTITY input_proxy_description.label " &lt;== Please keep keyboard focus in this text box">
+<!ENTITY menu_copy.label "Copy">
+<!ENTITY menu_paste.label "Paste">
+<!ENTITY menu_selAll.label "Select All">
+<!ENTITY menu_search.label "Search">

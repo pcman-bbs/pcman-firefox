@@ -30,6 +30,7 @@
             pcman=new PCMan();
             pcman.connect(url.substr(p));
         }
+        document.getElementById('topwin').setAttribute('title', url);
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
@@ -52,7 +53,7 @@
     </script>
     <vbox align="center" id='box1'>
         <box id="box2" orient="vertical">
-           <html:canvas id="canvas" width="800" height="480" moz-opaque="true"
+           <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
                         onclick="pcman.click(event);"
 			onmousemove="pcman.mousemove(event);">
            </html:canvas>
@@ -70,10 +71,10 @@
 
     <popupset>
       <menupopup id="popup-menu">
-        <menuitem label="Copy" oncommand="pcman.copy();"/>
-        <menuitem label="Paste" oncommand="pcman.paste();"/>
-        <menuitem label="Select All" oncommand="pcman.selAll();"/>
-        <menuitem label="Search" oncommand="alert('Not implemenetd');"/>
+        <menuitem label="&menu_copy.label;" oncommand="pcman.copy();"/>
+        <menuitem label="&menu_paste.label;" oncommand="pcman.paste();"/>
+        <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
+        <menuitem label="&menu_search.label;" oncommand="alert('Not implemenetd');"/>
       </menupopup>
     </popupset>
 

@@ -1,2 +1,6 @@
 <!ENTITY input_proxy.label "在此輸入：">
 <!ENTITY input_proxy_description.label " &lt;== 請保持焦點在這個文字方塊上">
+<!ENTITY menu_copy.label "複製">
+<!ENTITY menu_paste.label "貼上">
+<!ENTITY menu_selAll.label "全選">
+<!ENTITY menu_search.label "搜尋">
