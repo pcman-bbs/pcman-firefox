@@ -103,6 +103,7 @@ PCMan.prototype={
         var relY = event.pageY - this.view.canvas.offsetTop;
         var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
 	var PosY = (relY - relY % this.view.chh) / this.view.chh;
+	if(PosY >= 24) return;   // ignore events out of "rows" range, it's possible since we don't resize canvas height to fit chh*24
 	var uris = this.buf.lines[PosY].uris;
 	if (!uris) {
 	  this.view.canvas.style.cursor = "default";
