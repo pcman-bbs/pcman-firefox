@@ -310,7 +310,7 @@ TermView.prototype={
                 }
             }
         }
-        else {
+        else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch(e.keyCode){
             case 8:
                 conn.send('\b');
