@@ -165,6 +165,7 @@ TermView.prototype={
             var y=row * chh;
             var x = 0;
             var line = lines[row];
+            var lineUpdated = false;
             var chw = this.chw;
             for(var col=0; col<cols; ++col) {
                 var ch = line[col];
@@ -172,6 +173,7 @@ TermView.prototype={
                 // when drawing text. This could hurt the performance.
                 // However, this is required due to limitations of Firefox.
                 if(force || ch.needUpdate) {
+                    lineUpdated = true;
                     var fg = ch.getFg();
                     var bg = ch.getBg();
                     if(ch.isLeadByte) { // first byte of DBCS char
@@ -260,6 +262,23 @@ TermView.prototype={
                     ch.needUpdate=false;
                 }
                 x += chw;
+            }
+            // draw underline for links
+            if(lineUpdated){
+              var uris = line.uris;
+              if(uris){
+                for (var i=0 ; i<uris.length ; i++) {
+                  ctx.save();
+                  ctx.strokeStyle = '#FF6600';
+                  ctx.lineWidth = 2;
+                  ctx.beginPath();
+                  ctx.lineTo( uris[i][0] * chw, y + chh );
+                  ctx.lineTo( uris[i][1] * chw, y + chh );
+                  ctx.stroke();
+                  ctx.restore();
+                }
+              }
+              lineUpdated = false;
             }
         }
         if(cursorShow)
