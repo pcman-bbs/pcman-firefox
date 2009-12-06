@@ -46,18 +46,16 @@
     }
     </script>
     <vbox align="center" id='box1'>
-        <box id="box2" orient="vertical">
-           <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
-                        onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);">
-           </html:canvas>
-            <box orient="horizontal" id="box3" align="center">
-                <label value="&input_proxy.label;"/>
-                <textbox id="input_proxy"/>
-                <label value="&input_proxy_description.label;"/>
-            </box>
-        </box>
+      <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
+                   onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);">
+      </html:canvas>
+      <hbox id="box3" align="center">
+        <label value="&input_proxy.label;"/>
+        <textbox id="input_proxy"/>
+        <label value="&input_proxy_description.label;"/>
+      </hbox>
     </vbox>
-
+    
     <stringbundleset id="pcman-stringbundleset">
       <stringbundle id="pcman-string-bundle" src="chrome://pcmanfx2/locale/pcman.properties"/>
     </stringbundleset>

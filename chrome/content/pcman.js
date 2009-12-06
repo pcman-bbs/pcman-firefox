@@ -80,17 +80,16 @@ PCMan.prototype={
 
     //click to open in a new tab
     click: function(event) {
-        var relX = event.pageX - this.view.canvas.offsetLeft;
-        var relY = event.pageY - this.view.canvas.offsetTop;
-        var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
-        var PosY = (relY - relY % this.view.chh) / this.view.chh;
-        var uris = this.buf.lines[PosY].uris;
+        var cursor = this.view.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
         if (!uris) return;
         for (var i=0;i<uris.length;i++) {
-          if (PosX >= uris[i][0] && PosX < uris[i][1]) { //@ < or <<
+          if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
             var uri = "";
             for (var j=uris[i][0];j<uris[i][1];j++)
-              uri = uri + this.buf.lines[PosY][j].ch;
+              uri = uri + this.buf.lines[row][j].ch;
             var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
             var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
             // gBrowser.selectedTab = gBrowser.addTab(uri);
@@ -100,18 +99,16 @@ PCMan.prototype={
     },
     //detect current location and change mouse cursor  
     mousemove: function(event) {
-        var relX = event.pageX - this.view.canvas.offsetLeft;
-        var relY = event.pageY - this.view.canvas.offsetTop;
-        var PosX = (relX - relX % this.view.chw) / this.view.chw;//too slow?
-        var PosY = (relY - relY % this.view.chh) / this.view.chh;
-        if(PosY >= 24) return;   // ignore events out of "rows" range, it's possible since we don't resize canvas height to fit chh*24
-        var uris = this.buf.lines[PosY].uris;
+        var cursor = this.view.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
         if (!uris) {
           this.view.canvas.style.cursor = "default";
           return;
         }
         for (var i=0;i<uris.length;i++) {
-          if (PosX >= uris[i][0] && PosX < uris[i][1]) { //@ < or <<
+          if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
             this.view.canvas.style.cursor = "pointer";
             return
           }
