@@ -379,6 +379,7 @@ TermView.prototype={
             ctx.textBaseline='top';
         }
 
+        this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
     },
@@ -490,5 +491,17 @@ TermView.prototype={
         }
         ctx.putImageData(img, this.cursorX, this.cursorY);
         */
+    },
+    
+    clientToCursor: function(cX, cY){
+      var x = cX - this.canvas.offsetLeft;
+      var y = cY - this.canvas.offsetTop;
+      var col = Math.floor(x / this.chw);
+      var row = Math.floor(y / this.chh);
+      if(row < this.buf.rows){
+        return {col: col, row: row};
+      }
+      else  // client Y out of "rows" range (it's possible since we don't resize canvas height to fit chh*24)
+        return false;
     }
 }
