@@ -12,6 +12,7 @@
     pack="center"
     context="popup-menu"
     >
+    <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
@@ -20,16 +21,9 @@
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {
-        var url=document.location.href;
-        if( url.charAt(url.length-1) == '/' ) url = url.substr(0,url.length-1); // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
-        var p=url.indexOf(':/');
-        if(p >= 0) {
-            p += 2;
-            while(url[p] == '/')
-                ++p;
-            pcman=new PCMan();
-            pcman.connect(url.substr(p));
-        }
+        var url=document.location.host;
+        pcman=new PCMan();
+        pcman.connect(url);
         document.getElementById('topwin').setAttribute('title', url);
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
@@ -54,8 +48,7 @@
     <vbox align="center" id='box1'>
         <box id="box2" orient="vertical">
            <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
-                        onclick="pcman.click(event);"
-			onmousemove="pcman.mousemove(event);">
+                        onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);">
            </html:canvas>
             <box orient="horizontal" id="box3" align="center">
                 <label value="&input_proxy.label;"/>
