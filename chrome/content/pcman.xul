@@ -18,13 +18,17 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {
         var url=document.location.host;
         pcman=new PCMan();
         pcman.connect(url);
-        document.getElementById('topwin').setAttribute('title', url);
+        // Fetch title from bookmarks. XXX: Places API can be slow!
+        var browserutils = new BrowserUtils(); 
+        document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
+        
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
