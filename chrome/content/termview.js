@@ -10,6 +10,8 @@ function TermView(canvas) {
     this.cursorY=0;
     this.cursorVisible=true; // false to hide the cursor
     this.cursorShow=false; // blinking state of cursor
+    
+    this.selection = null;
 
     this.input = document.getElementById('input_proxy');
 
@@ -401,6 +403,8 @@ TermView.prototype={
         this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
+        
+        this.updateSelection();
     },
 
     // Cursor
@@ -510,6 +514,21 @@ TermView.prototype={
         }
         ctx.putImageData(img, this.cursorX, this.cursorY);
         */
+    },
+    
+    updateSelection: function(){
+      var box = document.getElementById('selection');
+      Components.utils.reportError(this.selection);
+      if(!this.selection) {
+        box.style.display = 'none';
+        Components.utils.reportError( box.style.display );
+        return;
+      }
+      box.textContent = this.selection.text;
+      box.style.font = this.chh + 'px monospace';
+      box.style.top = ( this.canvas.offsetTop + this.selection.rowStart * this.chh ) + 'px';
+      box.style.left = ( this.canvas.offsetLeft + this.selection.colStart * this.chw ) + 'px';
+      box.style.display = 'block';
     },
     
     clientToCursor: function(cX, cY){

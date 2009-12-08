@@ -2,3 +2,5 @@
 #canvas {background-color:#000;}
 #box3 {position:fixed; top:-100px; background:#fff;}
 #input_proxy {-moz-appearance:none; position:fixed; border:none; opacity:.9; background-color:-moz-field; color:-moz-fieldtext; padding:0; margin:0;}
+
+#selection {position:fixed; display:none; opacity:.6; padding:0; margin:0; background-color:Highlight; color:HighlightText;}

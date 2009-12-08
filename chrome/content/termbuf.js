@@ -395,5 +395,65 @@ TermBuf.prototype={
         }
         clearTimeout(this.timeout);
         this.timeout=null;
+    },
+    
+    getSelection: function(cursor) {
+      var col = cursor.col;
+      var row = cursor.row;
+      var line = this.lines[row];
+      var selection = {};
+      var splitter = null;
+      var chByte = 1;
+
+      if(line[col].isLeadByte || (col>0 && line[col-1].isLeadByte) ){ // DBCS, we should select DBCS text
+        if(!line[col].isLeadByte) col--;  // adjust cursor col, make selection start from leadByte of DBCS
+        splitter = /[\x00-\x7E]/;
+        chByte = 2;
+      }
+      else {
+        if( line[col].ch == ' ' )
+          return null;
+        else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
+          splitter = /\b|\s/;
+        else  // punctuation marks, select nearby punctuations
+          splitter = /\s|\w|[\u0080-\uffff]/;
+      }
+      var textL = this.getText(row, 0, col).split(splitter).pop();
+      var textR = this.getText(row, col).split(splitter).shift();
+
+      selection.text = textL + textR;
+      selection.rowStart = selection.rowEnd = row;
+      selection.colStart = col - textL.length * chByte;
+      selection.colEnd = col + textR.length * chByte;
+      return selection;
+    },
+    
+    getText: function(row, colStart, colEnd) {
+      var text = this.lines[row];
+      // always start from leadByte, and end at second-byte of DBCS.
+      // Note: this might change colStart and colEnd. But currently we don't return these changes.
+      if( colStart > 0 ){
+        if( !text[colStart].isLeadByte && text[colStart-1].isLeadByte ) colStart--;
+      }
+      else colStart = 0;
+      if( colEnd < this.cols ){
+        if( text[colEnd].isLeadByte ) colEnd++;
+      }
+      else colEnd = this.cols;
+
+      text = text.slice(colStart, colEnd);
+      var conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"].getService(Components.interfaces.nsIUTF8ConverterService);
+      return text.map( function(c, col, line){
+        if(!c.isLeadByte) {
+          if(col >=1 && line[col-1].isLeadByte) { // second byte of DBCS char
+            var prevC = line[col-1];
+            var b5 = prevC.ch + c.ch;
+            return conv.convertStringToUTF8(b5, 'big5',  true);
+          }
+          else
+            return c.ch;
+        }
+      }).join('');
     }
+
 }

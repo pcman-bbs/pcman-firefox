@@ -51,13 +51,14 @@
     </script>
     <vbox align="center" id='box1'>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
-                   onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);">
+                   onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);" ondblclick="pcman.dblclick(event);">
       </html:canvas>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
         <textbox id="input_proxy"/>
         <label value="&input_proxy_description.label;"/>
       </hbox>
+      <html:div id="selection" title=" "/>
     </vbox>
     
     <stringbundleset id="pcman-stringbundleset">
