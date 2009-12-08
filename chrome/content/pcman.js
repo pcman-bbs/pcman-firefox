@@ -80,6 +80,9 @@ PCMan.prototype={
 
     //click to open in a new tab
     click: function(event) {
+        this.view.selection = null;
+        this.view.updateSelection();
+
         var cursor = this.view.clientToCursor(event.pageX, event.pageY);
         if(!cursor) return;
         var col = cursor.col, row = cursor.row;
@@ -114,6 +117,14 @@ PCMan.prototype={
           }
         }
         this.view.canvas.style.cursor = "default";
+    },
+    //dblclick to select text
+    dblclick: function(event) {
+        var cursor = this.view.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        var col = cursor.col, row = cursor.row;
+        this.view.selection = this.buf.getSelection(cursor);
+        this.view.updateSelection();
     },
   
     textboxControllers: {
