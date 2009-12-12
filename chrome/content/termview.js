@@ -1,5 +1,7 @@
 // Terminal View
 
+var uriColor='#FF6600'; // color used to draw URI underline
+
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -85,6 +87,8 @@ TermView.prototype={
     update: function() {
         this.redraw(false);
     },
+
+    // theoratically, calling drawChar() in redraw() can reduce programming effort and make the code more concise and readable. However, due to poor performance of javascript, we need to prevent unnecessary function calls. If later benchmark showed that this won't affect performence, refactor can be done.
 
     drawChar: function(row, col, x, y) {
         var chw = this.chw;
@@ -271,11 +275,11 @@ TermView.prototype={
               if(uris){
                 for (var i=0 ; i<uris.length ; i++) {
                   ctx.save();
-                  ctx.strokeStyle = '#FF6600';
+                  ctx.strokeStyle = uriColor;
                   ctx.lineWidth = 2;
                   ctx.beginPath();
-                  ctx.lineTo( uris[i][0] * chw, y + chh );
-                  ctx.lineTo( uris[i][1] * chw, y + chh );
+                  ctx.lineTo( uris[i][0] * chw, y + chh - 1 );
+                  ctx.lineTo( uris[i][1] * chw, y + chh - 1 );
                   ctx.stroke();
                   ctx.restore();
                 }
@@ -492,8 +496,26 @@ TermView.prototype={
         else {
             if(this.buf) {
                 // dump(row + ', ' + col + '\n');
-                if(!this.buf.lines[row][col].needUpdate)
+                var line = this.buf.lines[row]; 
+                if(!line[col].needUpdate)
                     this.drawChar(row, col, this.cursorX, row * this.chh);
+                    if(line.uris) { // has URI in this line
+                        var n=line.uris.length;
+                        for(var i=0; i<n;++i) {
+                            var uri=line.uris[i];
+                            if(uri[0] <= col && uri[1] > col) { // the char is part of a URI
+                                // draw underline for URI.
+                                ctx.strokeStyle = uriColor;
+                                ctx.lineWidth = 2;
+                                ctx.beginPath();
+                                var y = (row + 1) * this.chh - 1;
+                                var x = col * this.chw;
+                                ctx.lineTo(x, y);
+                                ctx.lineTo(x + this.chw, y);
+                                ctx.stroke();
+                            }
+                        }
+                    }
             }
             else {
                 
@@ -530,7 +552,7 @@ TermView.prototype={
       box.style.left = ( this.canvas.offsetLeft + this.selection.colStart * this.chw ) + 'px';
       box.style.display = 'block';
     },
-    
+
     clientToCursor: function(cX, cY){
       var x = cX - this.canvas.offsetLeft;
       var y = cY - this.canvas.offsetTop;
