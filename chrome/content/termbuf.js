@@ -414,7 +414,7 @@ TermBuf.prototype={
         if( line[col].ch == ' ' )
           return null;
         else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
-          splitter = /\b|\s/;
+          splitter = /\s|\W|\b/;
         else  // punctuation marks, select nearby punctuations
           splitter = /\s|\w|[\u0080-\uffff]/;
       }

@@ -122,7 +122,6 @@ PCMan.prototype={
     dblclick: function(event) {
         var cursor = this.view.clientToCursor(event.pageX, event.pageY);
         if(!cursor) return;
-        var col = cursor.col, row = cursor.row;
         this.view.selection = this.buf.getSelection(cursor);
         this.view.updateSelection();
     },

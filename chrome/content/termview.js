@@ -540,10 +540,8 @@ TermView.prototype={
     
     updateSelection: function(){
       var box = document.getElementById('selection');
-      Components.utils.reportError(this.selection);
       if(!this.selection) {
         box.style.display = 'none';
-        Components.utils.reportError( box.style.display );
         return;
       }
       box.textContent = this.selection.text;
