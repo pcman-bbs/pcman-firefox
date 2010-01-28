@@ -548,6 +548,7 @@ TermView.prototype={
       box.style.font = this.chh + 'px monospace';
       box.style.top = ( this.canvas.offsetTop + this.selection.rowStart * this.chh ) + 'px';
       box.style.left = ( this.canvas.offsetLeft + this.selection.colStart * this.chw ) + 'px';
+      window.getSelection().selectAllChildren(box);
       box.style.display = 'block';
     },
 

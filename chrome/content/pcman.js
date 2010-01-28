@@ -22,7 +22,7 @@ PCMan.prototype={
             port=parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
     },
-    
+
     close: function() {
         this.conn.close();
     },
@@ -41,9 +41,16 @@ PCMan.prototype={
         alert(this.stringBundle.getString("alert_conn_close"));
         this.updateTabIcon('disconnect');
     },
-    
+
     copy: function(){
-        alert('Not yet supported');
+        var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                                    .getService(Components.interfaces.nsIClipboardHelper);
+        if(this.view.selection) {
+            clipboardHelper.copyString( this.view.selection.text );
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent('copy', true, true);
+            this.view.input.dispatchEvent(evt);
+        }
     },
 
     paste: function() {
@@ -64,14 +71,14 @@ PCMan.prototype={
             trans.getTransferData("text/unicode", data, len);
             if(data && data.value) {
                 var s=data.value.QueryInterface(Components.interfaces.nsISupportsString);
-                s = s.data.substring(0, len.value / 2);  
+                s = s.data.substring(0, len.value / 2);
                 s=s.replace(/\r\n/g, '\r');
                 s=s.replace(/\n/g, '\r');
                 this.conn.convSend(s, 'big5');
             }
         }
     },
-    
+
     selAll: function() {
         alert('Not yet supported');
     },
@@ -100,7 +107,7 @@ PCMan.prototype={
           }
         }
     },
-    //detect current location and change mouse cursor  
+    //detect current location and change mouse cursor
     mousemove: function(event) {
         var cursor = this.view.clientToCursor(event.pageX, event.pageY);
         if(!cursor) return;
@@ -125,7 +132,7 @@ PCMan.prototype={
         this.view.selection = this.buf.getSelection(cursor);
         this.view.updateSelection();
     },
-  
+
     textboxControllers: {
       supportsCommand: function(cmd){
         switch (cmd) {
