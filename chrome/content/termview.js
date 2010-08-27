@@ -501,10 +501,12 @@ TermView.prototype={
     },
 
     onMouseDown: function(event) {
-        var cursor = this.clientToCursor(event.pageX, event.pageY);
-        if(!cursor) return;
-        // FIXME: only handle left button
-        this.selection.selStart(false, cursor.col, cursor.row);
+        if(event.button == 0) { // left button
+            var cursor = this.clientToCursor(event.pageX, event.pageY);
+            if(!cursor) return;
+            // FIXME: only handle left button
+            this.selection.selStart(false, cursor.col, cursor.row);
+        }
     },
 
     onMouseMove: function(event) {
@@ -519,27 +521,45 @@ TermView.prototype={
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
         if (!uris) {
-          this.canvas.style.cursor = "default";
-          return;
+            this.canvas.style.cursor = "default";
+            return;
         }
         for (var i=0;i<uris.length;i++) {
-          if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-            this.canvas.style.cursor = "pointer";
-            return
-          }
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                this.canvas.style.cursor = "pointer";
+                return
+            }
         }
         this.canvas.style.cursor = "default";
     },
 
     onMouseUp: function(event) {
-        var cursor = this.clientToCursor(event.pageX, event.pageY);
-        if(!cursor) return;
-        if(this.selection.isSelecting)
-            this.selection.selEnd(cursor.col, cursor.row);
+        if(event.button == 0) { // left button
+            var cursor = this.clientToCursor(event.pageX, event.pageY);
+            if(!cursor) return;
+            if(this.selection.isSelecting)
+                this.selection.selEnd(cursor.col, cursor.row);
+        }
     },
 
     onClick: function(event) {
-
+        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+        if (!uris) return;
+        for (var i=0;i<uris.length;i++) {
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                var uri = "";
+                for (var j=uris[i][0];j<uris[i][1];j++)
+                    uri = uri + this.buf.lines[row][j].ch;
+                var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                            .getService(Components.interfaces.nsIWindowMediator);
+                var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
+                // gBrowser.selectedTab = gBrowser.addTab(uri);
+                gBrowser.addTab(uri, gBrowser.currentURI);
+            }
+        }
     },
 
     onDblClick: function(event) {
