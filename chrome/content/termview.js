@@ -1,19 +1,21 @@
 // Terminal View
 
 var uriColor='#FF6600'; // color used to draw URI underline
+var selectedStyle = 'rgba(49, 106, 197, 0.6)';
 
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.buf=null;
 
+    // text selection
+    this.selection = new TermSel(this);
+
     // Cursor
     this.cursorX=0;
     this.cursorY=0;
     this.cursorVisible=true; // false to hide the cursor
     this.cursorShow=false; // blinking state of cursor
-    
-    this.selection = null;
 
     this.input = document.getElementById('input_proxy');
 
@@ -88,7 +90,12 @@ TermView.prototype={
         this.redraw(false);
     },
 
-    // theoratically, calling drawChar() in redraw() can reduce programming effort and make the code more concise and readable. However, due to poor performance of javascript, we need to prevent unnecessary function calls. If later benchmark showed that this won't affect performence, refactor can be done.
+    drawSelRect: function(ctx, x, y, w, h) {
+        var tmp = ctx.fillStyle;
+        ctx.fillStyle = selectedStyle;
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = tmp;
+    },
 
     drawChar: function(row, col, x, y) {
         var chw = this.chw;
@@ -127,8 +134,8 @@ TermView.prototype={
                 // draw text
                 var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
                 var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
+                var chw2 = chw * 2;
                 if(u) { // can be converted to valid UTF-8
-                    var chw2 = chw * 2;
                     var fg2 = ch2.getFg(); // fg of second byte
                     if( fg == fg2 ) { // two bytes have the same fg
                         fillClipText(ctx, u, termColors[fg], chw2, x, y, chw2, chh);
@@ -140,6 +147,10 @@ TermView.prototype={
                         fillClipText(ctx, u, termColors[fg2], chw2, x + chw, y, chw, chh);
                     }
                 }
+                // draw selected color
+                if(ch.isSelected)
+                    this.drawSelRect(ctx, x, y, chw2, chh);
+
                 line[col].needUpdate=false;
             }
         }
@@ -149,6 +160,10 @@ TermView.prototype={
             // only draw visible chars to speed up
             if(ch.ch > ' ')
                 fillClipText(ctx, ch.ch, termColors[fg], chw, x, y, chw, chh);
+
+            // draw selected color
+            if(ch.isSelected)
+                this.drawSelRect(ctx, x, y, chw, chh);
         }
         ctx.restore();
         ch.needUpdate=false;
@@ -182,6 +197,7 @@ TermView.prototype={
                     lineUpdated = true;
                     var fg = ch.getFg();
                     var bg = ch.getBg();
+
                     if(ch.isLeadByte) { // first byte of DBCS char
                         ++col;
                         if(col < cols) {
@@ -242,6 +258,10 @@ TermView.prototype={
                                     ctx.restore();
                                 }
                             }
+                            // draw selected color
+                            if(ch.isSelected)
+                                this.drawSelRect(ctx, x, y, chw * 2, chh);
+
                             x += chw;
                             line[col].needUpdate=false;
                         }
@@ -264,6 +284,10 @@ TermView.prototype={
                             ctx.fillText( ch.ch, x, y, chw );
                             ctx.restore();
                         }
+
+                        // draw selected color
+                        if(ch.isSelected)
+                            this.drawSelRect(ctx, x, y, chw, chh);
                     }
                     ch.needUpdate=false;
                 }
@@ -407,8 +431,6 @@ TermView.prototype={
         this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
-        
-        this.updateSelection();
     },
 
     // Cursor
@@ -537,30 +559,73 @@ TermView.prototype={
         ctx.putImageData(img, this.cursorX, this.cursorY);
         */
     },
-    
-    updateSelection: function(){
-      var box = document.getElementById('selection');
-      if(!this.selection) {
-        box.style.display = 'none';
-        return;
-      }
-      box.textContent = this.selection.text;
-      box.style.font = this.chh + 'px monospace';
-      box.style.top = ( this.canvas.offsetTop + this.selection.rowStart * this.chh ) + 'px';
-      box.style.left = ( this.canvas.offsetLeft + this.selection.colStart * this.chw ) + 'px';
-      window.getSelection().selectAllChildren(box);
-      box.style.display = 'block';
+
+    // convert mouse pointer position (x, y) to (col, row)
+    clientToCursor: function(cX, cY){
+        var x = cX - this.canvas.offsetLeft;
+        var y = cY - this.canvas.offsetTop;
+        var col = Math.floor(x / this.chw);
+        var row = Math.floor(y / this.chh);
+
+        if(col < 0)
+            col = 0;
+        else if(col >= this.buf.cols)
+            col = this.buf.cols - 1;
+
+        if(row < 0)
+            row = 0;
+        else if(row >= this.buf.rows)
+            row = this.buf.rows - 1;
+
+        // FIXME: we shouldn't select half of a DBCS character
+        return {col: col, row: row};
     },
 
-    clientToCursor: function(cX, cY){
-      var x = cX - this.canvas.offsetLeft;
-      var y = cY - this.canvas.offsetTop;
-      var col = Math.floor(x / this.chw);
-      var row = Math.floor(y / this.chh);
-      if(row < this.buf.rows){
-        return {col: col, row: row};
-      }
-      else  // client Y out of "rows" range (it's possible since we don't resize canvas height to fit chh*24)
-        return false;
+    onMouseDown: function(event) {
+        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        // FIXME: only handle left button
+        this.selection.selStart(false, cursor.col, cursor.row);
+    },
+
+    onMouseMove: function(event) {
+        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        if(this.selection.isSelecting)
+            this.selection.selUpdate(cursor.col, cursor.row);
+    },
+
+    onMouseUp: function(event) {
+        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        if(this.selection.isSelecting)
+            this.selection.selEnd(cursor.col, cursor.row);
+    },
+
+    onClick: function(event) {
+
+    },
+
+    onDblClick: function(event) {
+
+    },
+
+    updateSel: function() {
+        var col, row;
+        var cols = this.buf.cols;
+        var rows = this.buf.rows;
+        var lines = this.buf.lines;
+
+        for(row = 0; row < rows; ++row) {
+            for(col = 0; col < cols; ++col) {
+                var ch = lines[row][col];
+                var is_sel = this.selection.isCharSelected(col, row);
+                if(is_sel != ch.isSelected) {
+                    ch.isSelected = is_sel;
+                    ch.needUpdate = true;
+                }
+            }
+        }
+        this.redraw(false);
     }
 }

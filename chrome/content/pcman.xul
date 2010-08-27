@@ -15,6 +15,7 @@
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
@@ -51,7 +52,11 @@
     </script>
     <vbox align="center" id='box1'>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
-                   onclick="pcman.click(event);" onmousemove="pcman.mousemove(event);" ondblclick="pcman.dblclick(event);">
+        onmousedown="pcman.view.onMouseDown(event);"
+        onmousemove="pcman.view.onMouseMove(event);"
+        onmouseup="pcman.view.onMouseUp(event);"
+        onclick="pcman.view.onClick(event);"
+        ondblclick="pcman.view.onDblClick(event);">
       </html:canvas>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
