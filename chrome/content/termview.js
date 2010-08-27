@@ -98,10 +98,16 @@ TermView.prototype={
     },
 
     drawChar: function(row, col, x, y) {
+        var line = this.buf.lines[row];
+        if(line){
+            var ch = line[col];
+            tihs.doDrawChar(line, ch, row, col, x, y);
+        }
+    },
+
+    doDrawChar: function(line, ch, row, col, x, y) {
         var chw = this.chw;
         var chh = this.chh;
-        var line=this.buf.lines[row];
-        var ch = line[col];
         if(!ch.isLeadByte) {
             // if this is second byte of DBCS char
             if(col >=1 && line[col-1].isLeadByte) {
@@ -188,111 +194,23 @@ TermView.prototype={
             var line = lines[row];
             var lineUpdated = false;
             var chw = this.chw;
-            for(var col=0; col<cols; ++col) {
+            for(var col=0; col<cols;) {
                 var ch = line[col];
-                // FIXME: clipping regions are used extensively
-                // when drawing text. This could hurt the performance.
-                // However, this is required due to limitations of Firefox.
                 if(force || ch.needUpdate) {
+                    this.doDrawChar(line, ch, row, col, x, y);
                     lineUpdated = true;
-                    var fg = ch.getFg();
-                    var bg = ch.getBg();
-
-                    if(ch.isLeadByte) { // first byte of DBCS char
-                        ++col;
-                        if(col < cols) {
-                            var ch2 = line[col]; // second byte of DBCS char
-                            // draw background color
-                            if(bg != old_color) {
-                                ctx.fillStyle=termColors[bg];
-                                old_color=bg;
-                            }
-                            var bg2 = ch2.getBg();
-                            if(bg = bg2) { // two bytes has the same bg
-                                ctx.fillRect(x, y, chw * 2, chh);
-                            }
-                            else { // two bytes has different bg
-                                ctx.fillRect(x, y, chw, chh); // lead byte
-                                ctx.fillStyle=termColors[bg2];
-                                old_color=bg2;
-                                ctx.fillRect(x + chw, y, chw, chh); // second byte
-                            }
-
-                            // draw text
-                            var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                            var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
-                            if(u) { // can be converted to valid UTF-8
-                                var chw2 = chw * 2;
-                                var fg2 = ch2.getFg(); // fg of second byte
-                                if( fg == fg2 ) { // two bytes have the same fg
-                                    ctx.save();
-                                    ctx.beginPath();
-                                    ctx.rect(x, y, chw2, chh);
-                                    ctx.closePath();
-                                    ctx.clip();
-                                    ctx.fillStyle=termColors[fg];
-                                    ctx.fillText(u, x, y, chw2);
-                                    ctx.restore();
-                                }
-                                else {
-                                    // draw first half
-                                    // set clip region
-                                    ctx.save();
-                                    ctx.beginPath();
-                                    ctx.rect(x, y, chw, chh);
-                                    ctx.closePath();
-                                    ctx.clip();
-                                    ctx.fillStyle=termColors[fg];
-                                    ctx.fillText(u, x, y, chw2);
-                                    ctx.restore();
-
-                                    // draw second half
-                                    // set clip region
-                                    ctx.save();
-                                    ctx.beginPath();
-                                    ctx.rect(x + chw, y, chw, chh);
-                                    ctx.closePath();
-                                    ctx.clip();
-                                    ctx.fillStyle=termColors[fg2];
-                                    ctx.fillText(u, x, y, chw2);
-                                    ctx.restore();
-                                }
-                            }
-                            // draw selected color
-                            if(ch.isSelected)
-                                this.drawSelRect(ctx, x, y, chw * 2, chh);
-
-                            x += chw;
-                            line[col].needUpdate=false;
-                        }
-                    }
-                    else {
-                        if(bg != old_color) {
-                            ctx.fillStyle=termColors[bg];
-                            old_color=bg;
-                        }
-                        ctx.fillRect(x, y, chw, chh);
-                        // only draw visible chars to speed up
-                        if(ch.ch > ' ') {
-                            ctx.save();
-                            ctx.fillStyle=termColors[fg];
-                            // set clip region
-                            ctx.beginPath();
-                            ctx.rect(x, y, chw, chh);
-                            ctx.closePath();
-                            ctx.clip();
-                            ctx.fillText( ch.ch, x, y, chw );
-                            ctx.restore();
-                        }
-
-                        // draw selected color
-                        if(ch.isSelected)
-                            this.drawSelRect(ctx, x, y, chw, chh);
-                    }
-                    ch.needUpdate=false;
                 }
-                x += chw;
+
+                if(ch.isLeadByte) {
+                    col += 2;
+                    x += chw * 2;
+                }
+                else {
+                    ++col;
+                    x += chw;
+                }
             }
+
             // draw underline for links
             if(lineUpdated){
               var uris = line.uris;
@@ -518,9 +436,10 @@ TermView.prototype={
         else {
             if(this.buf) {
                 // dump(row + ', ' + col + '\n');
-                var line = this.buf.lines[row]; 
-                if(!line[col].needUpdate)
-                    this.drawChar(row, col, this.cursorX, row * this.chh);
+                var line = this.buf.lines[row];
+                var ch = line[col];
+                if(!ch.needUpdate)
+                    this.doDrawChar(line, ch, row, col, this.cursorX, row * this.chh);
                     if(line.uris) { // has URI in this line
                         var n=line.uris.length;
                         for(var i=0; i<n;++i) {
@@ -591,8 +510,25 @@ TermView.prototype={
     onMouseMove: function(event) {
         var cursor = this.clientToCursor(event.pageX, event.pageY);
         if(!cursor) return;
+
+        // handle text selection
         if(this.selection.isSelecting)
             this.selection.selUpdate(cursor.col, cursor.row);
+
+        // handle cursors for hyperlinks
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+        if (!uris) {
+          this.canvas.style.cursor = "default";
+          return;
+        }
+        for (var i=0;i<uris.length;i++) {
+          if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+            this.canvas.style.cursor = "pointer";
+            return
+          }
+        }
+        this.canvas.style.cursor = "default";
     },
 
     onMouseUp: function(event) {
@@ -607,7 +543,9 @@ TermView.prototype={
     },
 
     onDblClick: function(event) {
-
+        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        if(!cursor) return;
+        this.selection.selectWordAt(cursor.col, cursor.row);
     },
 
     updateSel: function() {

@@ -50,6 +50,7 @@ PCMan.prototype={
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
             this.view.input.dispatchEvent(evt);
+            this.view.selection.cancelSel(true);
         }
     },
 
@@ -80,7 +81,7 @@ PCMan.prototype={
     },
 
     selAll: function() {
-        alert('Not yet supported');
+        this.view.selection.selectAll();
     },
 
     //Here comes mouse events
@@ -106,33 +107,6 @@ PCMan.prototype={
             gBrowser.addTab(uri, gBrowser.currentURI);
           }
         }
-    },
-
-    //detect current location and change mouse cursor
-    mousemove: function(event) {
-        var cursor = this.view.clientToCursor(event.pageX, event.pageY);
-        if(!cursor) return;
-        var col = cursor.col, row = cursor.row;
-        var uris = this.buf.lines[row].uris;
-        if (!uris) {
-          this.view.canvas.style.cursor = "default";
-          return;
-        }
-        for (var i=0;i<uris.length;i++) {
-          if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-            this.view.canvas.style.cursor = "pointer";
-            return
-          }
-        }
-        this.view.canvas.style.cursor = "default";
-    },
-
-    //dblclick to select text
-    dblclick: function(event) {
-        var cursor = this.view.clientToCursor(event.pageX, event.pageY);
-        if(!cursor) return;
-        this.view.selection = this.buf.getSelection(cursor);
-        this.view.updateSelection();
     },
 
     textboxControllers: {
