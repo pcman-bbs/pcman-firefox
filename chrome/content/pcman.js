@@ -45,8 +45,8 @@ PCMan.prototype={
     copy: function(){
         var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                     .getService(Components.interfaces.nsIClipboardHelper);
-        if(this.view.selection) {
-            clipboardHelper.copyString( this.view.selection.text );
+        if(this.view.selection.hasSelection()) {
+            clipboardHelper.copyString( this.view.selection.getText() );
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
             this.view.input.dispatchEvent(evt);
@@ -107,6 +107,7 @@ PCMan.prototype={
           }
         }
     },
+
     //detect current location and change mouse cursor
     mousemove: function(event) {
         var cursor = this.view.clientToCursor(event.pageX, event.pageY);
@@ -125,6 +126,7 @@ PCMan.prototype={
         }
         this.view.canvas.style.cursor = "default";
     },
+
     //dblclick to select text
     dblclick: function(event) {
         var cursor = this.view.clientToCursor(event.pageX, event.pageY);

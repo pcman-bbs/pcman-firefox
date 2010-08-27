@@ -26,6 +26,7 @@ function TermChar(ch) {
     this.resetAttr();
     this.needUpdate=false;
     this.isLeadByte=false;
+    this.isSelected = false;
 }
 
 TermChar.prototype={
