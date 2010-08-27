@@ -397,39 +397,8 @@ TermBuf.prototype={
         clearTimeout(this.timeout);
         this.timeout=null;
     },
-    
-    getSelection: function(cursor) {
-      var col = cursor.col;
-      var row = cursor.row;
-      var line = this.lines[row];
-      var selection = {};
-      var splitter = null;
-      var chByte = 1;
 
-      if(line[col].isLeadByte || (col>0 && line[col-1].isLeadByte) ){ // DBCS, we should select DBCS text
-        if(!line[col].isLeadByte) col--;  // adjust cursor col, make selection start from leadByte of DBCS
-        splitter = /[\x00-\x7E]/;
-        chByte = 2;
-      }
-      else {
-        if( line[col].ch == ' ' )
-          return null;
-        else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
-          splitter = /\s|\W|\b/;
-        else  // punctuation marks, select nearby punctuations
-          splitter = /\s|\w|[\u0080-\uffff]/;
-      }
-      var textL = this.getText(row, 0, col).split(splitter).pop();
-      var textR = this.getText(row, col).split(splitter).shift();
-
-      selection.text = textL + textR;
-      selection.rowStart = selection.rowEnd = row;
-      selection.colStart = col - textL.length * chByte;
-      selection.colEnd = col + textR.length * chByte;
-      return selection;
-    },
-    
-    getText: function(row, colStart, colEnd) {
+    getRowText: function(row, colStart, colEnd) {
       var text = this.lines[row];
       // always start from leadByte, and end at second-byte of DBCS.
       // Note: this might change colStart and colEnd. But currently we don't return these changes.
@@ -456,5 +425,4 @@ TermBuf.prototype={
         }
       }).join('');
     }
-
 }

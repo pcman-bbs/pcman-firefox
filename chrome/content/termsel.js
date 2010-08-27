@@ -97,6 +97,43 @@ TermSel.prototype={
         return false;
     },
 
+    selectWordAt: function(col, row) {
+        var buf = this.view.buf;
+        var line = buf.lines[row];
+        var splitter = null;
+        var chByte = 1;
+
+        if(line[col].isLeadByte || (col>0 && line[col-1].isLeadByte) ){ // DBCS, we should select DBCS text
+            if(!line[col].isLeadByte)
+                col--;  // adjust cursor col, make selection start from leadByte of DBCS
+            splitter = /[\x00-\x7E]/;
+            chByte = 2;
+        }
+        else {
+            if( line[col].ch == ' ' )
+                return null;
+            else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
+                splitter = /\s|\W|\b/;
+            else  // punctuation marks, select nearby punctuations
+                splitter = /\s|\w|[\u0080-\uffff]/;
+        }
+
+        // FIXME: need an implementation of better performance.
+        var textL = buf.getRowText(row, 0, col).split(splitter).pop();
+        var textR = buf.getRowText(row, col).split(splitter).shift();
+
+        var colStart = col - textL.length * chByte;
+        var colEnd = col + textR.length * chByte;
+        this.selStart(false, colStart, row);
+        this.selEnd(colEnd, row);
+    },
+
+    selectAll: function() {
+        var buf = this.view.buf;
+        this.selStart(false, 0, 0);
+        this.selEnd(buf.cols - 1, buf.rows - 1);
+    },
+
     hasSelection: function() {
         return this.startRow != -1;
     },
@@ -111,21 +148,23 @@ TermSel.prototype={
         if(this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
             for(col = this.startCol; col <= this.endCol; ++col)
-                ret = ret + line[col].ch;
+                ret += line[col].ch;
         }
         else {
             var cols = buf.cols;
             var line = lines[this.startRow];
             for(col = this.startCol; col < cols; ++col)
-                ret = ret + line[col].ch;
+                ret += line[col].ch;
+            ret += '\r\n';
             for(row = this.startRow; row < this.endRow; ++row) {
                 line = lines[row];
                 for(col = 0; col < cols; ++col)
-                    ret = ret + line[col].ch;
+                    ret += line[col].ch;
+                ret += '\r\n';
             }
             line = lines[this.endRow];
             for(col = 0; col <= this.endCol; ++col)
-                ret = ret + line[col].ch;
+                ret += line[col].ch;
         }
         ret = this.view.conv.convertStringToUTF8(ret, 'big5',  true);
         return ret;
