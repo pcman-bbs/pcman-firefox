@@ -131,7 +131,7 @@ TermBuf.prototype={
                 this.tab();
                 break;
             default:
-                var ch2 = line[this.cur_x]; 
+                var ch2 = line[this.cur_x];
                 ch2.ch=ch;
                 ch2.copyAttr(this.attr);
                 ch2.needUpdate=true;
@@ -277,9 +277,9 @@ TermBuf.prototype={
     },
 
     del: function() {
-        
+
     },
-    
+
     eraseLine: function(param) {
         var line = this.lines[this.cur_y];
         var cols = this.cols;
@@ -377,6 +377,10 @@ TermBuf.prototype={
             }
             this.timeout = setTimeout(func, 40);
         }
+    },
+
+    isUpdateQueued: function() {
+        return this.timeout != null;
     },
 
     onTimeout: function() {
