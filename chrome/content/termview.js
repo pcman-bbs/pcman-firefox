@@ -458,13 +458,19 @@ TermView.prototype={
     },
 
     drawCursor: function(){
+        if(this.chh == 0 || this.chw == 0)
+            return;
+
         var ctx=this.ctx;
         var row = Math.floor(this.cursorY / this.chh);
         var col = Math.floor(this.cursorX / this.chw);
 
         if(this.cursorShow) {
             if(this.buf) {
-                var ch=this.buf.lines[row][col];
+                var line = this.buf.lines[row];
+                if(!line)
+                    return;
+                var ch=line[col];
                 var fg=ch.getFg();
                 ctx.save();
                 ctx.fillStyle=termColors[fg];
@@ -478,6 +484,8 @@ TermView.prototype={
         else {
             if(this.buf) {
                 var line = this.buf.lines[row];
+                if(!line)
+                    return;
                 var ch = line[col];
                 if(!ch.needUpdate)
                     this.doDrawChar(line, ch, row, col, this.cursorX, row * this.chh);
@@ -594,11 +602,7 @@ TermView.prototype={
                 var uri = "";
                 for (var j=uris[i][0];j<uris[i][1];j++)
                     uri = uri + this.buf.lines[row][j].ch;
-                var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                            .getService(Components.interfaces.nsIWindowMediator);
-                var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-                // gBrowser.selectedTab = gBrowser.addTab(uri);
-                gBrowser.addTab(uri, gBrowser.currentURI);
+                openURI(uri);
             }
         }
     },
