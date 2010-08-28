@@ -63,10 +63,10 @@ function TermView(canvas) {
     this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
 }
 
-function fillClipText(ctx, text, style, maxw, x, y, w, h){
+function fillClipText(ctx, text, style, x, y, maxw, clipx, clipy, clipw, cliph){
     ctx.save();
     ctx.beginPath();
-    ctx.rect(x, y, w, h);
+    ctx.rect(clipx, clipy, clipw, cliph);
     ctx.closePath();
     ctx.clip();
     ctx.fillStyle=style;
@@ -144,13 +144,13 @@ TermView.prototype={
                 if(u) { // can be converted to valid UTF-8
                     var fg2 = ch2.getFg(); // fg of second byte
                     if( fg == fg2 ) { // two bytes have the same fg
-                        fillClipText(ctx, u, termColors[fg], chw2, x, y, chw2, chh);
+                        fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
                     }
                     else {
                         // draw first half
-                        fillClipText(ctx, u, termColors[fg], chw2, x, y, chw, chh);
+                        fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                         // draw second half
-                        fillClipText(ctx, u, termColors[fg2], chw2, x + chw, y, chw, chh);
+                        fillClipText(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
                     }
                 }
                 // draw selected color
@@ -165,7 +165,7 @@ TermView.prototype={
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
             if(ch.ch > ' ')
-                fillClipText(ctx, ch.ch, termColors[fg], chw, x, y, chw, chh);
+                fillClipText(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
 
             // draw selected color
             if(ch.isSelected)
@@ -318,7 +318,7 @@ TermView.prototype={
 
         var m=ctx.measureText('　'); //全形空白
         this.chw=Math.round(m.width/2);
-        
+
         // if overflow, resize canvas again
         var win = document.getElementById('topwin');
         var overflowX = (this.chw * 80) - win.clientWidth;
@@ -383,7 +383,7 @@ TermView.prototype={
         this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
         this.input.style.left = (this.canvas.offsetLeft + this.buf.cur_x * this.chw ) + 'px';
     },
-    
+
     onCompositionEnd: function(e) {
       this.input.style.top = '-100px';
     },
@@ -430,7 +430,7 @@ TermView.prototype={
                 ctx.restore();
             }
             else {
-                
+
             }
         }
         else {
@@ -459,7 +459,7 @@ TermView.prototype={
                     }
             }
             else {
-                
+
             }
         }
         /*
