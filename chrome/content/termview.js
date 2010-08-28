@@ -461,6 +461,7 @@ TermView.prototype={
         var ctx=this.ctx;
         var row = Math.floor(this.cursorY / this.chh);
         var col = Math.floor(this.cursorX / this.chw);
+
         if(this.cursorShow) {
             if(this.buf) {
                 var ch=this.buf.lines[row][col];
@@ -476,7 +477,6 @@ TermView.prototype={
         }
         else {
             if(this.buf) {
-                // dump(row + ', ' + col + '\n');
                 var line = this.buf.lines[row];
                 var ch = line[col];
                 if(!ch.needUpdate)
@@ -521,7 +521,7 @@ TermView.prototype={
     },
 
     // convert mouse pointer position (x, y) to (col, row)
-    clientToCursor: function(cX, cY){
+    mouseToColRow: function(cX, cY){
         var x = cX - this.canvas.offsetLeft;
         var y = cY - this.canvas.offsetTop;
         var col = Math.floor(x / this.chw);
@@ -529,8 +529,8 @@ TermView.prototype={
 
         if(col < 0)
             col = 0;
-        else if(col >= this.buf.cols)
-            col = this.buf.cols - 1;
+        else if(col > this.buf.cols)
+            col = this.buf.cols;
 
         if(row < 0)
             row = 0;
@@ -543,7 +543,7 @@ TermView.prototype={
 
     onMouseDown: function(event) {
         if(event.button == 0) { // left button
-            var cursor = this.clientToCursor(event.pageX, event.pageY);
+            var cursor = this.mouseToColRow(event.pageX, event.pageY);
             if(!cursor) return;
             // FIXME: only handle left button
             this.selection.selStart(false, cursor.col, cursor.row);
@@ -551,7 +551,7 @@ TermView.prototype={
     },
 
     onMouseMove: function(event) {
-        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
 
         // handle text selection
@@ -576,7 +576,7 @@ TermView.prototype={
 
     onMouseUp: function(event) {
         if(event.button == 0) { // left button
-            var cursor = this.clientToCursor(event.pageX, event.pageY);
+            var cursor = this.mouseToColRow(event.pageX, event.pageY);
             if(!cursor) return;
             if(this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
@@ -584,7 +584,7 @@ TermView.prototype={
     },
 
     onClick: function(event) {
-        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
@@ -604,7 +604,7 @@ TermView.prototype={
     },
 
     onDblClick: function(event) {
-        var cursor = this.clientToCursor(event.pageX, event.pageY);
+        var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
         this.selection.selectWordAt(cursor.col, cursor.row);
     },
