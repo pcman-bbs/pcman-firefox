@@ -27,9 +27,9 @@
         pcman=new PCMan();
         pcman.connect(url);
         // Fetch title from bookmarks. XXX: Places API can be slow!
-        var browserutils = new BrowserUtils(); 
+        var browserutils = new BrowserUtils();
         document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
-        
+
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
@@ -50,13 +50,13 @@
         // rc=document.getElementById('topwin').getBoundingClientRect();
     }
     </script>
-    <vbox align="center" id='box1'>
-      <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" "
+    <vbox align="center" id='box1'
         onmousedown="pcman.view.onMouseDown(event);"
         onmousemove="pcman.view.onMouseMove(event);"
         onmouseup="pcman.view.onMouseUp(event);"
         onclick="pcman.view.onClick(event);"
         ondblclick="pcman.view.onDblClick(event);">
+      <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" ">
       </html:canvas>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
@@ -65,7 +65,7 @@
       </hbox>
       <html:div id="selection" title=" "/>
     </vbox>
-    
+
     <stringbundleset id="pcman-stringbundleset">
       <stringbundle id="pcman-string-bundle" src="chrome://pcmanfx2/locale/pcman.properties"/>
     </stringbundleset>

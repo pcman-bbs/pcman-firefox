@@ -109,7 +109,7 @@ TermView.prototype={
         var chw = this.chw;
         var chh = this.chh;
         if(!ch.isLeadByte) {
-            // if this is second byte of DBCS char
+            // if this is second byte of DBCS char, draw the first byte together.
             if(col >=1 && line[col-1].isLeadByte) {
                 --col;
                 x -= chw;
@@ -138,21 +138,40 @@ TermView.prototype={
                     ctx.fillRect(x + chw, y, chw, chh); // second byte
                 }
                 // draw text
-                var b5=ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                var u=this.conv.convertStringToUTF8(b5, 'big5',  true);
                 var chw2 = chw * 2;
-                if(u) { // can be converted to valid UTF-8
-                    var fg2 = ch2.getFg(); // fg of second byte
-                    if( fg == fg2 ) { // two bytes have the same fg
-                        fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
-                    }
-                    else {
-                        // draw first half
-                        fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
-                        // draw second half
-                        fillClipText(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                // blinking text needs to be hidden sometimes
+                var visible1 = (!ch.blink || this.blinkShow); // ch1 is visible
+                var visible2 = (!ch2.blink || this.blinkShow); // ch2 is visible
+                // don't draw hidden text
+                if(visible1 || visible2) { // at least one of the two bytes should be visible
+                    var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
+                    var u = this.conv.convertStringToUTF8(b5, 'big5',  true); // UTF-8
+
+                    if(u) { // ch can be converted to valid UTF-8
+                        var fg2 = ch2.getFg(); // fg of second byte
+                        if( fg == fg2 ) { // two bytes have the same fg
+                            if(visible1) { // first half is visible
+                                if(visible2) // two bytes are all visible
+                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
+                                else // only the first half is visible
+                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                            }
+                            else if(visible2) { // only the second half is visible
+                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
+                            }
+                        }
+                        else {
+                            // draw first half
+                            if(visible1)
+                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                            // draw second half
+                            if(visible2)
+                                fillClipText(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                        }
                     }
                 }
+                // TODO: draw underline
+
                 // draw selected color
                 if(ch.isSelected)
                     this.drawSelRect(ctx, x, y, chw2, chh);
@@ -164,8 +183,10 @@ TermView.prototype={
             ctx.fillStyle=termColors[bg];
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
-            if(ch.ch > ' ')
+            if(ch.ch > ' ' && (!ch.blink || this.blinkShow))
                 fillClipText(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
+
+            // TODO: draw underline
 
             // draw selected color
             if(ch.isSelected)
@@ -185,7 +206,6 @@ TermView.prototype={
         var ctx = this.ctx;
 
         var lines = this.buf.lines;
-        var old_color = -1;
 
         for(var row=0; row<rows; ++row) {
             var chh = this.chh;
@@ -389,9 +409,31 @@ TermView.prototype={
     },
 
     onBlink: function(){
-        // dump('blink\n');
         this.blinkShow=!this.blinkShow;
-        // FIXME: draw blinking characters
+        var buf = this.buf;
+
+        // FIXME: this should be done in more cleaner way
+        if(!buf.isUpdateQueued()) { // update of the screen is not queued by TermBuf
+            var col, cols=buf.cols;
+            var row, rows=buf.rows;
+            var lines = buf.lines;
+
+            // FIXME: draw blinking characters
+            for(row = 0; row < rows; ++row) {
+                var line = lines[row];
+                for(col = 0; col < cols; ++col) {
+                    var ch = line[col];
+                    if(ch.blink)
+                        ch.needUpdate = true;
+                    // two bytes of DBCS chars need to be updated together
+                    if(ch.isLeadByte) {
+                        ++col;
+                        line[col].needUpdate = true;
+                    }
+                }
+            }
+            this.redraw(false);
+        }
 
         if(this.cursorVisible){
             this.cursorShow=!this.cursorShow;
@@ -417,7 +459,6 @@ TermView.prototype={
 
     drawCursor: function(){
         var ctx=this.ctx;
-        // dump('drawCursor\n');
         var row = Math.floor(this.cursorY / this.chh);
         var col = Math.floor(this.cursorX / this.chw);
         if(this.cursorShow) {
