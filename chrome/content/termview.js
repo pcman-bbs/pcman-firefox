@@ -610,6 +610,9 @@ TermView.prototype={
     },
 
     updateSel: function() {
+        if(this.buf.isUpdateQueued())
+            return;
+
         var col, row;
         var cols = this.buf.cols;
         var rows = this.buf.rows;
