@@ -11,15 +11,17 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     pack="center"
     context="popup-menu"
+    oncontextmenu="prepare_popup(event);"
     >
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/></box>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/searchmenu.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {
@@ -29,7 +31,6 @@
         // Fetch title from bookmarks. XXX: Places API can be slow!
         var browserutils = new BrowserUtils();
         document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
-
         document.getElementById('input_proxy').focus();
         document.onfocus="document.getElementById('input_proxy').focus();";
         resize();
@@ -48,6 +49,11 @@
         canvas.height=win.clientHeight;
         pcman.view.onResize();
         // rc=document.getElementById('topwin').getBoundingClientRect();
+    }
+
+    function prepare_popup(event) {
+        var search_menu = document.getElementById('search_menu');
+        createSearchMenu(search_menu);
     }
     </script>
     <vbox align="center" id='box1'
@@ -75,7 +81,10 @@
         <menuitem label="&menu_copy.label;" oncommand="pcman.copy();"/>
         <menuitem label="&menu_paste.label;" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
-        <menuitem label="&menu_search.label;" oncommand="alert('Not implemenetd');"/>
+        <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->
+        <menu label="&menu_search.label;">
+          <menupopup id="search_menu" />
+        </menu>
       </menupopup>
     </popupset>
 
