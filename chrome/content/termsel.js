@@ -1,5 +1,15 @@
 // Manage selected text of TermView
 
+function strStrip(s) {
+    var l = s.length;
+    var i = l - 1;
+    while(i >= 0 && s.charAt(i) == ' ' )
+        --i;
+    if(i >= -1 && i < l)
+        return s.substr(0, i + 1); 
+    return s;
+}
+
 function TermSel(view) {
     this.view = view;
     this.isSelecting = false;
@@ -166,26 +176,34 @@ TermSel.prototype={
         var lines = buf.lines;
         var row, col;
         var ret = '';
+        var tmp = '';
         if(this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
+            tmp = '';
             for(col = this.startCol; col <= this.endCol; ++col)
-                ret += line[col].ch;
+                tmp += line[col].ch;
+            ret += strStrip(tmp);
         }
         else {
             var cols = buf.cols;
             var line = lines[this.startRow];
             for(col = this.startCol; col < cols; ++col)
-                ret += line[col].ch;
-            ret += '\r\n';
-            for(row = this.startRow; row < this.endRow; ++row) {
+                tmp += line[col].ch;
+            ret += strStrip(tmp);
+            ret += '\n';
+            for(row = this.startRow + 1; row < this.endRow; ++row) {
                 line = lines[row];
+                tmp = '';
                 for(col = 0; col < cols; ++col)
-                    ret += line[col].ch;
-                ret += '\r\n';
+                    tmp += line[col].ch;
+                ret += strStrip(tmp);
+                ret += '\n';
             }
             line = lines[this.endRow];
+            tmp = '';
             for(col = 0; col <= this.endCol; ++col)
-                ret += line[col].ch;
+                tmp += line[col].ch;
+            ret += strStrip(tmp);
         }
         ret = this.view.conv.convertStringToUTF8(ret, 'big5',  true);
         return ret;
