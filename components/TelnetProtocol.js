@@ -20,6 +20,8 @@
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
  *   Doron Rosenberg <doronr@us.ibm.com>
+ *   Hong Jen Yee (PCMan) <pcman.tw@gmail.com> 
+ *   Hsiao-Ting Yu <sst.dreams@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,15 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Modified by Hong Jen Yee (PCMan) <pcman.tw@gmail.com> on 2009-11-23 to be 
-// used in PCMan firefox extension. 
-
 // Test protocol related
 const kSCHEME = "telnet";
-const kPROTOCOL_NAME = "Telnet Protocol";
-const kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
-const kPROTOCOL_CID = Components.ID("5FAF83FD-708D-45c0-988B-C7404FB25376");
-
 // Mozilla defined
 const kSIMPLEURI_CONTRACTID = "@mozilla.org/network/simple-uri;1";
 const kSTANDARDURL_CONTRACTID = "@mozilla.org/network/standard-url;1";
@@ -54,20 +49,19 @@ const nsIProtocolHandler = Components.interfaces.nsIProtocolHandler;
 const nsIURI = Components.interfaces.nsIURI;
 const nsIStandardURL     = Components.interfaces.nsIStandardURL;
 
+// Compatiblity notice: 1.9+ only
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function Protocol()
 {
 }
 
 Protocol.prototype =
 {
-  QueryInterface: function(iid)
-  {
-    if (!iid.equals(nsIProtocolHandler) &&
-        !iid.equals(nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-
+  classDescription: "Telnet protocol support for BBS",
+  classID: Components.ID("5FAF83FD-708D-45c0-988B-C7404FB25376"),
+  contractID: "@mozilla.org/network/protocol;1?name="+ kSCHEME,
+  QueryInterface: XPCOMUtils.generateQI([nsIProtocolHandler]),
   scheme: kSCHEME,
   defaultPort: 23,
   protocolFlags: nsIProtocolHandler.URI_NORELATIVE |
@@ -75,13 +69,11 @@ Protocol.prototype =
                  nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
                  nsIProtocolHandler.URI_NON_PERSISTABLE, // We can not save URL from telnet :D
   
-  allowPort: function(port, scheme)
-  {
+  allowPort: function(port, scheme) {
     return false;
   },
 
-  newURI: function(spec, charset, baseURI)
-  {
+  newURI: function(spec, charset, baseURI) {
     // for nsStandardURL test - http://groups.google.com.tw/group/pcmanfx/browse_thread/thread/ec757aa8c73b1432#
     // Parameters:
     // * aUrlType: URLTYPE_AUTHORITY will always convert telnet:, telnet:/, telnet://, telnet:/// to telnet://
@@ -95,8 +87,7 @@ Protocol.prototype =
     return cleanURI;
   },
 
-  newChannel: function(aURI)
-  {
+  newChannel: function(aURI) {
     /* create dummy nsIURI and nsIChannel instances */
     var ios = Components.classes[kIOSERVICE_CONTRACTID]
                         .getService(nsIIOService);
@@ -105,59 +96,11 @@ Protocol.prototype =
   },
 }
 
-var ProtocolFactory = new Object();
 
-ProtocolFactory.createInstance = function (outer, iid)
-{
-  if (outer != null)
-    throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-  if (!iid.equals(nsIProtocolHandler) &&
-      !iid.equals(nsISupports))
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-
-  return new Protocol();
+// Use NSGetFactory for Firefox 4 / Gecko 2
+// https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0
+if (XPCOMUtils.generateNSGetFactory) {
+  var NSGetFactory = XPCOMUtils.generateNSGetFactory([Protocol]);
+} else {
+  var NSGetModule = XPCOMUtils.generateNSGetModule([Protocol]);
 }
-
-
-/**
- * JS XPCOM component registration goop:
- *
- * We set ourselves up to observe the xpcom-startup category.  This provides
- * us with a starting point.
- */
-
-var ThisModule = new Object();
-
-ThisModule.registerSelf = function (compMgr, fileSpec, location, type)
-{
-  compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-  compMgr.registerFactoryLocation(kPROTOCOL_CID,
-                                  kPROTOCOL_NAME,
-                                  kPROTOCOL_CONTRACTID,
-                                  fileSpec, 
-                                  location, 
-                                  type);
-}
-
-ThisModule.getClassObject = function (compMgr, cid, iid)
-{
-  if (!cid.equals(kPROTOCOL_CID))
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-
-  if (!iid.equals(Components.interfaces.nsIFactory))
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
-  return ProtocolFactory;
-}
-
-ThisModule.canUnload = function (compMgr)
-{
-  return true;
-}
-
-function NSGetModule(compMgr, fileSpec)
-{
-  return ThisModule;
-}
-
