@@ -11,6 +11,8 @@ function PCMan() {
     this.parser=new AnsiParser(this.buf);
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
+    this.os = Components.classes["@mozilla.org/xre/app-info;1"]
+                 .getService(Components.interfaces.nsIXULRuntime).OS;
 }
 
 PCMan.prototype={
@@ -38,7 +40,7 @@ PCMan.prototype={
     },
 
     onClose: function(conn) {
-        alert(this.stringBundle.getString("alert_conn_close"));
+        /* alert(this.stringBundle.getString("alert_conn_close")); */
         this.updateTabIcon('disconnect');
     },
 
@@ -46,7 +48,10 @@ PCMan.prototype={
         var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                     .getService(Components.interfaces.nsIClipboardHelper);
         if(this.view.selection.hasSelection()) {
-            clipboardHelper.copyString( this.view.selection.getText() );
+            var text = this.view.selection.getText();
+            if(this.os == 'WINNT') // handle CRLF
+                text = text.replace(/\n/g, "\r\n");
+            clipboardHelper.copyString( text );
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
             this.view.input.dispatchEvent(evt);
