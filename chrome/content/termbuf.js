@@ -219,6 +219,7 @@ TermBuf.prototype={
                 line[col].needUpdate=true;
             }
             for(row=this.cur_y; row < rows; ++row) {
+                line=lines[row];
                 for(col=0; col< cols; ++col) {
                     line[col].copyFrom(this.attr);
                     line[col].needUpdate=true;
@@ -229,6 +230,7 @@ TermBuf.prototype={
             var line;
             var col, row;
             for(row=0; row < this.cur_y; ++row) {
+                line=lines[row];
                 for(col=0; col< cols; ++col) {
                     line[col].copyFrom(this.attr);
                     line[col].needUpdate=true;
