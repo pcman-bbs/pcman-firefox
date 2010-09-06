@@ -129,7 +129,7 @@ TermView.prototype={
                 // draw background color
                 ctx.fillStyle=termColors[bg];
                 var bg2 = ch2.getBg();
-                if(bg = bg2) { // two bytes has the same bg
+                if(bg == bg2) { // two bytes has the same bg
                     ctx.fillRect(x, y, chw * 2, chh);
                 }
                 else { // two bytes has different bg
@@ -428,7 +428,13 @@ TermView.prototype={
                     // two bytes of DBCS chars need to be updated together
                     if(ch.isLeadByte) {
                         ++col;
-                        line[col].needUpdate = true;
+                        if(ch.blink)
+                            line[col].needUpdate = true;
+                        // only second byte is blinking
+                        else if(line[col].blink) {
+                            ch.needUpdate = true;
+                            line[col].needUpdate = true;
+                        }
                     }
                 }
             }
@@ -464,6 +470,10 @@ TermView.prototype={
         var ctx=this.ctx;
         var row = Math.floor(this.cursorY / this.chh);
         var col = Math.floor(this.cursorX / this.chw);
+
+        // Some BBS allow the cursor outside the screen range
+        if(this.buf && this.buf.cols == col)
+            return;
 
         if(this.cursorShow) {
             if(this.buf) {
