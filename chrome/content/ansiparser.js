@@ -1,9 +1,10 @@
 // Parser for ANSI escape sequence
+// References: http://www.termsys.demon.co.uk/vtansi.htm
+//             http://www.it.usyd.edu.au/~tapted/ansi.html
 
 const STATE_TEXT=0;
 const STATE_ESC=1;
 const STATE_CSI=2;
-const STATE_C1=3;
 
 function AnsiParser(termbuf) {
     this.termbuf=termbuf;
@@ -103,9 +104,17 @@ AnsiParser.prototype={
                         term.eraseLine(params? params[0] : 0);
                         break;
                     case 'r': // FIXME: scroll range
+                        if(!params || params.length == 0) // reset
+                            term.setScrollRegion(0, term.rows - 1);
+                        else {
+                            if(params.length >= 2)
+                                term.setScrollRegion(params[0] - 1, prarms[1] - 1);
+                            else
+                                term.setScrollRegion(0, prarms[0] - 1);
+                        }
                         break;
                     default:
-                        dump('unknown CSI: ' + ch + '\n');
+                        dump('unknown CSI: ' + ch.charCodeAt(0) + '\n');
                     }
                     this.state=STATE_TEXT;
                     this.esc = '';
@@ -113,17 +122,28 @@ AnsiParser.prototype={
                 else
                     this.esc += ch;
                 break;
-            case STATE_C1:
-                this.esc += ch;
-                dump('C1 CONTROL CHAR IS FOUND' + this.esc + '\n');
-                this.esc='';
-                this.state=STATE_TEXT;
-                break;
             case STATE_ESC:
-                if(ch == '[')
+                if(ch == '[') /* CSI */
                     this.state=STATE_CSI;
-                else
-                    this.state=STATE_C1;
+                else {
+                    // This is a C1 control character
+                    var code = ch.charCodeAt(0);
+                    if(code >= 0x40 && code <= 0x5f) { // @ ~ _
+                        switch(ch) {
+                            case 'D': // scroll up
+                                term.scroll(false, 1)
+                                break;
+                            case 'M':// scroll down
+                                term.scroll(true, 1);
+                                break;
+                            default:
+                                dump("C1 control char ESC " + ch + "is not handled\n");
+                                break;
+                        };
+                    }
+                    this.esc='';
+                    this.state=STATE_TEXT;
+                }
                 break;
             }
         }
