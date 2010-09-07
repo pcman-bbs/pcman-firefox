@@ -205,8 +205,21 @@ Conn.prototype={
     },
 
     convSend: function(unicode_str, charset) {
-        this.oconv.charset=charset;
-        var s = this.oconv.ConvertFromUnicode(unicode_str);
+        // supports UAO
+        var s;
+        // when converting unicode to big5, use UAO.
+        if(charset.toLowerCase() == 'big5') {
+            if(!this.uaoConvLoaded) {
+                Components.utils.import("resource://pcmanfx2/uao.js");
+                this.uaoConvLoaded = true;
+            }
+            s = uaoConv.u2b(unicode_str);
+        }
+        else
+        {
+            this.oconv.charset=charset;
+            s = this.oconv.ConvertFromUnicode(unicode_str);
+        }
         if(s)
             this.send(s);
     }
