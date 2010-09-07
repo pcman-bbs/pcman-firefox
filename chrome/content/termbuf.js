@@ -62,14 +62,21 @@ TermChar.prototype={
 }
 
 function TermBuf(cols, rows) {
+    this.view=null;
+    // numbers of columns and rows
     this.cols=cols;
     this.rows=rows;
-    this.view=null;
-    this.cur_x=0;
-    this.cur_y=0;
+    // curcor position
+    this.curX=0;
+    this.curY=0;
+    // scroll region
+    this.top = 0;
+    this.bottom = rows - 1;
+    // default chracter attribute
     this.attr=new TermChar(' ');
     this.changed=false;
     this.posChanged=false;
+    // the buffer
     this.lines=new Array(rows);
     while(--rows >= 0) {
         var line=new Array(cols);
@@ -96,7 +103,7 @@ TermBuf.prototype={
         var rows=this.rows;
         var lines=this.lines;
         var n=str.length;
-        var line = lines[this.cur_y];
+        var line = lines[this.curY];
         for(var i=0;i<n;++i) {
             var ch=str[i];
             switch(ch) {
@@ -111,7 +118,7 @@ TermBuf.prototype={
                 continue;
             case '\n':
                 this.lineFeed();
-                line = lines[this.cur_y];
+                line = lines[this.curY];
                 continue;
             case '\0':
                 continue;
@@ -119,11 +126,11 @@ TermBuf.prototype={
             if( ch < ' ')
                 dump('Unhandled invisible char' + ch.charCodeAt(0)+ '\n');
 
-            if(this.cur_x >= cols) {
+            if(this.curX >= cols) {
                 // next line
                 this.lineFeed();
-                this.cur_x=0;
-                line = lines[this.cur_y];
+                this.curX=0;
+                line = lines[this.curY];
                 this.posChanged=true;
             }
             switch(ch) {
@@ -131,11 +138,11 @@ TermBuf.prototype={
                 this.tab();
                 break;
             default:
-                var ch2 = line[this.cur_x];
+                var ch2 = line[this.curX];
                 ch2.ch=ch;
                 ch2.copyAttr(this.attr);
                 ch2.needUpdate=true;
-                ++this.cur_x;
+                ++this.curX;
                 this.changed=true;
                 this.posChanged=true;
             }
@@ -212,13 +219,13 @@ TermBuf.prototype={
 
         switch(param) {
         case 0:
-            var line = lines[this.cur_y];
+            var line = lines[this.curY];
             var col, row;
-            for(col=this.cur_x; col< cols; ++col) {
+            for(col=this.curX; col< cols; ++col) {
                 line[col].copyFrom(this.attr);
                 line[col].needUpdate=true;
             }
-            for(row=this.cur_y; row < rows; ++row) {
+            for(row=this.curY; row < rows; ++row) {
                 line=lines[row];
                 for(col=0; col< cols; ++col) {
                     line[col].copyFrom(this.attr);
@@ -229,15 +236,15 @@ TermBuf.prototype={
         case 1:
             var line;
             var col, row;
-            for(row=0; row < this.cur_y; ++row) {
+            for(row=0; row < this.curY; ++row) {
                 line=lines[row];
                 for(col=0; col< cols; ++col) {
                     line[col].copyFrom(this.attr);
                     line[col].needUpdate=true;
                 }
             }
-            line = lines[this.cur_y];
-            for(col=0; col< this.cur_x; ++col) {
+            line = lines[this.curY];
+            for(col=0; col< this.curX; ++col) {
                 line[col].copyFrom(this.attr);
                 line[col].needUpdate=true;
             }
@@ -259,17 +266,17 @@ TermBuf.prototype={
     },
 
     back: function() {
-        if(this.cur_x>0) {
-            --this.cur_x;
+        if(this.curX>0) {
+            --this.curX;
             this.posChanged=true;
         }
     },
 
     tab: function() {
-        var mod = this.cur_x % 4;
-        this.cur_x += (this.cur_x - mod)/4 + 4;
-        if(this.cur_x >= this.cols) {
-            this.cur_x = this.cols-1;
+        var mod = this.curX % 4;
+        this.curX += (this.curX - mod)/4 + 4;
+        if(this.curX >= this.cols) {
+            this.curX = this.cols-1;
             this.posChanged=true;
         }
     },
@@ -283,18 +290,18 @@ TermBuf.prototype={
     },
 
     eraseLine: function(param) {
-        var line = this.lines[this.cur_y];
+        var line = this.lines[this.curY];
         var cols = this.cols;
         switch(param) {
-        case 0: // erase to rigth
-            for(var col=this.cur_x;col < cols;++col) {
+        case 0: // erase to right
+            for(var col=this.curX;col < cols;++col) {
                 line[col].copyFrom(this.attr);
                 line[col].needUpdate=true;
             }
             break;
         case 1: //erase to left
-            var cur_x = this.cur_x;
-            for(var col=0;col < cur_x;++col) {
+            var curX = this.curX;
+            for(var col=0;col < curX;++col) {
                 line[col].copyFrom(this.attr);
                 line[col].needUpdate=true;
             }
@@ -313,8 +320,20 @@ TermBuf.prototype={
     },
 
     scroll: function(up, n) {
-        if(n>=this.rows) // scroll more than 1 page = clear
-            this.clear(2)
+        // scroll more than 1 page = clear
+        if( n > (this.bottom - this.top) ) {
+            if(this.top == 0 && this.bottom == this.rows -1)
+                this.clear(2)
+            else {
+                var lines=this.lines;
+                var bottom = this.bottom;
+                for(var row = this.top; row <= bottom; ++row) {
+                    var line = lines[row];
+                    for(var col=0; col < cols;++col)
+                        line[col].copyFrom(this.attr);
+                }
+            }
+        }
         else {
             var lines=this.lines;
             var rows=this.rows;
@@ -322,23 +341,25 @@ TermBuf.prototype={
 
             if(up) { // move lines down
                 while(--n >= 0) {
-                    var line=lines.pop();
-                    lines.unshift(line);
+                    var line = lines[this.bottom];
+                    lines.splice(this.bottom, 1); // remove the last line
+                    lines.splice(this.top, 0, line); // insert it to top
                     for(var col=0; col < cols;++col)
                         line[col].copyFrom(this.attr);
                 }
             }
             else { // move lines up
                 while(--n >= 0) {
-                    var line=lines.shift();
-                    lines.push(line);
-                    for(var col=0; col < cols;++col) // clear the line
+                    var line = lines[this.top];
+                    lines.splice(this.top, 1); // remove the first line
+                    lines.splice(this.bottom, 0, line); // insert it to bottom
+                    for(var col=0; col < cols;++col)
                         line[col].copyFrom(this.attr);
                 }
             }
 
-            // update the whole screen
-            for(var row=0;row<rows;++row) {
+            // update the whole scroll region
+            for(var row=this.top; row <= this.bottom;++row) {
                 var line=lines[row];
                 for(var col=0;col<cols;++col) {
                     line[col].needUpdate=true;
@@ -351,24 +372,33 @@ TermBuf.prototype={
 
     gotoPos: function(x,y) {
         // dump('gotoPos: ' + x + ', ' + y + '\n');
-        this.cur_x = x;
-        this.cur_y = y;
+        this.curX = x;
+        this.curY = y;
         this.posChanged=true;
     },
 
     carriageReturn: function() {
-        this.cur_x = 0;
+        this.curX = 0;
         this.posChanged=true;
     },
 
     lineFeed: function() {
-        if(this.cur_y < (this.rows-1)) {
-            ++this.cur_y;
+        if(this.curY < this.bottom) {
+            ++this.curY;
             this.posChanged=true;
         }
-        else { // at bottom of screen
+        else { // at bottom of screen or scroll region
             this.scroll(false, 1);
         }
+    },
+
+    setScrollRegion : function(top, bottom) {
+        if(top < 0)
+            top = 0;
+        if(bottom >= this.rows )
+            bottom = this.rows - 1;
+        this.top = top;
+        this.bottom = bottom;
     },
 
     queueUpdate: function() {
