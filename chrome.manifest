@@ -7,3 +7,5 @@ style chrome://browser/content/browser.xul chrome://pcmanfx2/content/bindings.cs
 
 component {5FAF83FD-708D-45c0-988B-C7404FB25376} components/TelnetProtocol.js
 contract @mozilla.org/network/protocol;1?name=telnet {5FAF83FD-708D-45c0-988B-C7404FB25376}
+
+resource pcmanfx2 modules/

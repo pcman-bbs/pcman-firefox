@@ -387,8 +387,8 @@ TermView.prototype={
         if(visible)
             this.hideCursor();
         if(this.buf) {
-            this.cursorX=this.buf.curY * this.chw;
-            this.cursorY=(this.buf.cur_y + 1)*this.chh - this.cursorH;
+            this.cursorX=this.buf.curX * this.chw;
+            this.cursorY=(this.buf.curY + 1)*this.chh - this.cursorH;
         }
         else {
             this.cursorX=0;
@@ -399,9 +399,9 @@ TermView.prototype={
     },
 
     onCompositionStart: function(e) {
-        var top = (this.buf.cur_y + 1) * this.chh;
+        var top = (this.buf.curY + 1) * this.chh;
         this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
-        this.input.style.left = (this.canvas.offsetLeft + this.buf.curY * this.chw ) + 'px';
+        this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
     },
 
     onCompositionEnd: function(e) {
