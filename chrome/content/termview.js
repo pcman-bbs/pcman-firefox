@@ -63,17 +63,6 @@ function TermView(canvas) {
     this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
 }
 
-function fillClipText(ctx, text, style, x, y, maxw, clipx, clipy, clipw, cliph){
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(clipx, clipy, clipw, cliph);
-    ctx.closePath();
-    ctx.clip();
-    ctx.fillStyle=style;
-    ctx.fillText(text, x, y, maxw);
-    ctx.restore();
-}
-
 TermView.prototype={
     conv: Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                                                 .getService(Components.interfaces.nsIUTF8ConverterService),
@@ -163,21 +152,21 @@ TermView.prototype={
                         if( fg == fg2 ) { // two bytes have the same fg
                             if(visible1) { // first half is visible
                                 if(visible2) // two bytes are all visible
-                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
+                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
                                 else // only the first half is visible
-                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             }
                             else if(visible2) { // only the second half is visible
-                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
                             }
                         }
                         else {
                             // draw first half
                             if(visible1)
-                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             // draw second half
                             if(visible2)
-                                fillClipText(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
                         }
                     }
                 }
@@ -195,7 +184,7 @@ TermView.prototype={
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
             if(ch.ch > ' ' && (!ch.blink || this.blinkShow))
-                fillClipText(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
+                drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
 
             // TODO: draw underline
 
@@ -533,21 +522,6 @@ TermView.prototype={
 
             }
         }
-        /*
-        // FIXME: this has very poor performance on Linux
-        var img=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
-        var src=img.data;
-        img=ctx.createImageData(this.cursorW, this.cursorH);
-        var px=img.data;
-        // invert the image
-        for(var i = 0, n = px.length; i < n; i += 4) {
-            px[i] = 255 - src[i];
-            px[i+1] = 255 - src[i+1];
-            px[i+2] = 255 - src[i+2];
-            px[i+3] = 255;
-        }
-        ctx.putImageData(img, this.cursorX, this.cursorY);
-        */
     },
 
     // convert mouse pointer position (x, y) to (col, row)
