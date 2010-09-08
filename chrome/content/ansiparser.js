@@ -1,6 +1,11 @@
 // Parser for ANSI escape sequence
 // References: http://www.termsys.demon.co.uk/vtansi.htm
 //             http://www.it.usyd.edu.au/~tapted/ansi.html
+//             http://wapedia.mobi/en/ANSI_X3.64
+//
+// Little part of the code is taken from BBSFox developed by
+// Ett Chung <ettoolong@hotmail.com>
+// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const STATE_TEXT=0;
 const STATE_ESC=1;
@@ -37,8 +42,6 @@ AnsiParser.prototype={
                 break;
             case STATE_CSI:
                 if( (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <='Z') ) {
-                    // if(ch != 'm')
-                    //    dump('CSI: ' + this.esc + ch + '\n');
                     var params=this.esc.split(';');
                     for(var j=0; j<params.length; ++j) {
                         if( params[j] )
@@ -47,21 +50,7 @@ AnsiParser.prototype={
                             params[j]=0;
                     }
                     switch(ch) {
-                    case 'J':
-                        term.clear(params ? params[0] : 0);
-                        break;
-                    case 'H':
-                    case 'f':
-                        if(params.length < 2)
-                            term.gotoPos(0, 0);
-                        else {
-                            if(params[0] > 0)
-                                --params[0];
-                            if(params[1] > 0)
-                                --params[1];
-                            term.gotoPos(params[1], params[0]);
-                        }
-                        break;
+                    // Most frequently used CSI
                     case 'm':
                         var attr=term.attr;
                         for(var n_params=params.length;n_params;--n_params){
@@ -100,9 +89,80 @@ AnsiParser.prototype={
                             }
                         }
                         break;
-                    case 'K':
-                        term.eraseLine(params? params[0] : 0);
+                    case 'H':
+                    case 'f':
+                        if(params.length < 2)
+                            term.gotoPos(0, 0);
+                        else {
+                            if(params[0] > 0)
+                                --params[0];
+                            if(params[1] > 0)
+                                --params[1];
+                            term.gotoPos(params[1], params[0]);
+                        }
                         break;
+
+                    case '@':
+                        term.insert(params[0]>0 ? params[0] : 1);
+                        break;
+                    case 'A':
+                        term.gotoPos(term.curX, term.curY - (params[0] ? params[0] : 1));
+                        break;
+                    case 'B':
+                        term.gotoPos(term.curX, term.curY + (params[0] ? params[0] : 1));
+                        break;
+                    case 'C':
+                        term.gotoPos(term.curX + (params[0] ? params[0] : 1), term.curY);
+                        break;
+                    case 'D':
+                        term.gotoPos(term.curX - (params[0] ? params[0] : 1), term.curY);
+                        break;
+                    case 'E':
+                        term.gotoPos(0, term.curY + (params[0] ? params[0] : 1));
+                        break;
+                    case 'F':
+                        term.gotoPos(0, term.curY - (params[0] ? params[0] : 1));
+                        break;
+                    case 'G':
+                        term.gotoPos(params[0] > 0 ? params[0] - 1 : 0, term.curY);
+                        break;
+                    // case 'H':
+                    case 'I':
+                        term.tab(params[0]>0 ? params[0] : 1);
+                        break;
+                    case 'J':
+                        term.clear(params ? params[0] : 0);
+                        break;
+                    case 'K':
+                        term.eraseLine(params ? params[0] : 0);
+                        break;
+                    case 'L':
+                        term.insertLine(params[0] > 0 ? params[0] : 1);
+                        break;
+                    case 'M':
+                        term.deleteLine(params[0] > 0 ? params[0] : 1);
+                        break;
+                    case 'P':
+                        term.del(params[0] > 0 ? params[0] : 1);
+                        break;
+                    case 'S':
+                        term.scroll(false, (params[0] > 0 ? params[0] : 1));
+                        break;
+                    case 'T':
+                        term.scroll(true, (params[0] > 0 ? params[0] : 1));
+                        break;
+                    case 'X':
+                        term.eraseChar(params[0] > 0 ? params[0] : 1);
+                        break;
+                    case 'Z':
+                        term.backTab(params[0] > 0 ? params[0] : 1);
+                        break;
+
+                    case 'd':
+                        term.gotoPos(term.curX, params[0]>0?params[0]-1:0);
+                        break;
+                    // case 'm':
+                    // this is the most frequently used. So it's moved to top.
                     case 'r': // FIXME: scroll range
                         if(!params || params.length == 0) // reset
                             term.setScrollRegion(0, term.rows - 1);
@@ -112,6 +172,12 @@ AnsiParser.prototype={
                             else
                                 term.setScrollRegion(0, prarms[0] - 1);
                         }
+                        break;
+                    case 's':
+                        term.saveCursor();
+                        break;
+                    case 'u':
+                        term.restoreCursor();
                         break;
                     default:
                         dump('unknown CSI: ' + ch.charCodeAt(0) + '\n');
@@ -135,6 +201,16 @@ AnsiParser.prototype={
                                 break;
                             case 'M':// scroll down
                                 term.scroll(true, 1);
+                                break;
+                            case 'E':
+                                term.lineFeed();
+                                term.carriageReturn();
+                                break;
+                            case '7':
+                                term.saveCursor();
+                                break;
+                            case '8':
+                                term.restoreCursor();
                                 break;
                             default:
                                 dump("C1 control char ESC " + ch + "is not handled\n");
