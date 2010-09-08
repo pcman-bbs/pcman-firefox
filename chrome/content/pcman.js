@@ -35,7 +35,8 @@ PCMan.prototype={
 
     onData: function(conn, data) {
         //alert('data('+data.length +') ' +data);
-        this.parser.feed(data);
+        this.parser.feed(data); // parse the received data
+        this.view.update(); // update the view
         //alert('end data');
     },
 
