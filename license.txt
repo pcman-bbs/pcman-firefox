@@ -12,8 +12,13 @@ The uao250-u2b.txt file in uao directory is provided by Unicode At On
 project (http://cpatch.org/unicode) and can be downloaded here:
 http://moztw.org/docs/big5/table/uao250-u2b.txt.
 
-The whole program is released under GNU GPL v2 license.
+chrome/content/ansiparser.js and chrome/content/termbuf.js contain
+some source code from BBSFox project written by:
+ * Ett Chung <ettoolong@hotmail.com>
+   https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
+
+The whole program is released under GNU GPL v2 license.
 
             GNU GENERAL PUBLIC LICENSE
                Version 2, June 1991

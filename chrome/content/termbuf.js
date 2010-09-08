@@ -1,4 +1,8 @@
 // Terminal Screen Buffer, displayed by TermView
+//
+// Little part of the code is taken from BBSFox developed by
+// Ett Chung <ettoolong@hotmail.com>
+// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const termColors=[
     // dark
@@ -72,8 +76,10 @@ function TermBuf(cols, rows) {
     // scroll region
     this.top = 0;
     this.bottom = rows - 1;
-    // default chracter attribute
+    // current character attribute
     this.attr=new TermChar(' ');
+    // default chracter attribute
+    this.newChar=new TermChar(' ');
     this.changed=false;
     this.posChanged=false;
     // the buffer
@@ -221,13 +227,13 @@ TermBuf.prototype={
             var line = lines[this.curY];
             var col, row;
             for(col=this.curX; col< cols; ++col) {
-                line[col].copyFrom(this.attr);
+                line[col].copyFrom(this.newChar);
                 line[col].needUpdate=true;
             }
             for(row=this.curY; row < rows; ++row) {
                 line=lines[row];
                 for(col=0; col< cols; ++col) {
-                    line[col].copyFrom(this.attr);
+                    line[col].copyFrom(this.newChar);
                     line[col].needUpdate=true;
                 }
             }
@@ -238,13 +244,13 @@ TermBuf.prototype={
             for(row=0; row < this.curY; ++row) {
                 line=lines[row];
                 for(col=0; col< cols; ++col) {
-                    line[col].copyFrom(this.attr);
+                    line[col].copyFrom(this.newChar);
                     line[col].needUpdate=true;
                 }
             }
             line = lines[this.curY];
             for(col=0; col< this.curX; ++col) {
-                line[col].copyFrom(this.attr);
+                line[col].copyFrom(this.newChar);
                 line[col].needUpdate=true;
             }
             break;
@@ -253,7 +259,7 @@ TermBuf.prototype={
                 var col=cols;
                 var line=lines[rows];
                 while(--col >= 0) {
-                    line[col].copyFrom(this.attr);
+                    line[col].copyFrom(this.newChar);
                     line[col].needUpdate=true;
                 }
             }
@@ -279,12 +285,80 @@ TermBuf.prototype={
         }
     },
 
-    insert: function() {
-
+    backTab: function(num) { // taken from BBSFox
+        var mod = this.curX % 4;
+        this.curX -= (mod>0 ? mod : 4);
+        if(num > 1)
+            this.curX -= 4 * (num-1);
+        if(this.curX < 0)
+            this.curX = 0;
+        this.posChanged=true;
     },
 
-    del: function() {
+    insert: function(num) { // taken from BBSFox
+        var line = this.lines[this.curY];
+        var cols = this.cols;
+        var curX = this.curX;
+        if(curX > 0 && line[curX-1].isLeadByte)
+            ++curX;
+        if(curX >= cols)
+            return;
+        if(curX + num >= cols) {
+            for(var col=curX; col<cols; ++col) {
+                line[col].copyFrom(this.newChar);
+                line[col].needUpdate=true;
+            }
+        }
+        else {
+            while(--num >= 0) {
+                var ch=line.pop();
+                line.splice(curX,0,ch);
+                ch.copyFrom(this.newChar);
+            }
+            for(var col=curX; col<cols; ++col)
+                line[col].needUpdate=true;
+        }
+        this.changed=true;
+    },
 
+    del: function(num) { // taken from BBSFox
+        var line = this.lines[this.curY];
+        var cols = this.cols;
+        var curX = this.curX;
+        if(curX>0 && line[curX-1].isLeadByte)
+            ++curX;
+        if(curX >= cols)
+            return;
+        if(curX + num >= cols) {
+            for(var col=curX; col<cols; ++col) {
+                line[col].copyFrom(this.newChar);
+                line[col].needUpdate=true;
+            }
+        }
+        else {
+            var n = cols-curX-num;
+            while(--n >= 0)
+                line.splice(curX,0,line.pop());
+            for(var col=cols-num; col<cols; ++col)
+                line[col].copyFrom(this.newChar);
+            for(var col=curX; col<cols; ++col)
+                line[col].needUpdate=true;
+        }
+        this.changed=true;
+    },
+
+    eraseChar: function(num) { // taken from BBSFox
+        var line = this.lines[this.curY];
+        var cols = this.cols;
+        var curX = this.curX;
+        if(curX>0 && line[curX-1].isLeadByte) ++curX;
+        if(curX == cols) return;
+        var n = (curX+param > cols) ? cols : curX + num;
+        for(var col=curX; col<n; ++col) {
+            line[col].copyFrom(this.newChar);
+            line[col].needUpdate=true;
+        }
+        this.changed=true;
     },
 
     eraseLine: function(param) {
@@ -293,26 +367,46 @@ TermBuf.prototype={
         switch(param) {
         case 0: // erase to right
             for(var col=this.curX;col < cols;++col) {
-                line[col].copyFrom(this.attr);
+                line[col].copyFrom(this.newChar);
                 line[col].needUpdate=true;
             }
             break;
         case 1: //erase to left
             var curX = this.curX;
             for(var col=0;col < curX;++col) {
-                line[col].copyFrom(this.attr);
+                line[col].copyFrom(this.newChar);
                 line[col].needUpdate=true;
             }
             break;
         case 2: //erase all
             for(var col=0;col < cols;++col) {
-                line[col].copyFrom(this.attr);
+                line[col].copyFrom(this.newChar);
                 line[col].needUpdate=true;
             }
             break;
         default:
             return;
         }
+        this.changed=true;
+    },
+
+    deleteLine: function(num) { // taken from BBSFox
+        var tmp = this.top;
+        this.top = this.curY;
+        this.scroll(false, num);
+        this.top = tmp;
+        this.changed=true;
+    },
+
+    insertLine: function(num) { // taken from BBSFox
+        var tmp = this.top;
+        if(this.curY == this.bottom)
+            this.scroll(false, 1); // FIXME: I don't think this is correct
+        else {
+            this.top = this.curY;
+            this.scroll(true, num);
+        }
+        this.top = tmp;
         this.changed=true;
     },
 
@@ -327,7 +421,7 @@ TermBuf.prototype={
                 for(var row = this.top; row <= bottom; ++row) {
                     var line = lines[row];
                     for(var col=0; col < cols;++col)
-                        line[col].copyFrom(this.attr);
+                        line[col].copyFrom(this.newChar);
                 }
             }
         }
@@ -342,7 +436,7 @@ TermBuf.prototype={
                     lines.splice(this.bottom, 1); // remove the last line
                     lines.splice(this.top, 0, line); // insert it to top
                     for(var col=0; col < cols;++col)
-                        line[col].copyFrom(this.attr);
+                        line[col].copyFrom(this.newChar);
                 }
             }
             else { // move lines up
@@ -351,7 +445,7 @@ TermBuf.prototype={
                     lines.splice(this.top, 1); // remove the first line
                     lines.splice(this.bottom, 0, line); // insert it to bottom
                     for(var col=0; col < cols;++col)
-                        line[col].copyFrom(this.attr);
+                        line[col].copyFrom(this.newChar);
                 }
             }
 
@@ -368,6 +462,17 @@ TermBuf.prototype={
 
     gotoPos: function(x,y) {
         // dump('gotoPos: ' + x + ', ' + y + '\n');
+
+        // make sure the position is valid
+        if(x < 0)
+            x = 0;
+        else if(x > this.cols)
+            x = this.cols;
+        if(y < 0)
+            y = 0;
+        else if(y >= this.rows)
+            y = this.rows - 1;
+
         this.curX = x;
         this.curY = y;
         this.posChanged=true;
@@ -395,6 +500,24 @@ TermBuf.prototype={
             bottom = this.rows - 1;
         this.top = top;
         this.bottom = bottom;
+    },
+
+    saveCursor: function() {
+        this.savedCurX = this.curX;
+        this.savedCurY = this.curY;
+        this.cursorSaved  =true;
+    },
+
+    restoreCursor: function() {
+        if(this.cursorSaved) {
+            this.curX = this.savedCurX;
+            this.curY = this.savedCurY;
+            this.cursorPosChanged = true;
+
+            this.savedCurX = null;
+            this.savedCurY = null;
+            this.cursorSaved = false;
+        }
     },
 
     getRowText: function(row, colStart, colEnd) {
