@@ -147,7 +147,6 @@ TermBuf.prototype={
                 this.posChanged=true;
             }
         }
-        this.queueUpdate();
     },
 
     updateCharAttr: function() {
@@ -262,7 +261,6 @@ TermBuf.prototype={
         }
         this.changed=true;
         this.gotoPos(0, 0);
-        this.queueUpdate();
     },
 
     back: function() {
@@ -316,7 +314,6 @@ TermBuf.prototype={
             return;
         }
         this.changed=true;
-        this.queueUpdate();
     },
 
     scroll: function(up, n) {
@@ -367,7 +364,6 @@ TermBuf.prototype={
             }
         }
         this.changed=true;
-        this.queueUpdate();
     },
 
     gotoPos: function(x,y) {
@@ -399,39 +395,6 @@ TermBuf.prototype={
             bottom = this.rows - 1;
         this.top = top;
         this.bottom = bottom;
-    },
-
-    queueUpdate: function() {
-        if(!this.timeout) {
-            var _this=this;
-            var func=function() {
-                _this.onTimeout();
-            }
-            this.timeout = setTimeout(func, 40);
-        }
-    },
-
-    isUpdateQueued: function() {
-        return this.timeout != null;
-    },
-
-    onTimeout: function() {
-        if(this.changed) // content changed
-        {
-            this.updateCharAttr();
-            if(this.view) {
-                this.view.update();
-            }
-            this.changed=false;
-        }
-        if(this.posChanged) { // cursor pos changed
-            if(this.view) {
-                this.view.updateCursorPos();
-            }
-            this.posChanged=false;
-        }
-        clearTimeout(this.timeout);
-        this.timeout=null;
     },
 
     getRowText: function(row, colStart, colEnd) {

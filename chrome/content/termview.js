@@ -86,8 +86,19 @@ TermView.prototype={
         this.conn=conn;
     },
 
+    /* update the canvas to reflect the change in TermBuf */
     update: function() {
-        this.redraw(false);
+        var buf = this.buf;
+        if(buf.changed) // content of TermBuf changed
+        {
+            buf.updateCharAttr(); // prepare TermBuf
+            this.redraw(false); // do the redraw
+            buf.changed=false;
+        }
+        if(buf.posChanged) { // cursor pos changed
+            this.updateCursorPos();
+            buf.posChanged=false;
+        }
     },
 
     drawSelRect: function(ctx, x, y, w, h) {
@@ -412,34 +423,35 @@ TermView.prototype={
         this.blinkShow=!this.blinkShow;
         var buf = this.buf;
 
-        // FIXME: this should be done in more cleaner way
-        if(!buf.isUpdateQueued()) { // update of the screen is not queued by TermBuf
-            var col, cols=buf.cols;
-            var row, rows=buf.rows;
-            var lines = buf.lines;
+        // redraw the canvas first if needed
+        if(buf.changed)
+            this.update();
 
-            // FIXME: draw blinking characters
-            for(row = 0; row < rows; ++row) {
-                var line = lines[row];
-                for(col = 0; col < cols; ++col) {
-                    var ch = line[col];
+        var col, cols=buf.cols;
+        var row, rows=buf.rows;
+        var lines = buf.lines;
+
+        // FIXME: draw blinking characters
+        for(row = 0; row < rows; ++row) {
+            var line = lines[row];
+            for(col = 0; col < cols; ++col) {
+                var ch = line[col];
+                if(ch.blink)
+                    ch.needUpdate = true;
+                // two bytes of DBCS chars need to be updated together
+                if(ch.isLeadByte) {
+                    ++col;
                     if(ch.blink)
+                        line[col].needUpdate = true;
+                    // only second byte is blinking
+                    else if(line[col].blink) {
                         ch.needUpdate = true;
-                    // two bytes of DBCS chars need to be updated together
-                    if(ch.isLeadByte) {
-                        ++col;
-                        if(ch.blink)
-                            line[col].needUpdate = true;
-                        // only second byte is blinking
-                        else if(line[col].blink) {
-                            ch.needUpdate = true;
-                            line[col].needUpdate = true;
-                        }
+                        line[col].needUpdate = true;
                     }
                 }
             }
-            this.redraw(false);
         }
+        this.redraw(false);
 
         if(this.cursorVisible){
             this.cursorShow=!this.cursorShow;
@@ -624,7 +636,7 @@ TermView.prototype={
     },
 
     updateSel: function() {
-        if(this.buf.isUpdateQueued())
+        if(this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;
