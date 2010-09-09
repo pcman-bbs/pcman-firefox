@@ -3,6 +3,17 @@
 var uriColor='#FF6600'; // color used to draw URI underline
 var selectedStyle = 'rgba(49, 106, 197, 0.6)';
 
+function setTimer(repeat, func, timelimit) {
+    var timer = Components.classes["@mozilla.org/timer;1"]
+                  .createInstance(Components.interfaces.nsITimer);
+    timer.initWithCallback(
+        { notify: function(timer) { func(); } },
+        timelimit,
+        repeat  ? Components.interfaces.nsITimer.TYPE_REPEATING_SLACK
+                : Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    return timer;
+}
+
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -60,7 +71,7 @@ function TermView(canvas) {
     this.input.addEventListener('input', text_input, false);
 
     var _this=this;
-    this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
+    this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
 }
 
 TermView.prototype={
@@ -400,7 +411,7 @@ TermView.prototype={
 
     onCompositionStart: function(e) {
         var top = (this.buf.curY + 1) * this.chh;
-        this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
+        this.input.style.top = (this.canvas.offsetTop + ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top )) + 'px';
         this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
     },
 
@@ -435,13 +446,7 @@ TermView.prototype={
                     // only second byte is blinking
                     else if(line[col].blink) {
                         ch.needUpdate = true;
-                        if(ch.blink)
-                            line[col].needUpdate = true;
-                        // only second byte is blinking
-                        else if(line[col].blink) {
-                            ch.needUpdate = true;
-                            line[col].needUpdate = true;
-                        }
+                        line[col].needUpdate = true;
                     }
                 }
             }
