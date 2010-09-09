@@ -514,8 +514,8 @@ TermBuf.prototype={
             this.curY = this.savedCurY;
             this.cursorPosChanged = true;
 
-            this.savedCurX = null;
-            this.savedCurY = null;
+            delete this.savedCurX;
+            delete this.savedCurY;
             this.cursorSaved = false;
         }
     },

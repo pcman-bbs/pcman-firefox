@@ -20,7 +20,8 @@ var uaoConv = {
         var bins = Components.classes["@mozilla.org/binaryinputstream;1"].
                                 createInstance(Components.interfaces.nsIBinaryInputStream);
         bins.setInputStream(ins);
-        this.u2bTab = bins.readBytes(bins.available());
+        this.u2bTab = bins.readBytes(tabfile.fileSize);
+        bins.close();
     },
 
     u2b: function(ustr) {
