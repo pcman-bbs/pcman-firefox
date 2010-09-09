@@ -63,17 +63,6 @@ function TermView(canvas) {
     this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
 }
 
-function fillClipText(ctx, text, style, x, y, maxw, clipx, clipy, clipw, cliph){
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(clipx, clipy, clipw, cliph);
-    ctx.closePath();
-    ctx.clip();
-    ctx.fillStyle=style;
-    ctx.fillText(text, x, y, maxw);
-    ctx.restore();
-}
-
 TermView.prototype={
     conv: Components.classes["@mozilla.org/intl/utf8converterservice;1"]
                                                 .getService(Components.interfaces.nsIUTF8ConverterService),
@@ -86,8 +75,19 @@ TermView.prototype={
         this.conn=conn;
     },
 
+    /* update the canvas to reflect the change in TermBuf */
     update: function() {
-        this.redraw(false);
+        var buf = this.buf;
+        if(buf.changed) // content of TermBuf changed
+        {
+            buf.updateCharAttr(); // prepare TermBuf
+            this.redraw(false); // do the redraw
+            buf.changed=false;
+        }
+        if(buf.posChanged) { // cursor pos changed
+            this.updateCursorPos();
+            buf.posChanged=false;
+        }
     },
 
     drawSelRect: function(ctx, x, y, w, h) {
@@ -152,21 +152,21 @@ TermView.prototype={
                         if( fg == fg2 ) { // two bytes have the same fg
                             if(visible1) { // first half is visible
                                 if(visible2) // two bytes are all visible
-                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
+                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
                                 else // only the first half is visible
-                                    fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             }
                             else if(visible2) { // only the second half is visible
-                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
                             }
                         }
                         else {
                             // draw first half
                             if(visible1)
-                                fillClipText(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             // draw second half
                             if(visible2)
-                                fillClipText(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                                drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
                         }
                     }
                 }
@@ -184,7 +184,7 @@ TermView.prototype={
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
             if(ch.ch > ' ' && (!ch.blink || this.blinkShow))
-                fillClipText(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
+                drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
 
             // TODO: draw underline
 
@@ -387,8 +387,8 @@ TermView.prototype={
         if(visible)
             this.hideCursor();
         if(this.buf) {
-            this.cursorX=this.buf.cur_x * this.chw;
-            this.cursorY=(this.buf.cur_y + 1)*this.chh - this.cursorH;
+            this.cursorX=this.buf.curX * this.chw;
+            this.cursorY=(this.buf.curY + 1)*this.chh - this.cursorH;
         }
         else {
             this.cursorX=0;
@@ -399,9 +399,9 @@ TermView.prototype={
     },
 
     onCompositionStart: function(e) {
-        var top = (this.buf.cur_y + 1) * this.chh;
+        var top = (this.buf.curY + 1) * this.chh;
         this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
-        this.input.style.left = (this.canvas.offsetLeft + this.buf.cur_x * this.chw ) + 'px';
+        this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
     },
 
     onCompositionEnd: function(e) {
@@ -412,22 +412,29 @@ TermView.prototype={
         this.blinkShow=!this.blinkShow;
         var buf = this.buf;
 
-        // FIXME: this should be done in more cleaner way
-        if(!buf.isUpdateQueued()) { // update of the screen is not queued by TermBuf
-            var col, cols=buf.cols;
-            var row, rows=buf.rows;
-            var lines = buf.lines;
+        // redraw the canvas first if needed
+        if(buf.changed)
+            this.update();
 
-            // FIXME: draw blinking characters
-            for(row = 0; row < rows; ++row) {
-                var line = lines[row];
-                for(col = 0; col < cols; ++col) {
-                    var ch = line[col];
+        var col, cols=buf.cols;
+        var row, rows=buf.rows;
+        var lines = buf.lines;
+
+        // FIXME: draw blinking characters
+        for(row = 0; row < rows; ++row) {
+            var line = lines[row];
+            for(col = 0; col < cols; ++col) {
+                var ch = line[col];
+                if(ch.blink)
+                    ch.needUpdate = true;
+                // two bytes of DBCS chars need to be updated together
+                if(ch.isLeadByte) {
+                    ++col;
                     if(ch.blink)
+                        line[col].needUpdate = true;
+                    // only second byte is blinking
+                    else if(line[col].blink) {
                         ch.needUpdate = true;
-                    // two bytes of DBCS chars need to be updated together
-                    if(ch.isLeadByte) {
-                        ++col;
                         if(ch.blink)
                             line[col].needUpdate = true;
                         // only second byte is blinking
@@ -438,8 +445,8 @@ TermView.prototype={
                     }
                 }
             }
-            this.redraw(false);
         }
+        this.redraw(false);
 
         if(this.cursorVisible){
             this.cursorShow=!this.cursorShow;
@@ -521,21 +528,6 @@ TermView.prototype={
 
             }
         }
-        /*
-        // FIXME: this has very poor performance on Linux
-        var img=ctx.getImageData(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
-        var src=img.data;
-        img=ctx.createImageData(this.cursorW, this.cursorH);
-        var px=img.data;
-        // invert the image
-        for(var i = 0, n = px.length; i < n; i += 4) {
-            px[i] = 255 - src[i];
-            px[i+1] = 255 - src[i+1];
-            px[i+2] = 255 - src[i+2];
-            px[i+3] = 255;
-        }
-        ctx.putImageData(img, this.cursorX, this.cursorY);
-        */
     },
 
     // convert mouse pointer position (x, y) to (col, row)
@@ -624,7 +616,7 @@ TermView.prototype={
     },
 
     updateSel: function() {
-        if(this.buf.isUpdateQueued())
+        if(this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;

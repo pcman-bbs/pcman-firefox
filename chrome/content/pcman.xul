@@ -16,6 +16,7 @@
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
