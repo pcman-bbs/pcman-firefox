@@ -5,22 +5,19 @@
 var EXPORTED_SYMBOLS = ["uaoConv"];
 
 var uaoConv = {
-    u2bTab: null,
+    u2bTab: '',
     init: function () {
         // load U2B table
-        // https://developer.mozilla.org/en/Code_snippets/File_I%2F%2FO
-        var progID = "pcmanfx2@pcman.org";
-        var em = Components.classes["@mozilla.org/extensions/manager;1"].
-                 getService(Components.interfaces.nsIExtensionManager);
-        var tabfile = em.getInstallLocation(progID).getItemFile(progID, "modules/u2b.tab");
-        // load form the file
-        var ins = Components.classes["@mozilla.org/network/file-input-stream;1"].
-                                createInstance(Components.interfaces.nsIFileInputStream);
-        ins.init(tabfile, -1, -1, false);
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+        // load from resource:// instead of file path
+        var channel = ioService.newChannel('resource://pcmanfx2/u2b.tab', null, null);
+        var ins = channel.open();
         var bins = Components.classes["@mozilla.org/binaryinputstream;1"].
-                                createInstance(Components.interfaces.nsIBinaryInputStream);
+                       createInstance(Components.interfaces.nsIBinaryInputStream);
         bins.setInputStream(ins);
-        this.u2bTab = bins.readBytes(tabfile.fileSize);
+        while(bins.available())
+            this.u2bTab += bins.readBytes(bins.available());
         bins.close();
     },
 
