@@ -67,7 +67,6 @@ Conn.prototype={
         this.trans=this.ts.createTransport(null, 0,
                                         host, port, null);
         this._ins=this.trans.openInputStream(0,0,0);
-
         this.outs=this.trans.openOutputStream(0,0,0);
 
         // initialize input stream
@@ -84,11 +83,12 @@ Conn.prototype={
     },
 
     close: function() {
-        this._ins.close();
         this.ins.close();
         this.outs.close();
-        this._ins=this.ins=this.outs=null;
-        this.trans=null;
+        delete this._ins;
+        delete this.ins;
+        delete this.outs;
+        delete this.trans;
     },
 
     // data listener
