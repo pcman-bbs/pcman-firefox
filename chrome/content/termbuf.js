@@ -281,9 +281,10 @@ TermBuf.prototype={
         }
     },
 
-    tab: function() {
+    tab: function(num) {
         var mod = this.curX % 4;
         this.curX += 4 - mod;
+        if(num && num > 1) this.curX += 4 * (num-1);
         if(this.curX >= this.cols) {
             this.curX = this.cols-1;
             this.posChanged=true;
@@ -405,9 +406,7 @@ TermBuf.prototype={
 
     insertLine: function(num) { // taken from BBSFox
         var tmp = this.top;
-        if(this.curY == this.bottom)
-            this.scroll(false, 1); // FIXME: I don't think this is correct
-        else {
+        if(this.curY < this.bottom) {
             this.top = this.curY;
             this.scroll(true, num);
         }
