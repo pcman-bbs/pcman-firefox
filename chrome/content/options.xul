@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE prefwindow SYSTEM "chrome://pcmanfx2/locale/options.dtd">
+
+<prefwindow id="pcmanOption"
+                title="&options_pcmanoptions.label;"
+                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                xmlns:html="http://www.w3.org/1999/xhtml"
+                minwidth="400"
+                onload="load();"
+                ondialogaccept="save();"
+                buttons="accept, cancel"
+                >
+
+    <prefpane id="generalpane" label="&options_pcmanoptions.label;">
+
+    <hbox>
+        <vbox>
+            <spacer flex="1"/>
+            <groupbox>
+                <caption label="&options_sitesetting.label;"/>
+                <listbox id="siteList" onselect="siteChanged()" rows="11" width="100">
+                    <listitem label="&options_default.label;" selected="true"/>
+                </listbox>
+            </groupbox>
+            <spacer flex="1"/>
+        </vbox>
+
+        <tabbox>
+            <tabs>
+                <tab label="&options_general.label;"/>
+                <tab label="&options_about.label;"/>
+            </tabs>
+
+            <tabpanels>
+                <tabpanel>
+                    <hbox>
+                        <label control="Charset" value="&options_codepage.label;"/>
+                        <menulist editable="true" id="Charset">
+                            <menupopup>
+                                <menuitem label="big5"/>
+                                <menuitem label="gb2312"/>
+                            </menupopup>
+                        </menulist>
+                    </hbox>
+                </tabpanel>
+
+                <tabpanel>
+                    <hbox>
+                        <label value="pcmanfx "/>
+                        <label id="version"/>
+                    </hbox>
+                </tabpanel>
+            </tabpanels>
+        </tabbox>
+    </hbox>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js"/>
+    <script type="application/x-javascript">
+        function load() {
+            options = new PCmanOptions();
+            options.init();
+
+            var app = Components.classes["@mozilla.org/fuel/application;1"]
+                                .getService(Components.interfaces.fuelIApplication);
+            if(app.extensions) {
+                var ver = app.extensions.get('pcmanfx2@pcman.org').version;
+                document.getElementById('version').value = ver;
+            } else {
+                Components.utils.import("resource://gre/modules/AddonManager.jsm");
+                AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
+                    document.getElementById('version').value = addon.version;
+                });
+            }
+        }
+
+        function siteChanged() { options.siteChanged(); }
+
+        function save() { options.accept(); }
+    </script>
+
+    </prefpane>
+</prefwindow>
