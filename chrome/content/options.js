@@ -99,3 +99,29 @@ PCmanOptions.prototype = {
     }
 }
 
+// detect whether the page loading this script is prefwindow or not
+// Other page may load this script for creating SitePref or something else
+if(document.getElementById('pcmanOption')) {
+
+    function load() {
+        options = new PCmanOptions();
+        options.init();
+
+        var app = Components.classes["@mozilla.org/fuel/application;1"]
+                            .getService(Components.interfaces.fuelIApplication);
+        if(app.extensions) {
+            var ver = app.extensions.get('pcmanfx2@pcman.org').version;
+            document.getElementById('version').value = ver;
+        } else {
+            Components.utils.import("resource://gre/modules/AddonManager.jsm");
+            AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
+                document.getElementById('version').value = addon.version;
+            });
+        }
+    }
+
+    function siteChanged() { options.siteChanged(); }
+
+    function save() { options.accept(); }
+
+}

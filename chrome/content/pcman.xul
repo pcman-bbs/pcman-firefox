@@ -16,6 +16,8 @@
     <!-- Fix the error message in the error console -->
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
@@ -57,6 +59,11 @@
         var search_menu = document.getElementById('search_menu');
         createSearchMenu(search_menu);
     }
+
+    function create_SitePref() {
+        var options = new PCmanOptions();
+        options.create(document.location.href);
+    }
     </script>
     <vbox align="center" id='box1'
         onmousedown="pcman.view.onMouseDown(event);"
@@ -83,10 +90,10 @@
         <menuitem label="&menu_copy.label;" oncommand="pcman.copy();"/>
         <menuitem label="&menu_paste.label;" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
-        <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->
         <menu label="&menu_search.label;">
           <menupopup id="search_menu" />
         </menu>
+        <menuitem label="&menu_sitepref.label;" oncommand="create_SitePref();"/>
       </menupopup>
     </popupset>
 
