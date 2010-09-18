@@ -3,6 +3,17 @@
 var uriColor='#FF6600'; // color used to draw URI underline
 var selectedStyle = 'rgba(49, 106, 197, 0.6)';
 
+function setTimer(repeat, func, timelimit) {
+    var timer = Components.classes["@mozilla.org/timer;1"]
+                  .createInstance(Components.interfaces.nsITimer);
+    timer.initWithCallback(
+        { notify: function(timer) { func(); } },
+        timelimit,
+        repeat  ? Components.interfaces.nsITimer.TYPE_REPEATING_SLACK
+                : Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    return timer;
+}
+
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -60,7 +71,7 @@ function TermView(canvas) {
     this.input.addEventListener('input', text_input, false);
 
     var _this=this;
-    this.blinkTimeout=setInterval(function(){_this.onBlink();}, 600);
+    this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
 }
 
 TermView.prototype={
@@ -145,7 +156,8 @@ TermView.prototype={
                 // don't draw hidden text
                 if(visible1 || visible2) { // at least one of the two bytes should be visible
                     var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                    var u = this.conv.convertStringToUTF8(b5, 'big5',  true); // UTF-8
+                    var charset = this.conn.listener.prefs.Encoding;
+                    var u = this.conv.convertStringToUTF8(b5, charset,  true); // UTF-8
 
                     if(u) { // ch can be converted to valid UTF-8
                         var fg2 = ch2.getFg(); // fg of second byte
@@ -254,7 +266,8 @@ TermView.prototype={
     },
 
     onTextInput: function(text) {
-        this.conn.convSend(text, 'big5');
+        var charset = this.conn.listener.prefs.Encoding;
+        this.conn.convSend(text, charset);
     },
 
     onkeyPress: function(e) {
@@ -366,9 +379,16 @@ TermView.prototype={
             ctx.textBaseline='top';
         }
 
+        var visible=this.cursorVisible;
+        if(visible)
+            this.hideCursor();
+
         this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
+
+        if(visible)
+            this.showCursor();
     },
 
     // Cursor
@@ -400,7 +420,7 @@ TermView.prototype={
 
     onCompositionStart: function(e) {
         var top = (this.buf.curY + 1) * this.chh;
-        this.input.style.top = ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top ) + 'px';
+        this.input.style.top = (this.canvas.offsetTop + ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top )) + 'px';
         this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
     },
 

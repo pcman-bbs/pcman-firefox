@@ -146,7 +146,7 @@ TermSel.prototype={
             else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
                 splitter = /\s|\W|\b/;
             else  // punctuation marks, select nearby punctuations
-                splitter = /\s|\w|[\u0080-\uffff]/;
+                splitter = /\s|\w|[^\x00-\x7F]/;
         }
 
         // FIXME: need an implementation of better performance.
@@ -205,7 +205,8 @@ TermSel.prototype={
                 tmp += line[col].ch;
             ret += strStrip(tmp);
         }
-        ret = this.view.conv.convertStringToUTF8(ret, 'big5',  true);
+        var charset = this.view.conn.listener.prefs.Encoding;
+        ret = this.view.conv.convertStringToUTF8(ret, charset,  true);
         return ret;
     }
 }

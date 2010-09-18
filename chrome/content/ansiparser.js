@@ -2,10 +2,6 @@
 // References: http://www.termsys.demon.co.uk/vtansi.htm
 //             http://www.it.usyd.edu.au/~tapted/ansi.html
 //             http://wapedia.mobi/en/ANSI_X3.64
-//
-// Little part of the code is taken from BBSFox developed by
-// Ett Chung <ettoolong@hotmail.com>
-// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const STATE_TEXT=0;
 const STATE_ESC=1;
@@ -41,7 +37,7 @@ AnsiParser.prototype={
                 }
                 break;
             case STATE_CSI:
-                if( (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <='Z') ) {
+                if( (ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <='Z') ) {
                     var params=this.esc.split(';');
                     for(var j=0; j<params.length; ++j) {
                         if( params[j] )
@@ -168,9 +164,9 @@ AnsiParser.prototype={
                             term.setScrollRegion(0, term.rows - 1);
                         else {
                             if(params.length >= 2)
-                                term.setScrollRegion(params[0] - 1, prarms[1] - 1);
+                                term.setScrollRegion(params[0] - 1, params[1] - 1);
                             else
-                                term.setScrollRegion(0, prarms[0] - 1);
+                                term.setScrollRegion(0, params[0] - 1);
                         }
                         break;
                     case 's':
