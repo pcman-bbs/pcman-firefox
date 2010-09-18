@@ -4,9 +4,10 @@
 function PrefHandler(listener) {
     this.listener=listener;
 
+    // The following is for type checking and unexpected errors of reading file
     this.Encoding = 'big5';
 
-    this.onPrefChange(true); // Initial
+    this.onPrefChange(true); // Initial, load values from ini file
 }
 
 PrefHandler.prototype={
@@ -16,10 +17,12 @@ PrefHandler.prototype={
         var keys = options.prefs.getKeyNames(group);
         var len = keys.length;
         for(var i=0; i<len; ++i) {
-            switch(typeof(this[keys[i]])) {
+            var key = keys[i];
+            var value = this[keys[i]];
+            switch(typeof(value)) {
             case 'string':
-                var newStr = options.prefs.getStr(group,keys[i],this[keys[i]]);
-                if(newStr != this[keys[i]]) {
+                var newStr = options.prefs.getStr(group, key, value);
+                if(newStr != value) { // Setting is changed
                     if(initial)
                         this[keys[i]] = newStr;
                     else
@@ -27,8 +30,8 @@ PrefHandler.prototype={
                 }
                 break;
             case 'number':
-                var newInt = options.prefs.getInt(group,keys[i],this[keys[i]]);
-                if(newInt != this[keys[i]]) {
+                var newInt = options.prefs.getInt(group, key, value);
+                if(newInt != value) { // Setting is changed
                     if(initial)
                         this[keys[i]] = newInt;
                     else
@@ -36,18 +39,21 @@ PrefHandler.prototype={
                 }
                 break;
             case 'boolean':
-                var newBool = options.prefs.getBool(group,keys[i],this[keys[i]]);
-                if(newBool != this[keys[i]]) {
+                var newBool = options.prefs.getBool(group, key, value);
+                if(newBool != value) { // Setting is changed
                     if(initial)
                         this[keys[i]] = newBool;
                     else
                         this['set'+keys[i]](newBool);
                 }
                 break;
-            default: // unknown or undefined
+            default: // unknown type or undefined
             }
         }
     },
+
+    // functions for applying prefs immediately
+    // function with name 'set' + pref_name is the handler of pref_name
 
     setEncoding: function(charset) {
         this.Encoding = charset;
