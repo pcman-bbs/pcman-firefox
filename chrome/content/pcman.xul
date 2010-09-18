@@ -13,7 +13,8 @@
     context="popup-menu"
     oncontextmenu="prepare_popup(event);"
     >
-    <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/></box>
+    <!-- Fix the error message in the error console -->
+    <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />

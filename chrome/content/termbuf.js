@@ -96,7 +96,7 @@ function TermBuf(cols, rows) {
 
 TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
-    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w#!:.?+=&%@!\-\/\$'*\,;|~(]+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
 
     setView: function(view) {
         this.view = view;
@@ -145,6 +145,11 @@ TermBuf.prototype={
                 break;
             default:
                 var ch2 = line[this.curX];
+
+                // avoid the residues of incorrect DBCS chars for some BBS
+                if(ch2.isLeadByte)
+                    line[this.curX+1].needUpdate=true;
+
                 ch2.ch=ch;
                 ch2.copyAttr(this.attr);
                 ch2.needUpdate=true;
@@ -276,9 +281,10 @@ TermBuf.prototype={
         }
     },
 
-    tab: function() {
+    tab: function(num) {
         var mod = this.curX % 4;
-        this.curX += (this.curX - mod)/4 + 4;
+        this.curX += 4 - mod;
+        if(num && num > 1) this.curX += 4 * (num-1);
         if(this.curX >= this.cols) {
             this.curX = this.cols-1;
             this.posChanged=true;
@@ -400,9 +406,7 @@ TermBuf.prototype={
 
     insertLine: function(num) { // taken from BBSFox
         var tmp = this.top;
-        if(this.curY == this.bottom)
-            this.scroll(false, 1); // FIXME: I don't think this is correct
-        else {
+        if(this.curY < this.bottom) {
             this.top = this.curY;
             this.scroll(true, num);
         }
