@@ -20,7 +20,7 @@ function tryDrawIdeograph(ctx, ch, x, y, w, h) {
         if(code < 0x2589) {
             idx = code - 0x2580;
             y += h;
-            h *= (idx/9);
+            h *= (idx/8);
             y -= h;
         }
         else {
@@ -68,9 +68,9 @@ function tryDrawIdeograph(ctx, ch, x, y, w, h) {
         }
         fillTriangle(ctx, x1, y1, x2, y2, x3, y3);
     }
-    else if(code == 0x25a0) { // ■  0x25fc and 0x25fe are also black square, but they're not used in big5.
+    /*else if(code == 0x25a0) { // ■  0x25fc and 0x25fe are also black square, but they're not used in big5.
         ctx.fillRect(x, y, w, h);
-    }
+    }*/
     else
         return false;
     return true;
