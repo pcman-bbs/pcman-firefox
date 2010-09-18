@@ -41,7 +41,7 @@ AnsiParser.prototype={
                 }
                 break;
             case STATE_CSI:
-                if( (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <='Z') ) {
+                if( (ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <='Z') ) {
                     var params=this.esc.split(';');
                     for(var j=0; j<params.length; ++j) {
                         if( params[j] )
@@ -168,9 +168,9 @@ AnsiParser.prototype={
                             term.setScrollRegion(0, term.rows - 1);
                         else {
                             if(params.length >= 2)
-                                term.setScrollRegion(params[0] - 1, prarms[1] - 1);
+                                term.setScrollRegion(params[0] - 1, params[1] - 1);
                             else
-                                term.setScrollRegion(0, prarms[0] - 1);
+                                term.setScrollRegion(0, params[0] - 1);
                         }
                         break;
                     case 's':

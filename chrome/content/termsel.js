@@ -146,7 +146,7 @@ TermSel.prototype={
             else if( line[col].ch.match(/\w/) )  // should select [A-Za-z0-9_]
                 splitter = /\s|\W|\b/;
             else  // punctuation marks, select nearby punctuations
-                splitter = /\s|\w|[\u0080-\uffff]/;
+                splitter = /\s|\w|[^\x00-\x7F]/;
         }
 
         // FIXME: need an implementation of better performance.
