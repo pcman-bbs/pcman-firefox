@@ -31,6 +31,7 @@
     <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
     <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
     <em:homepageURL>http://code.google.com/p/pcmanfx/</em:homepageURL>
+    <em:optionsURL>chrome://pcmanfx2/content/options.xul</em:optionsURL>
 
     <em:localized>
         <Description>

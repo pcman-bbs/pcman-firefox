@@ -21,6 +21,19 @@ function BrowserUtils() {
 }
 
 BrowserUtils.prototype = {
+  findBookmarkID: function(url) {
+    try {
+      var uri = this._ioService.newURI(url, null, null);
+      var bookmarkArray = this._bookmarkService.getBookmarkIdsForURI(uri, {});
+      if (bookmarkArray.length <= 0)
+        return null;
+      return bookmarkArray[0];
+    } catch (e) {
+      // The URL might be incorrect >"<
+      return null;
+    }
+  },
+
   findBookmarkTitle: function(url) {
     // Eat any errors
     try {

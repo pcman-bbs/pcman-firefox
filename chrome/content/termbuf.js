@@ -92,9 +92,7 @@ function TermBuf(cols, rows) {
 
 TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
-    //uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
-    // Modified by Hemiola
-    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(\)?+=&%@!~\-\/])*/ig,
+    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w#!:.?+=&%@!\-\/\$'*\,;|~(]+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
 
     setView: function(view) {
         this.view = view;
@@ -282,9 +280,8 @@ TermBuf.prototype={
     tab: function(num) {
         var mod = this.curX % 4;
         this.curX += 4 - mod;
-        if(num && num > 1)
-            this.curX += 4 * (num-1);
-        if(this.curX >= this.cols)
+        if(num && num > 1) this.curX += 4 * (num-1);
+        if(this.curX >= this.cols) {
             this.curX = this.cols-1;
         this.posChanged=true;
     },
@@ -539,12 +536,13 @@ TermBuf.prototype={
 
       text = text.slice(colStart, colEnd);
       var conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"].getService(Components.interfaces.nsIUTF8ConverterService);
+      var charset = this.view.conn.listener.prefs.Encoding;
       return text.map( function(c, col, line){
         if(!c.isLeadByte) {
           if(col >=1 && line[col-1].isLeadByte) { // second byte of DBCS char
             var prevC = line[col-1];
             var b5 = prevC.ch + c.ch;
-            return conv.convertStringToUTF8(b5, 'big5',  true);
+            return conv.convertStringToUTF8(b5, charset,  true);
           }
           else
             return c.ch;
