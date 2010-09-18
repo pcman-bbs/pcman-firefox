@@ -6,6 +6,8 @@
 // https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 function PCManOptions() {
+    // Load ini file or create one if the file doesn't exist
+    // and then parse all available ids from the group names
     this.confFile = Components.classes["@mozilla.org/file/directory_service;1"]
                              .getService(Components.interfaces.nsIProperties)
                              .get("ProfD", Components.interfaces.nsIFile);
@@ -15,11 +17,11 @@ function PCManOptions() {
 
     this.prefs = new IniFile();
     this.prefs.load(this.confFile);
-    if( !this.prefs.groups['default'] ) {
-        this.reset('default');
+    if( !this.prefs.groups['default'] ) { // Just created config file
+        this.reset('default'); // Create prefs and set initial value
         this.prefs.save(this.confFile);
     }
-    this.getBookmarkIDs();
+    this.getBookmarkIDs(); // Get bookmarkIDs from the group names in ini file
 }
 
 PCManOptions.prototype = {
@@ -34,6 +36,7 @@ PCManOptions.prototype = {
         }
     },
 
+    // determine group name by url
     getGroupName: function(url) {
         var browserutils = new BrowserUtils();
         var bookmarkID = browserutils.findBookmarkID(url);
@@ -43,12 +46,13 @@ PCManOptions.prototype = {
         return group;
     },
 
+    // Create one group of preferences for one site (and save to file)
     create: function(url) {
         var browserutils = new BrowserUtils();
         var bookmarkID = browserutils.findBookmarkID(url);
         if(bookmarkID) {
             var group = 'rdf:#$' + bookmarkID;
-            this.reset(group);
+            this.reset(group); // Create prefs and set initial value
             this.prefs.save(this.confFile);
             return true;
         } else {
@@ -56,6 +60,8 @@ PCManOptions.prototype = {
         }
     },
 
+    // Get bookmark titles and fill them in siteList for vaild IDs
+    // For invalid IDs delete these groups of them
     init: function() {
         var browserutils = new BrowserUtils();
         var bookmarkService = browserutils._bookmarkService;
@@ -74,6 +80,7 @@ PCManOptions.prototype = {
         this.load(this.recentGroup);
     },
 
+    // Change the content of prefwindow to that of another group
     siteChanged: function() {
         this.save(this.recentGroup);
         var siteList = document.getElementById('siteList');
@@ -86,18 +93,25 @@ PCManOptions.prototype = {
         this.load(this.recentGroup);
     },
 
+    // save all changes to file and notify the main program
     accept: function() {
         this.save(this.recentGroup);
         this.prefs.save(this.confFile);
+        this.notify();
+    },
 
-        // taken from BBSFox
+    // taken from BBSFox
+    // Create an event to notify the main program that prefs were changed
+    notify: function() {
         var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                            .getService(Components.interfaces.nsIWindowMediator);
 
         var browserEnumerator = wm.getEnumerator("navigator:browser");
+        // Iterate all browser windows
         while(browserEnumerator.hasMoreElements()) {
             var browserInstance = browserEnumerator.getNext().getBrowser();
             var numTabs = browserInstance.tabContainer.childNodes.length;
+            // Iterate all tabs in a certain browser window
             for(var index=0; index<numTabs; index++) {
                 var currentBrowser = browserInstance.getBrowserAtIndex(index);
                 var urlstr = currentBrowser.currentURI.spec;
@@ -116,6 +130,8 @@ PCManOptions.prototype = {
         }
     },
 
+    // Put supported options into these functions
+
     load: function(group) {
         document.getElementById('Charset').value = this.prefs.getStr(group, 'Encoding', 'big5');
     },
@@ -133,21 +149,25 @@ PCManOptions.prototype = {
 // Other page may load this script for creating SitePref or something else
 if(document.getElementById('pcmanOption')) {
 
-    function load() {
-        options = new PCManOptions();
-        options.init();
-
+    // Find the version of PCManFx
+    function getVersion() {
         var app = Components.classes["@mozilla.org/fuel/application;1"]
                             .getService(Components.interfaces.fuelIApplication);
-        if(app.extensions) {
+        if(app.extensions) { // for firefox until 3.6
             var ver = app.extensions.get('pcmanfx2@pcman.org').version;
             document.getElementById('version').value = ver;
-        } else {
+        } else { // for firefox 4.0+ 
             Components.utils.import("resource://gre/modules/AddonManager.jsm");
             AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
                 document.getElementById('version').value = addon.version;
             });
         }
+    }
+
+    function load() {
+        options = new PCManOptions();
+        options.init();
+        getVersion();
     }
 
     function siteChanged() { options.siteChanged(); }
