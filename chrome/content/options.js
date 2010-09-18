@@ -1,4 +1,11 @@
-function PCmanOptions() {
+// process prefwindow and handle all access to preference
+//
+// Created by ChihHao <u881831@hotmail.com>
+// Little part of the code is taken from BBSFox developed by
+// Ett Chung <ettoolong@hotmail.com>
+// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
+
+function PCManOptions() {
     this.confFile = Components.classes["@mozilla.org/file/directory_service;1"]
                              .getService(Components.interfaces.nsIProperties)
                              .get("ProfD", Components.interfaces.nsIFile);
@@ -15,7 +22,7 @@ function PCmanOptions() {
     this.getBookmarkIDs();
 }
 
-PCmanOptions.prototype = {
+PCManOptions.prototype = {
     getBookmarkIDs: function() {
         var names = this.prefs.getGroupNames();
         this.bookmarkIDs = [];
@@ -83,7 +90,30 @@ PCmanOptions.prototype = {
         this.save(this.recentGroup);
         this.prefs.save(this.confFile);
 
-        // TODO: create an event to notify the main program that prefs were changed
+        // taken from BBSFox
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Components.interfaces.nsIWindowMediator);
+
+        var browserEnumerator = wm.getEnumerator("navigator:browser");
+        while(browserEnumerator.hasMoreElements()) {
+            var browserInstance = browserEnumerator.getNext().getBrowser();
+            var numTabs = browserInstance.tabContainer.childNodes.length;
+            for(var index=0; index<numTabs; index++) {
+                var currentBrowser = browserInstance.getBrowserAtIndex(index);
+                var urlstr = currentBrowser.currentURI.spec;
+                if(urlstr.length<=9) // Invalid
+                    continue;
+                var urlheader = urlstr.substr(0,9);
+                if(urlheader.toLowerCase()!="telnet://") // Not a BBS page
+                    continue;
+                var doc = currentBrowser.contentDocument;
+                if(doc && ("createEvent" in doc)) {
+                    var evt = doc.createEvent("Events");
+                    evt.initEvent("PrefChanged", true, false);
+                    doc.dispatchEvent(evt);
+                }
+            }
+        }
     },
 
     load: function(group) {
@@ -104,7 +134,7 @@ PCmanOptions.prototype = {
 if(document.getElementById('pcmanOption')) {
 
     function load() {
-        options = new PCmanOptions();
+        options = new PCManOptions();
         options.init();
 
         var app = Components.classes["@mozilla.org/fuel/application;1"]

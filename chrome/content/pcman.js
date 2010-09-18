@@ -2,6 +2,7 @@
 
 function PCMan() {
     var canvas = document.getElementById("canvas");
+    this.prefs=new PrefHandler(this);
     this.conn=new Conn(this);
     this.view=new TermView(canvas);
     this.buf=new TermBuf(80, 24);
@@ -13,6 +14,14 @@ function PCMan() {
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
                  .getService(Components.interfaces.nsIXULRuntime).OS;
+
+    var pref_changed ={
+        view: this,
+        handleEvent: function(e) {
+            this.view.prefs.onPrefChange(false);
+        }
+    };
+    document.addEventListener('PrefChanged', pref_changed, false);
 }
 
 PCMan.prototype={
@@ -81,7 +90,8 @@ PCMan.prototype={
                 s = s.data.substring(0, len.value / 2);
                 s=s.replace(/\r\n/g, '\r');
                 s=s.replace(/\n/g, '\r');
-                this.conn.convSend(s, 'big5');
+                var charset = this.prefs.Encoding;
+                this.conn.convSend(s, charset);
             }
         }
     },

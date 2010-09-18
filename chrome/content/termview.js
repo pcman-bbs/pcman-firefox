@@ -156,7 +156,8 @@ TermView.prototype={
                 // don't draw hidden text
                 if(visible1 || visible2) { // at least one of the two bytes should be visible
                     var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                    var u = this.conv.convertStringToUTF8(b5, 'big5',  true); // UTF-8
+                    var charset = this.conn.listener.prefs.Encoding;
+                    var u = this.conv.convertStringToUTF8(b5, charset,  true); // UTF-8
 
                     if(u) { // ch can be converted to valid UTF-8
                         var fg2 = ch2.getFg(); // fg of second byte
@@ -265,7 +266,8 @@ TermView.prototype={
     },
 
     onTextInput: function(text) {
-        this.conn.convSend(text, 'big5');
+        var charset = this.conn.listener.prefs.Encoding;
+        this.conn.convSend(text, charset);
     },
 
     onkeyPress: function(e) {
@@ -377,9 +379,16 @@ TermView.prototype={
             ctx.textBaseline='top';
         }
 
+        var visible=this.cursorVisible;
+        if(visible)
+            this.hideCursor();
+
         this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
+
+        if(visible)
+            this.showCursor();
     },
 
     // Cursor

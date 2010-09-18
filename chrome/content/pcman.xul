@@ -18,6 +18,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefhandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
@@ -61,7 +62,7 @@
     }
 
     function create_SitePref() {
-        var options = new PCmanOptions();
+        var options = new PCManOptions();
         options.create(document.location.href);
     }
     </script>

@@ -1,8 +1,4 @@
 // Terminal Screen Buffer, displayed by TermView
-//
-// Little part of the code is taken from BBSFox developed by
-// Ett Chung <ettoolong@hotmail.com>
-// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const termColors=[
     // dark
@@ -291,7 +287,7 @@ TermBuf.prototype={
         }
     },
 
-    backTab: function(num) { // taken from BBSFox
+    backTab: function(num) {
         var mod = this.curX % 4;
         this.curX -= (mod>0 ? mod : 4);
         if(num > 1)
@@ -301,7 +297,7 @@ TermBuf.prototype={
         this.posChanged=true;
     },
 
-    insert: function(num) { // taken from BBSFox
+    insert: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -327,7 +323,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    del: function(num) { // taken from BBSFox
+    del: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -353,7 +349,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    eraseChar: function(num) { // taken from BBSFox
+    eraseChar: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -396,7 +392,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    deleteLine: function(num) { // taken from BBSFox
+    deleteLine: function(num) {
         var tmp = this.top;
         this.top = this.curY;
         this.scroll(false, num);
@@ -404,7 +400,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    insertLine: function(num) { // taken from BBSFox
+    insertLine: function(num) {
         var tmp = this.top;
         if(this.curY < this.bottom) {
             this.top = this.curY;
@@ -539,12 +535,13 @@ TermBuf.prototype={
 
       text = text.slice(colStart, colEnd);
       var conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"].getService(Components.interfaces.nsIUTF8ConverterService);
+      var charset = this.view.conn.listener.prefs.Encoding;
       return text.map( function(c, col, line){
         if(!c.isLeadByte) {
           if(col >=1 && line[col-1].isLeadByte) { // second byte of DBCS char
             var prevC = line[col-1];
             var b5 = prevC.ch + c.ch;
-            return conv.convertStringToUTF8(b5, 'big5',  true);
+            return conv.convertStringToUTF8(b5, charset,  true);
           }
           else
             return c.ch;
