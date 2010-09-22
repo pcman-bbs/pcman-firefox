@@ -1,10 +1,9 @@
 // get settings from preferences and apply it immediately
-// Created by ChihHao <u881831@hotmail.com>
 
 function PrefHandler(listener) {
     this.listener=listener;
 
-    // The following is for type checking and unexpected errors of reading file
+    // The following is for type checking or for unexpected errors of reading file
     this.Encoding = 'big5';
 
     this.onPrefChange(true); // Initial, load values from ini file
@@ -18,33 +17,33 @@ PrefHandler.prototype={
         var len = keys.length;
         for(var i=0; i<len; ++i) {
             var key = keys[i];
-            var value = this[keys[i]];
+            var value = this[key];
             switch(typeof(value)) {
             case 'string':
                 var newStr = options.prefs.getStr(group, key, value);
                 if(newStr != value) { // Setting is changed
                     if(initial)
-                        this[keys[i]] = newStr;
+                        this[key] = newStr;
                     else
-                        this['set'+keys[i]](newStr);
+                        this['set'+key](newStr);
                 }
                 break;
             case 'number':
                 var newInt = options.prefs.getInt(group, key, value);
                 if(newInt != value) { // Setting is changed
                     if(initial)
-                        this[keys[i]] = newInt;
+                        this[key] = newInt;
                     else
-                        this['set'+keys[i]](newInt);
+                        this['set'+key](newInt);
                 }
                 break;
             case 'boolean':
                 var newBool = options.prefs.getBool(group, key, value);
                 if(newBool != value) { // Setting is changed
                     if(initial)
-                        this[keys[i]] = newBool;
+                        this[key] = newBool;
                     else
-                        this['set'+keys[i]](newBool);
+                        this['set'+key](newBool);
                 }
                 break;
             default: // unknown type or undefined

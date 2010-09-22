@@ -1,6 +1,5 @@
 // process prefwindow and handle all access to preference
 //
-// Created by ChihHao <u881831@hotmail.com>
 // Little part of the code is taken from BBSFox developed by
 // Ett Chung <ettoolong@hotmail.com>
 // https://addons.mozilla.org/zh-TW/firefox/addon/179388/
@@ -61,7 +60,7 @@ PCManOptions.prototype = {
     },
 
     // Get bookmark titles and fill them in siteList for vaild IDs
-    // For invalid IDs delete these groups of them
+    // For invalid IDs delete their groups
     init: function() {
         var browserutils = new BrowserUtils();
         var bookmarkService = browserutils._bookmarkService;
@@ -153,7 +152,7 @@ if(document.getElementById('pcmanOption')) {
     function getVersion() {
         var app = Components.classes["@mozilla.org/fuel/application;1"]
                             .getService(Components.interfaces.fuelIApplication);
-        if(app.extensions) { // for firefox until 3.6
+        if(app.extensions) { // for firefox 3.x
             var ver = app.extensions.get('pcmanfx2@pcman.org').version;
             document.getElementById('version').value = ver;
         } else { // for firefox 4.0+ 
