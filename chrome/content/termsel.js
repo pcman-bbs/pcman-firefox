@@ -223,8 +223,7 @@ TermSel.prototype={
                 tmp += line[col].ch;
             ret += strStrip(tmp);
         }
-        var charset = this.view.conn.listener.prefs.Encoding;
-        ret = this.view.conv.convertStringToUTF8(ret, charset,  true);
+        ret = this.view.conv.convertStringToUTF8(ret, 'big5',  true);
         return ret;
     }
 }

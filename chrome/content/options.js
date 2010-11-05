@@ -16,65 +16,62 @@ function PCManOptions() {
 
     this.prefs = new IniFile();
     this.prefs.load(this.confFile);
-    if( !this.prefs.groups['default'] ) { // Just created config file
-        this.reset('default'); // Create prefs and set initial value
-        this.prefs.save(this.confFile);
-    }
-    this.getBookmarkIDs(); // Get bookmarkIDs from the group names in ini file
+    if( !this.prefs.groups['default'] ) // Just created config file
+        this.create(null); // Create default prefs and set initial value
 }
 
 PCManOptions.prototype = {
-    getBookmarkIDs: function() {
-        var names = this.prefs.getGroupNames();
-        this.bookmarkIDs = [];
-        for(var i=0; i<names.length; ++i) {
-            if(names[i] != 'default') {
-                var id = parseInt(names[i].substr(6));
-                this.bookmarkIDs.push(id);
-            }
-        }
+    setupDefault: {
+        'Encoding': 'big5'
     },
 
-    // determine group name by url
-    getGroupName: function(url) {
+    // Determine group name by url
+    // and optionally return default for not create site
+    getGroupName: function(url, realName) {
         var browserutils = new BrowserUtils();
         var bookmarkID = browserutils.findBookmarkID(url);
         var group = bookmarkID ? ('rdf:#$' + bookmarkID) : 'default';
-        if( !this.prefs.groups[group] ) // Not created, use default
+        if(!realName && !this.prefs.groups[group]) // Not created, use default
             group = 'default';
         return group;
     },
 
     // Create one group of preferences for one site (and save to file)
+    // If this group of preferences is created it will be reset to default
     create: function(url) {
-        var browserutils = new BrowserUtils();
-        var bookmarkID = browserutils.findBookmarkID(url);
-        if(bookmarkID) {
-            var group = 'rdf:#$' + bookmarkID;
-            this.reset(group); // Create prefs and set initial value
-            this.prefs.save(this.confFile);
-            return true;
-        } else {
-            return false;
-        }
+        // Show the real group name even if it is not created
+        var group = this.getGroupName(url, true);
+        this.reset(group); // Create prefs and set initial value
+        this.prefs.save(this.confFile);
     },
 
-    // Get bookmark titles and fill them in siteList for vaild IDs
+    // Create the list of valid bookmarkIDs and return their titles 
     // For invalid IDs delete their groups
-    init: function() {
+    getItemTitles: function() {
+        var names = this.prefs.getGroupNames();
         var browserutils = new BrowserUtils();
         var bookmarkService = browserutils._bookmarkService;
-        var validIDs = [];
-        for(var i=0; i<this.bookmarkIDs.length; ++i) {
+        var bookmarkTitles = [];
+        this.bookmarkIDs = [];
+        for(var i=0; i<names.length; ++i) {
+            if(names[i] == 'default') continue;
+            var id = parseInt(names[i].substr(6));
             try {
-                var bookmarkTitle = bookmarkService.getItemTitle(this.bookmarkIDs[i]);
-                document.getElementById('siteList').appendItem(bookmarkTitle);
-                validIDs.push(this.bookmarkIDs[i]);
+                var bookmarkTitle = bookmarkService.getItemTitle(id);
+                bookmarkTitles.push(bookmarkTitle);
+                this.bookmarkIDs.push(id);
             } catch (e) { // the bookmark may be removed
-                delete this.prefs.groups['rdf:#$' + this.bookmarkIDs[i]];
+                delete this.prefs.groups['rdf:#$' + id];
             }
         }
-        this.bookmarkIDs = validIDs;
+        return bookmarkTitles;
+    },
+
+    // Fill bookmark titles in siteList
+    init: function() {
+        var bookmarkTitles = this.getItemTitles();
+        for(var i=0; i<bookmarkTitles.length; ++i)
+            document.getElementById('siteList').appendItem(bookmarkTitles[i]);
         this.recentGroup = 'default';
         this.load(this.recentGroup);
     },
@@ -129,18 +126,59 @@ PCManOptions.prototype = {
         }
     },
 
-    // Put supported options into these functions
-
     load: function(group) {
-        document.getElementById('Charset').value = this.prefs.getStr(group, 'Encoding', 'big5');
+        for(key in this.setupDefault) {
+            var value = this.setupDefault[key];
+            var element = document.getElementById(key);
+            switch(typeof(value)) {
+            case 'string':
+                element.value = this.prefs.getStr(group, key, value);
+                break;
+            case 'number':
+                element.value = this.prefs.getInt(group, key, value);
+                break;
+            case 'boolean':
+                element.checked = this.prefs.getBool(group, key, value);
+                break;
+            default:
+            }
+        }
     },
 
     save: function(group) {
-        this.prefs.setStr(group, 'Encoding', document.getElementById('Charset').value);
+        for(key in this.setupDefault) {
+            var element = document.getElementById(key);
+            switch(typeof(this.setupDefault[key])) {
+            case 'string':
+                this.prefs.setStr(group, key, element.value);
+                break;
+            case 'number':
+                this.prefs.setInt(group, key, element.value);
+                break;
+            case 'boolean':
+                this.prefs.setBool(group, key, element.checked);
+                break;
+            default:
+            }
+        }
     },
 
     reset: function(group) {
-        this.prefs.setStr(group, 'Encoding', 'big5');
+        for(key in this.setupDefault) {
+            var value = this.setupDefault[key];
+            switch(typeof(value)) {
+            case 'string':
+                this.prefs.setStr(group, key, value);
+                break;
+            case 'number':
+                this.prefs.setInt(group, key, value);
+                break;
+            case 'boolean':
+                this.prefs.setBool(group, key, value);
+                break;
+            default:
+            }
+        }
     }
 }
 
