@@ -35,8 +35,8 @@
             <tabpanels>
                 <tabpanel>
                     <hbox>
-                        <label control="Charset" value="&options_codepage.label;"/>
-                        <menulist editable="true" id="Charset">
+                        <label control="Encoding" value="&options_codepage.label;"/>
+                        <menulist editable="true" id="Encoding">
                             <menupopup>
                                 <menuitem label="big5"/>
                                 <menuitem label="gb2312"/>

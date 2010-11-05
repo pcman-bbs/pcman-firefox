@@ -2,16 +2,16 @@
 
 function PrefHandler(listener) {
     this.listener=listener;
-
-    // The following is for type checking or for unexpected errors of reading file
-    this.Encoding = 'big5';
-
     this.onPrefChange(true); // Initial, load values from ini file
 }
 
 PrefHandler.prototype={
     onPrefChange: function(initial) {
         var options = new PCManOptions();
+        if(initial) {
+            for(key in options.setupDefault)
+                this[key] = options.setupDefault[key];
+        }
         var group = options.getGroupName(document.location.href);
         var keys = options.prefs.getKeyNames(group);
         var len = keys.length;
