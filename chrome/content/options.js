@@ -16,7 +16,7 @@ function PCManOptions() {
 
     this.prefs = new IniFile();
     this.prefs.load(this.confFile);
-    if( !this.prefs.groups['default'] ) // Just created config file
+    if( !this.hasGroup(this.getNameById(null)) ) // Just created config file
         this.create(null); // Create default prefs and set initial value
 }
 
@@ -25,14 +25,34 @@ PCManOptions.prototype = {
         'Encoding': 'big5'
     },
 
+    hasGroup: function(group) {
+        return this.prefs.groups[group] ? true : false;
+    },
+
+    listGroups: function() {
+        return this.prefs.getGroupNames();
+    },
+
+    removeGroup: function(group) {
+        delete this.prefs.groups[group];
+    },
+
+    saveFile: function() {
+        return this.prefs.save(this.confFile);
+    },
+
+    getNameById: function(id) {
+        return (id ? ('rdf:#$' + id) : 'default');
+    },
+
     // Determine group name by url
     // and optionally return default for not create site
     getGroupName: function(url, realName) {
         var browserutils = new BrowserUtils();
         var bookmarkID = browserutils.findBookmarkID(url);
-        var group = bookmarkID ? ('rdf:#$' + bookmarkID) : 'default';
-        if(!realName && !this.prefs.groups[group]) // Not created, use default
-            group = 'default';
+        var group = this.getNameById(bookmarkID);
+        if(!realName && !this.hasGroup(group)) // Not created, use default
+            group = this.getNameById(null);
         return group;
     },
 
@@ -42,26 +62,27 @@ PCManOptions.prototype = {
         // Show the real group name even if it is not created
         var group = this.getGroupName(url, true);
         this.reset(group); // Create prefs and set initial value
-        this.prefs.save(this.confFile);
+        this.saveFile();
     },
 
     // Create the list of valid bookmarkIDs and return their titles 
     // For invalid IDs delete their groups
     getItemTitles: function() {
-        var names = this.prefs.getGroupNames();
+        var names = this.listGroups();
         var browserutils = new BrowserUtils();
         var bookmarkService = browserutils._bookmarkService;
         var bookmarkTitles = [];
         this.bookmarkIDs = [];
         for(var i=0; i<names.length; ++i) {
-            if(names[i] == 'default') continue;
+            if(names[i] == this.getNameById(null))
+                continue;
             var id = parseInt(names[i].substr(6));
             try {
                 var bookmarkTitle = bookmarkService.getItemTitle(id);
                 bookmarkTitles.push(bookmarkTitle);
                 this.bookmarkIDs.push(id);
             } catch (e) { // the bookmark may be removed
-                delete this.prefs.groups['rdf:#$' + id];
+                this.removeGroup(this.getNameById(id));
             }
         }
         return bookmarkTitles;
@@ -72,7 +93,7 @@ PCManOptions.prototype = {
         var bookmarkTitles = this.getItemTitles();
         for(var i=0; i<bookmarkTitles.length; ++i)
             document.getElementById('siteList').appendItem(bookmarkTitles[i]);
-        this.recentGroup = 'default';
+        this.recentGroup = this.getNameById(null);
         this.load(this.recentGroup);
     },
 
@@ -82,9 +103,9 @@ PCManOptions.prototype = {
         var siteList = document.getElementById('siteList');
         var siteIndex = siteList.getIndexOfItem(siteList.selectedItems[0]);
         if(siteIndex == 0)
-            var groupname = 'default';
+            var groupname = this.getNameById(null);
         else
-            var groupname = 'rdf:#$' + this.bookmarkIDs[siteIndex-1];
+            var groupname = this.getNameById(this.bookmarkIDs[siteIndex-1]);
         this.recentGroup = groupname;
         this.load(this.recentGroup);
     },
@@ -92,7 +113,7 @@ PCManOptions.prototype = {
     // save all changes to file and notify the main program
     accept: function() {
         this.save(this.recentGroup);
-        this.prefs.save(this.confFile);
+        this.saveFile();
         this.notify();
     },
 
@@ -130,54 +151,59 @@ PCManOptions.prototype = {
         for(key in this.setupDefault) {
             var value = this.setupDefault[key];
             var element = document.getElementById(key);
-            switch(typeof(value)) {
-            case 'string':
-                element.value = this.prefs.getStr(group, key, value);
-                break;
-            case 'number':
-                element.value = this.prefs.getInt(group, key, value);
-                break;
-            case 'boolean':
-                element.checked = this.prefs.getBool(group, key, value);
-                break;
-            default:
-            }
+            if(typeof(this.setupDefault[key]) == 'boolean')
+                element.checked = this.getVal(group, key, value);
+            else
+                element.value = this.getVal(group, key, value);
         }
     },
 
     save: function(group) {
         for(key in this.setupDefault) {
             var element = document.getElementById(key);
-            switch(typeof(this.setupDefault[key])) {
-            case 'string':
-                this.prefs.setStr(group, key, element.value);
-                break;
-            case 'number':
-                this.prefs.setInt(group, key, element.value);
-                break;
-            case 'boolean':
-                this.prefs.setBool(group, key, element.checked);
-                break;
-            default:
-            }
+            if(typeof(this.setupDefault[key]) == 'boolean')
+                this.setVal(group, key, element.checked);
+            else
+                this.setVal(group, key, element.value);
         }
     },
 
     reset: function(group) {
         for(key in this.setupDefault) {
             var value = this.setupDefault[key];
-            switch(typeof(value)) {
-            case 'string':
-                this.prefs.setStr(group, key, value);
-                break;
-            case 'number':
-                this.prefs.setInt(group, key, value);
-                break;
-            case 'boolean':
-                this.prefs.setBool(group, key, value);
-                break;
-            default:
-            }
+            this.setVal(group, key, value);
+        }
+    },
+
+    getVal: function(group, key, value) {
+        switch(typeof(value)) {
+        case 'string':
+            return this.prefs.getStr(group, key, value);
+            break;
+        case 'number':
+            return this.prefs.getInt(group, key, value);
+            break;
+        case 'boolean':
+            return this.prefs.getBool(group, key, value);
+            break;
+        default: // unknown type or undefined
+            return value;
+        }
+    },
+
+    setVal: function(group, key, value) {
+        switch(typeof(value)) {
+        case 'string':
+            return this.prefs.setStr(group, key, value);
+            break;
+        case 'number':
+            return this.prefs.setInt(group, key, value);
+            break;
+        case 'boolean':
+            return this.prefs.setBool(group, key, value);
+            break;
+        default: // unknown type or undefined
+            return null;
         }
     }
 }
