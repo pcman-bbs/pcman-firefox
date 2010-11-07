@@ -8,45 +8,16 @@ function PrefHandler(listener) {
 PrefHandler.prototype={
     onPrefChange: function(initial) {
         var options = new PCManOptions();
-        if(initial) {
-            for(key in options.setupDefault)
-                this[key] = options.setupDefault[key];
-        }
         var group = options.getGroupName(document.location.href);
-        var keys = options.prefs.getKeyNames(group);
-        var len = keys.length;
-        for(var i=0; i<len; ++i) {
-            var key = keys[i];
-            var value = this[key];
-            switch(typeof(value)) {
-            case 'string':
-                var newStr = options.prefs.getStr(group, key, value);
-                if(newStr != value) { // Setting is changed
-                    if(initial)
-                        this[key] = newStr;
-                    else
-                        this['set'+key](newStr);
-                }
-                break;
-            case 'number':
-                var newInt = options.prefs.getInt(group, key, value);
-                if(newInt != value) { // Setting is changed
-                    if(initial)
-                        this[key] = newInt;
-                    else
-                        this['set'+key](newInt);
-                }
-                break;
-            case 'boolean':
-                var newBool = options.prefs.getBool(group, key, value);
-                if(newBool != value) { // Setting is changed
-                    if(initial)
-                        this[key] = newBool;
-                    else
-                        this['set'+key](newBool);
-                }
-                break;
-            default: // unknown type or undefined
+        for(var key in options.setupDefault) {
+            if(initial)
+                this[key] = options.setupDefault[key];
+            var newVal = options.getVal(group, key, this[key]);
+            if(newVal != this[key]) { // Setting is changed
+                if(initial)
+                    this[key] = newVal;
+                else
+                    this['set'+key](newVal);
             }
         }
     },
