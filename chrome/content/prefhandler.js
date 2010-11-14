@@ -6,6 +6,35 @@ function PrefHandler(listener) {
 }
 
 PrefHandler.prototype={
+///*
+    observe: function() {
+        var options = new PCManOptions();
+        this.observer = {};
+        for(var key in options.setupDefault) {
+            this.observer[key] = {
+                view: this,
+                onContentPrefSet: function(group, name, value) {
+                    return this.view.onPrefChange(false);
+                },
+                onContentPrefRemoved: function(group, name) {}
+            }
+            options.prefService.addObserver(key, this.observer[key]);
+        }
+    },
+//*/
+
+/*
+    observe: function() {
+        var pref_changed ={
+            view: this,
+            handleEvent: function(e) {
+                this.view.onPrefChange(false);
+            }
+        };
+        document.addEventListener('PrefChanged', pref_changed, false);
+    },
+*/
+
     onPrefChange: function(initial) {
         var options = new PCManOptions();
         var group = options.getGroupName(document.location.href);

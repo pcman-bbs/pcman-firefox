@@ -15,13 +15,7 @@ function PCMan() {
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
                  .getService(Components.interfaces.nsIXULRuntime).OS;
 
-    var pref_changed ={
-        view: this,
-        handleEvent: function(e) {
-            this.view.prefs.onPrefChange(false);
-        }
-    };
-    document.addEventListener('PrefChanged', pref_changed, false);
+    this.prefs.observe();
 }
 
 PCMan.prototype={
