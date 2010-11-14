@@ -162,7 +162,7 @@ TermSel.prototype={
     selectAll: function() {
         var buf = this.view.buf;
         this.selStart(false, 0, 0);
-        this.selEnd(buf.cols - 1, buf.rows - 1);
+        this.selEnd(buf.cols, buf.rows - 1);
     },
 
     hasSelection: function() {
@@ -175,12 +175,13 @@ TermSel.prototype={
         var buf = this.view.buf;
         var lines = buf.lines;
         var row, col;
+        var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
         var tmp = '';
         if(this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
             tmp = '';
-            for(col = this.startCol; col <= this.endCol; ++col)
+            for(col = this.startCol; col <= endCol; ++col)
                 tmp += line[col].ch;
             ret += strStrip(tmp);
         }
@@ -201,7 +202,7 @@ TermSel.prototype={
             }
             line = lines[this.endRow];
             tmp = '';
-            for(col = 0; col <= this.endCol; ++col)
+            for(col = 0; col <= endCol; ++col)
                 tmp += line[col].ch;
             ret += strStrip(tmp);
         }
