@@ -4,6 +4,7 @@
 // Ett Chung <ettoolong@hotmail.com>
 // https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
+/*
 function PCManOptions() {
     // Load ini file or create one if the file doesn't exist
     // and then parse all available ids from the group names
@@ -19,22 +20,75 @@ function PCManOptions() {
     if( !this.hasGroup(this.getNameById(null)) ) // Just created config file
         this.create(null); // Create default prefs and set initial value
 }
+*/
+
+///*
+function PCManOptions() {
+    var browserutils = new BrowserUtils();
+    this.prefService = Components.classes["@mozilla.org/content-pref/service;1"]
+                       .getService(Components.interfaces.nsIContentPrefService);
+    this.prefs = {};
+    this.prefs.groups = {};
+    var groups = this.listGroups();
+    for(var i = groups.length - 1; i >= 0; --i)
+        this.prefs.groups[groups[i]] = {};
+    for(var group in this.prefs.groups) {
+        var uri = null;
+        if(group != this.getNameById(null))
+            uri = browserutils._ioService.newURI('telnet://'+group, null, null);
+        for(var key in this.setupDefault) {
+            if(this.prefService.hasPref(uri, key))
+                var value = this.prefService.getPref(uri, key);
+            else
+                var value = this.setupDefault[key];
+            this.prefs.groups[group][key] = value;
+        }
+    }
+    if(!this.prefService.hasPref(null, 'Encoding'))
+        this.create(null);
+}
+//*/
 
 PCManOptions.prototype = {
     setupDefault: {
         'Encoding': 'big5'
     },
 
-    hasGroup: function(group) {
-        return this.prefs.groups[group] ? true : false;
+    /*
+    getVal: function(group, key, value) {
+        switch(typeof(value)) {
+        case 'string':
+            return this.prefs.getStr(group, key, value);
+            break;
+        case 'number':
+            return this.prefs.getInt(group, key, value);
+            break;
+        case 'boolean':
+            return this.prefs.getBool(group, key, value);
+            break;
+        default: // unknown type or undefined
+            return value;
+        }
+    },
+
+    setVal: function(group, key, value) {
+        switch(typeof(value)) {
+        case 'string':
+            return this.prefs.setStr(group, key, value);
+            break;
+        case 'number':
+            return this.prefs.setInt(group, key, value);
+            break;
+        case 'boolean':
+            return this.prefs.setBool(group, key, value);
+            break;
+        default: // unknown type or undefined
+            return null;
+        }
     },
 
     listGroups: function() {
         return this.prefs.getGroupNames();
-    },
-
-    removeGroup: function(group) {
-        delete this.prefs.groups[group];
     },
 
     saveFile: function() {
@@ -43,6 +97,91 @@ PCManOptions.prototype = {
 
     getNameById: function(id) {
         return (id ? ('rdf:#$' + id) : 'default');
+    },
+
+    getIdByName: function(name) {
+        return parseInt(name.substr(6));
+    },
+    */
+
+    ///*
+    getVal: function(group, key, value) {
+        if(this.prefs.groups[group] && typeof(this.prefs.groups[group][key]) != 'undefined')
+            return this.prefs.groups[group][key];
+        else
+            return value;
+    },
+
+    setVal: function(group, key, value) {
+        if(!this.prefs.groups[group])
+            this.prefs.groups[group] = {};
+        this.prefs.groups[group][key] = value;
+    },
+
+    listGroups: function() {
+        var groups = [];
+        var groupedPrefs = this.prefService.getPrefsByName('Encoding');
+        var enumerator = groupedPrefs.enumerator;
+        while(enumerator.hasMoreElements()) {
+            var property = enumerator.getNext()
+                          .QueryInterface(Components.interfaces.nsIProperty);
+            var group = property.name;
+            if(!group)
+                group = this.getNameById(null);
+            groups.push(group);
+        }
+        return groups;
+    },
+
+    saveFile: function() {
+        var browserutils = new BrowserUtils();
+        var groups = this.listGroups();
+        var existingGroups = {};
+        for(var i = groups.length - 1; i >= 0; --i)
+            existingGroups[groups[i]] = {};
+        for(var group in this.prefs.groups) {
+            var uri = null;
+            if(group != this.getNameById(null))
+                uri = browserutils._ioService.newURI('telnet://'+group, null, null);
+            for(var key in this.setupDefault) {
+                var value = this.prefs.groups[group][key];
+                this.prefService.setPref(uri, key, value);
+            }
+            if(existingGroups[group])
+                delete existingGroups[group];
+        }
+        for(var group in existingGroups) { // groups needed to be removed
+            if(group != this.getNameById(null)) {
+                var uri = browserutils._ioService.newURI('telnet://'+group, null, null);
+                for(var key in this.setupDefault)
+                    this.prefService.removePref(uri, key);
+            }
+        }
+    },
+
+    getNameById: function(id) {
+        var browserutils = new BrowserUtils();
+        if(id) {
+            var uri = browserutils._bookmarkService.getBookmarkURI(id);
+            return uri.host;
+        }
+        else
+            return 'default';
+    },
+
+    getIdByName: function(name) {
+        var browserutils = new BrowserUtils();
+        return browserutils.findBookmarkID('telnet://'+name);
+    },
+    //*/ 
+
+    hasGroup: function(group) {
+        return this.prefs.groups[group] ? true : false;
+    },
+
+    removeGroup: function(group) {
+        if(group == this.getNameById(null)) return;
+        delete this.prefs.groups[group];
     },
 
     // Determine group name by url
@@ -76,13 +215,13 @@ PCManOptions.prototype = {
         for(var i=0; i<names.length; ++i) {
             if(names[i] == this.getNameById(null))
                 continue;
-            var id = parseInt(names[i].substr(6));
+            var id = this.getIdByName(names[i]);
             try {
                 var bookmarkTitle = bookmarkService.getItemTitle(id);
                 bookmarkTitles.push(bookmarkTitle);
                 this.bookmarkIDs.push(id);
             } catch (e) { // the bookmark may be removed
-                this.removeGroup(this.getNameById(id));
+                this.removeGroup(names[i]);
             }
         }
         return bookmarkTitles;
@@ -172,38 +311,6 @@ PCManOptions.prototype = {
         for(key in this.setupDefault) {
             var value = this.setupDefault[key];
             this.setVal(group, key, value);
-        }
-    },
-
-    getVal: function(group, key, value) {
-        switch(typeof(value)) {
-        case 'string':
-            return this.prefs.getStr(group, key, value);
-            break;
-        case 'number':
-            return this.prefs.getInt(group, key, value);
-            break;
-        case 'boolean':
-            return this.prefs.getBool(group, key, value);
-            break;
-        default: // unknown type or undefined
-            return value;
-        }
-    },
-
-    setVal: function(group, key, value) {
-        switch(typeof(value)) {
-        case 'string':
-            return this.prefs.setStr(group, key, value);
-            break;
-        case 'number':
-            return this.prefs.setInt(group, key, value);
-            break;
-        case 'boolean':
-            return this.prefs.setBool(group, key, value);
-            break;
-        default: // unknown type or undefined
-            return null;
         }
     }
 }
