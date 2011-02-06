@@ -6,7 +6,6 @@ function PrefHandler(listener) {
 }
 
 PrefHandler.prototype={
-///*
     observe: function() {
         var options = new PCManOptions();
         this.observer = {};
@@ -21,19 +20,6 @@ PrefHandler.prototype={
             options.prefService.addObserver(key, this.observer[key]);
         }
     },
-//*/
-
-/*
-    observe: function() {
-        var pref_changed ={
-            view: this,
-            handleEvent: function(e) {
-                this.view.onPrefChange(false);
-            }
-        };
-        document.addEventListener('PrefChanged', pref_changed, false);
-    },
-*/
 
     onPrefChange: function(initial) {
         var options = new PCManOptions();
