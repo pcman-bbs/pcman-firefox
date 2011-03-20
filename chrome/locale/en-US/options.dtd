@@ -4,4 +4,6 @@
 <!ENTITY options_general.label "General">
 <!ENTITY options_about.label "About">
 <!ENTITY options_codepage.label "Codepage:">
+<!ENTITY options_column.label "Column:">
+<!ENTITY options_row.label "Row:">
 

@@ -34,15 +34,23 @@
 
             <tabpanels>
                 <tabpanel>
-                    <hbox>
-                        <label control="Encoding" value="&options_codepage.label;"/>
-                        <menulist editable="true" id="Encoding">
-                            <menupopup>
-                                <menuitem label="big5"/>
-                                <menuitem label="gb2312"/>
-                            </menupopup>
-                        </menulist>
-                    </hbox>
+                    <vbox>
+                        <hbox>
+                            <label control="Encoding" value="&options_codepage.label;"/>
+                            <menulist editable="true" id="Encoding">
+                                <menupopup>
+                                    <menuitem label="big5"/>
+                                    <menuitem label="gb2312"/>
+                                </menupopup>
+                            </menulist>
+                        </hbox>
+                        <hbox>
+                            <label control="Cols" value="&options_column.label;"/>
+                            <textbox id="Cols" type="number" min="1" max="65535" size="3"/>
+                            <label control="Rows" value="&options_row.label;"/>
+                            <textbox id="Rows" type="number" min="1" max="65535" size="3"/>
+                        </hbox>
+                    </vbox>
                 </tabpanel>
 
                 <tabpanel>
@@ -56,7 +64,8 @@
     </hbox>
 
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js"/>
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js"/>
+    <!-- <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js"/> -->
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/contentpref.js"/>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js"/>
 
     </prefpane>

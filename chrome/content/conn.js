@@ -204,6 +204,10 @@ Conn.prototype={
                     case TERM_TYPE:
                         this.send( IAC + WILL + ch );
                         break;
+                    case NAWS:
+                        this.send( IAC + WILL + ch );
+                        this.sendNaws();
+                        break;
                     default:
                         this.send( IAC + WONT + ch );
                     }
@@ -236,6 +240,14 @@ Conn.prototype={
                 data='';
             }
         }
+    },
+
+    sendNaws: function() {
+        var cols = this.listener.prefs.Cols;
+        var rows = this.listener.prefs.Rows;
+        var nawsStr = String.fromCharCode(Math.floor(cols/256), cols%256, Math.floor(rows/256), rows%256).replace(/(\xff)/g,'\xff\xff');
+        var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
+        this.send( rep );
     },
 
     send: function(str) {

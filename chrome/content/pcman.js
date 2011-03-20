@@ -5,7 +5,7 @@ function PCMan() {
     this.prefs=new PrefHandler(this);
     this.conn=new Conn(this);
     this.view=new TermView(canvas);
-    this.buf=new TermBuf(80, 24);
+    this.buf=new TermBuf(this.prefs.Cols, this.prefs.Rows);
     this.buf.setView(this.view);
     this.view.setBuf(this.buf);
     this.view.setConn(this.conn);
