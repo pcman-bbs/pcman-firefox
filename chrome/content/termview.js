@@ -343,8 +343,12 @@ TermView.prototype={
     },
 
     onResize: function() {
+        var cols = this.buf ? this.buf.cols : 80;
+        var rows = this.buf ? this.buf.rows : 24;
+        var win = document.getElementById('topwin');
+        this.canvas.height = win.clientHeight;
         var ctx = this.ctx;
-        this.chh = Math.floor(this.canvas.height / 24);
+        this.chh = Math.floor(this.canvas.height / rows);
         var font = this.chh + 'px monospace';
         ctx.font= font;
         ctx.textBaseline='top';
@@ -353,19 +357,18 @@ TermView.prototype={
         this.chw=Math.round(m.width/2);
 
         // if overflow, resize canvas again
-        var win = document.getElementById('topwin');
-        var overflowX = (this.chw * 80) - win.clientWidth;
+        var overflowX = (this.chw * cols) - win.clientWidth;
         if(overflowX > 0) {
           this.canvas.width = win.clientWidth;
-          this.chw = Math.floor(this.canvas.width / 80);
+          this.chw = Math.floor(this.canvas.width / cols);
           this.chh = this.chw*2;  // is it necessary to measureText?
           font = this.chh + 'px monospace';
           ctx.font= font;
-          this.canvas.height = this.chh * 24;
+          this.canvas.height = this.chh * rows;
         }
 
         if(this.buf) {
-            this.canvas.width = this.chw * this.buf.cols;
+            this.canvas.width = this.chw * cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
             ctx.textBaseline='top';
@@ -373,7 +376,7 @@ TermView.prototype={
         }
         else {
             // dump(this.chw + ', ' + this.chw * 80 + '\n');
-            this.canvas.width = this.chw * 80;
+            this.canvas.width = this.chw * cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
             ctx.textBaseline='top';

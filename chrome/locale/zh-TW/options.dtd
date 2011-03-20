@@ -4,4 +4,6 @@
 <!ENTITY options_general.label "一般">
 <!ENTITY options_about.label "關於">
 <!ENTITY options_codepage.label "編碼：">
+<!ENTITY options_column.label "行數：">
+<!ENTITY options_row.label "列數：">
 

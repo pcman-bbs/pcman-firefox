@@ -16,8 +16,8 @@
     <!-- Fix the error message in the error console -->
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js" />
+    <!-- <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js" /> -->
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/contentpref.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefhandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />
@@ -47,11 +47,11 @@
     }
 
     function resize(){
-        var win=document.getElementById('topwin');
-        var canvas=document.getElementById("canvas");
+        //var win=document.getElementById('topwin');
+        //var canvas=document.getElementById("canvas");
         //canvas.width=win.clientWidth;
         //canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
-        canvas.height=win.clientHeight;
+        //canvas.height=win.clientHeight;
         pcman.view.onResize();
         // rc=document.getElementById('topwin').getBoundingClientRect();
     }
@@ -61,9 +61,15 @@
         createSearchMenu(search_menu);
     }
 
-    function create_SitePref() {
+    function sitePref() {
         var options = new PCManOptions();
-        options.create(document.location.href);
+        // Show the real group name even if it is not created
+        var group = options.getGroup(document.location.href, true);
+        if(options.hasGroup(group))
+            options.removeGroup(group);
+        else
+            options.resetGroup(group); // Create prefs and set initial value
+        options.save();
     }
     </script>
     <vbox align="center" id='box1'
@@ -91,10 +97,11 @@
         <menuitem label="&menu_copy.label;" oncommand="pcman.copy();"/>
         <menuitem label="&menu_paste.label;" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
+        <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->
         <menu label="&menu_search.label;">
           <menupopup id="search_menu" />
         </menu>
-        <menuitem label="&menu_sitepref.label;" oncommand="create_SitePref();"/>
+        <menuitem label="&menu_sitepref.label;" oncommand="sitePref();"/>
       </menupopup>
     </popupset>
 

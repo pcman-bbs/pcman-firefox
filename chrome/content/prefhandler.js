@@ -23,7 +23,7 @@ PrefHandler.prototype={
 
     onPrefChange: function(initial) {
         var options = new PCManOptions();
-        var group = options.getGroupName(document.location.href);
+        var group = options.getGroup(document.location.href);
         for(var key in options.setupDefault) {
             if(initial)
                 this[key] = options.setupDefault[key];
@@ -43,5 +43,15 @@ PrefHandler.prototype={
     setEncoding: function(charset) {
         this.Encoding = charset;
         this.listener.view.redraw(true);
+    },
+
+    setCols: function(cols) {
+        this.Cols = cols;
+        this.listener.buf.onResize();
+    },
+
+    setRows: function(rows) {
+        this.Rows = rows;
+        this.listener.buf.onResize();
     }
 }
