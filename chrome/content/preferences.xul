@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<!DOCTYPE prefwindow SYSTEM "chrome://pcmanfx2/locale/options.dtd">
+<!DOCTYPE prefwindow SYSTEM "chrome://pcmanfx2/locale/preferences.dtd">
 
 <prefwindow id="pcmanOption"
                 title="&options_pcmanoptions.label;"
@@ -50,6 +50,9 @@
                             <label control="Rows" value="&options_row.label;"/>
                             <textbox id="Rows" type="number" min="1" max="65535" size="3"/>
                         </hbox>
+                        <hbox>
+                            <checkbox id="NewTab" label="&options_newtab.label;"/>
+                        </hbox>
                     </vbox>
                 </tabpanel>
 
@@ -65,8 +68,9 @@
 
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js"/>
     <!-- <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js"/> -->
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefdefault.js"/>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/contentpref.js"/>
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/options.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/preferences.js"/>
 
     </prefpane>
 </prefwindow>

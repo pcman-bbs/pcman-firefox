@@ -598,7 +598,7 @@ TermView.prototype={
                 var uri = "";
                 for (var j=uris[i][0];j<uris[i][1];j++)
                     uri = uri + this.buf.lines[row][j].ch;
-                openURI(uri);
+                openURI(uri, this.conn.listener.prefs.NewTab);
             }
         }
     },

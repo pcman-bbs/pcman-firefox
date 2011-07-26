@@ -37,6 +37,31 @@ PrefHandler.prototype={
         }
     },
 
+    /*onPrefChange: function(initial) {
+        var options = new PCManOptions();
+        var group = options.getGroup(document.location.href);
+        if(initial) {
+            this.Encoding =
+               options.getVal(group, 'Encoding', options.setupDefault.Encoding);
+            this.Cols =
+               options.getVal(group, 'Cols', options.setupDefault.Cols);
+            this.Rows =
+               options.getVal(group, 'Rows', options.setupDefault.Rows);
+            this.NewTab =
+               options.getVal(group, 'NewTab', options.setupDefault.NewTab);
+        } else {
+            var newVal;
+            newVal = options.getVal(group, 'Encoding', this.Encoding);
+            if(newVal != this.Encoding) this.setEncoding(newVal);
+            newVal = options.getVal(group, 'Cols', this.Cols);
+            if(newVal != this.Cols) this.setCols(newVal);
+            newVal = options.getVal(group, 'Rows', this.Rows);
+            if(newVal != this.Rows) this.setRows(newVal);
+            newVal = options.getVal(group, 'NewTab', this.NewTab);
+            if(newVal != this.NewTab) this.setNewTab(newVal);
+        }
+    },*/
+
     // functions for applying prefs immediately
     // function with name 'set' + pref_name is the handler of pref_name
 
@@ -53,5 +78,9 @@ PrefHandler.prototype={
     setRows: function(rows) {
         this.Rows = rows;
         this.listener.buf.onResize();
+    },
+
+    setNewTab: function(isNewTab) {
+        this.NewTab = isNewTab;
     }
 }

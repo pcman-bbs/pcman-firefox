@@ -14,13 +14,11 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>3.6</em:minVersion>
-        <em:maxVersion>4.0.*</em:maxVersion>
+        <em:maxVersion>7.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
-    <!--
     <em:optionsURL>chrome://pcmanfx2/content/preferences.xul</em:optionsURL>
-    -->
 
     <!-- Front End MetaData -->
     <em:name>PCMan Firefox Extension</em:name>
@@ -31,7 +29,6 @@
     <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
     <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
     <em:homepageURL>http://code.google.com/p/pcmanfx/</em:homepageURL>
-    <em:optionsURL>chrome://pcmanfx2/content/options.xul</em:optionsURL>
 
     <em:localized>
         <Description>

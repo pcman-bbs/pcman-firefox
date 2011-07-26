@@ -1,20 +1,5 @@
 // Process the operations of prefwindow
 
-// Find the version of PCManFx
-function getVersion() {
-    var app = Components.classes["@mozilla.org/fuel/application;1"]
-                        .getService(Components.interfaces.fuelIApplication);
-    if(app.extensions) { // for firefox 3.x
-        var ver = app.extensions.get('pcmanfx2@pcman.org').version;
-        document.getElementById('version').value = ver;
-    } else { // for firefox 4.0+ 
-        Components.utils.import("resource://gre/modules/AddonManager.jsm");
-        AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
-            document.getElementById('version').value = addon.version;
-        });
-    }
-}
-
 // Update values in the prefwindow from the object
 function loadObject() {
     for(var key in options.setupDefault) {
@@ -26,6 +11,16 @@ function loadObject() {
             element.value = options.getVal(recentGroup, key, value);
     }
 }
+/*function loadObject() {
+    document.getElementById('Encoding').value =
+        options.getVal(recentGroup, 'Encoding', options.setupDefault.Encoding);
+    document.getElementById('Cols').value =
+        options.getVal(recentGroup, 'Cols', options.setupDefault.Cols);
+    document.getElementById('Rows').value =
+        options.getVal(recentGroup, 'Rows', options.setupDefault.Rows);
+    document.getElementById('NewTab').checked =
+        options.getVal(recentGroup, 'NewTab', options.setupDefault.NewTab);
+}*/
 
 // Update values in the prefwindow to the object
 function saveObject() {
@@ -37,6 +32,16 @@ function saveObject() {
             options.setVal(recentGroup, key, element.value);
     }
 }
+/*function saveObject() {
+    options.setVal(recentGroup, 'Encoding',
+        document.getElementById('Encoding').value);
+    options.setVal(recentGroup, 'Cols',
+        document.getElementById('Cols').value);
+    options.setVal(recentGroup, 'Rows',
+        document.getElementById('Rows').value);
+    options.setVal(recentGroup, 'NewTab',
+        document.getElementById('NewTab').checked);
+}*/
 
 // Initialize the prefwindow (fill bookmark titles in siteList)
 function load() {
@@ -50,7 +55,6 @@ function load() {
     }
     recentGroup = options.defaultGroup;
     loadObject();
-    getVersion();
 }
 
 // Change the content of prefwindow to that of another group
