@@ -6,4 +6,5 @@
 <!ENTITY options_codepage.label "Codepage:">
 <!ENTITY options_column.label "Column:">
 <!ENTITY options_row.label "Row:">
+<!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
 

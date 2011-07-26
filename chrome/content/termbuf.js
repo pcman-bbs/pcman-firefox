@@ -92,7 +92,9 @@ function TermBuf(cols, rows) {
 
 TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
-    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w#!:.?+=&%@!\-\/\$'*\,;|~(]+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+    //uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+    // Modified by Hemiola
+    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(?+=&%@!~\-\/])*/ig,
 
     setView: function(view) {
         this.view = view;
@@ -557,11 +559,12 @@ TermBuf.prototype={
                 this.lines.pop();
             for(row=0; row<this.curY-newrows+1; ++row)
                 this.lines.shift();
-            if(this.savedCurY>=0 && this.savedCurY<this.curY-newrows+1)
-                this.savedCurY=0;
-            else if(this.savedCurY>=0 && this.curY>newrows-1)
-                this.savedCurY-=this.curY-newrows+1;
-            if(this.savedCurY>=newrows) this.savedCurY=newrows-1;
+            if(this.cursorSaved) {
+                if(this.savedCurY<this.curY-newrows+1) this.savedCurY=0;
+                else if(this.curY>newrows-1)
+                    this.savedCurY-=this.curY-newrows+1;
+                if(this.savedCurY>=newrows) this.savedCurY=newrows-1;
+            }
             if(this.curY>=newrows) this.curY=newrows-1;
         } else {
             for(var row=this.rows-1; row<newrows-1; ++row) {
@@ -572,14 +575,15 @@ TermBuf.prototype={
             }
         }
         if(newcols<this.cols) {
-            if(this.curX>newcols) this.curX=0;
-            if(this.savedCurX>newcols) this.savedCurX=0;
+            if(this.curX>newcols) this.curX=newcols-1;
+            if(this.cursorSaved && this.savedCurX>newcols)
+                this.savedCurX=newcols-1;
             for(var row=0; row<newrows; ++row) {
                 for(var col=this.cols-1; col>newcols-1; --col)
                     this.lines[row].pop();
                 if(this.lines[row][newcols-1].isLeadByte)
                     this.lines[row][newcols-1].copyFrom(this.newChar);
-                // mark for updating url
+                // force the url to be updated
                 this.lines[row][newcols-1].needUpdate = true;
                 if(this.lines[row][newcols-2].isLeadByte)
                     this.lines[row][newcols-2].needUpdate = true;

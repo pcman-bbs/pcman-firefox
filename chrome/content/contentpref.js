@@ -2,17 +2,33 @@
 
 function PCManOptions() {
     this.defaultGroup = 'default';
-
-    this.setupDefault = {
-        'Encoding': 'big5',
-        'Cols': 80,
-        'Rows': 24
-    };
-
+    this.setupDefault = PrefDefault;
+    this.isFX3 = this.getVersion();
     this.load();
 }
 
 PCManOptions.prototype = {
+    // Find the version of PCManFx
+    getVersion: function() {
+        var app = Components.classes["@mozilla.org/fuel/application;1"]
+                            .getService(Components.interfaces.fuelIApplication);
+
+        if(document.getElementById('pcmanOption')) {
+            if(app.extensions) { // for firefox 3.x
+                document.getElementById('version').value = 
+                    app.extensions.get('pcmanfx2@pcman.org').version;
+            } else { // for firefox 4+ 
+                //FIXME: get return value from this asynchronous function
+                app.getExtensions(function(extensions) {
+                    document.getElementById('version').value = 
+                        extensions.get('pcmanfx2@pcman.org').version;
+                });
+            }
+        }
+
+        return Boolean(app.extensions);
+    },
+
     // Create objects storing all pref values in every group
     // and load the values from the database
     load: function() {
@@ -70,7 +86,7 @@ PCManOptions.prototype = {
         var groups = [];
         groups.push(this.defaultGroup);
         if(!specifiedKey) {
-            for(var key in this.setupDefault) { // Choose one key arbitrary
+            for(var key in this.setupDefault) { // Choose one key arbitrarily
                 specifiedKey = key;
                 break;
             }
@@ -99,7 +115,7 @@ PCManOptions.prototype = {
         var ios = Components.classes['@mozilla.org/network/io-service;1']
                   .getService(Components.interfaces.nsIIOService);
         var uri = ios.newURI(url, null, null);
-        var group = uri.host;
+        var group = this.isFX3 ? uri.host : uri.hostPort;
         if(!realName && !this.hasGroup(group)) // Not created, use default
             group = this.defaultGroup;
         return group;
@@ -107,9 +123,10 @@ PCManOptions.prototype = {
 
     // Get the key for the database from the group name
     getURI: function(group) {
-        var ios = Components.classes['@mozilla.org/network/io-service;1']
-                  .getService(Components.interfaces.nsIIOService);
-        return ios.newURI('telnet://'+group, null, null);
+        var uri = Components.classes['@mozilla.org/network/io-service;1']
+                  .getService(Components.interfaces.nsIIOService)
+                  .newURI('telnet://'+group, null, null);
+        return this.isFX3 ? uri : uri.hostPort;
     },
 
     getVal: function(group, key, value) {

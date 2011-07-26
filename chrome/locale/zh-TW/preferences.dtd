@@ -6,4 +6,5 @@
 <!ENTITY options_codepage.label "編碼：">
 <!ENTITY options_column.label "行數：">
 <!ENTITY options_row.label "列數：">
+<!ENTITY options_newtab.label "BBS畫面點擊鏈結後自動跳到新的分頁">
 
