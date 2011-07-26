@@ -1,8 +1,4 @@
 // Terminal Screen Buffer, displayed by TermView
-//
-// Little part of the code is taken from BBSFox developed by
-// Ett Chung <ettoolong@hotmail.com>
-// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const termColors=[
     // dark
@@ -96,7 +92,9 @@ function TermBuf(cols, rows) {
 
 TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
-    uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w#!:.?+=&%@!\-\/\$'*\,;|~(]+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+    //uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
+    // Modified by Hemiola
+    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(?+=&%@!~\-\/])*/ig,
 
     setView: function(view) {
         this.view = view;
@@ -291,7 +289,7 @@ TermBuf.prototype={
         }
     },
 
-    backTab: function(num) { // taken from BBSFox
+    backTab: function(num) {
         var mod = this.curX % 4;
         this.curX -= (mod>0 ? mod : 4);
         if(num > 1)
@@ -301,7 +299,7 @@ TermBuf.prototype={
         this.posChanged=true;
     },
 
-    insert: function(num) { // taken from BBSFox
+    insert: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -327,7 +325,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    del: function(num) { // taken from BBSFox
+    del: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -353,7 +351,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    eraseChar: function(num) { // taken from BBSFox
+    eraseChar: function(num) {
         var line = this.lines[this.curY];
         var cols = this.cols;
         var curX = this.curX;
@@ -396,7 +394,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    deleteLine: function(num) { // taken from BBSFox
+    deleteLine: function(num) {
         var tmp = this.top;
         this.top = this.curY;
         this.scroll(false, num);
@@ -404,7 +402,7 @@ TermBuf.prototype={
         this.changed=true;
     },
 
-    insertLine: function(num) { // taken from BBSFox
+    insertLine: function(num) {
         var tmp = this.top;
         if(this.curY < this.bottom) {
             this.top = this.curY;
