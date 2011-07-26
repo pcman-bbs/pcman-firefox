@@ -158,6 +158,23 @@ PCMan.prototype={
       }
       var rw = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
       var browserIndex = rw.gBrowser.getBrowserIndexForDocument(document);
+
+      // Modified by Hemiola 
+      if (browserIndex > -1) {
+        let tab = rw.gBrowser.mTabContainer.childNodes[browserIndex];
+        tab.image = icon;
+        switch (aStatus) {
+        case 'connect':
+          tab.setAttribute("protected", "true");
+          tab.setAttribute("locked", "true");
+          break;
+        case 'disconnect':
+          tab.removeAttribute("protected");
+          tab.removeAttribute("locked");
+          break;
+        }
+      }
+
       if (browserIndex > -1) {
         rw.gBrowser.mTabContainer.childNodes[browserIndex].image = icon;
       }

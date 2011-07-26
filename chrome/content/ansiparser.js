@@ -2,10 +2,6 @@
 // References: http://www.termsys.demon.co.uk/vtansi.htm
 //             http://www.it.usyd.edu.au/~tapted/ansi.html
 //             http://wapedia.mobi/en/ANSI_X3.64
-//
-// Little part of the code is taken from BBSFox developed by
-// Ett Chung <ettoolong@hotmail.com>
-// https://addons.mozilla.org/zh-TW/firefox/addon/179388/
 
 const STATE_TEXT=0;
 const STATE_ESC=1;
