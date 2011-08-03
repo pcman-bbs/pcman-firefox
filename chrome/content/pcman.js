@@ -15,7 +15,7 @@ function PCMan() {
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
                  .getService(Components.interfaces.nsIXULRuntime).OS;
 
-    this.prefs.observe();
+    this.prefs.observe(true);
 }
 
 PCMan.prototype={
@@ -39,10 +39,10 @@ PCMan.prototype={
 
         this.view.removeEventListener();
         this.view.input.controllers.removeController(this.textboxControllers);
+        this.prefs.observe(false);
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
-        this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {

@@ -90,6 +90,7 @@ Conn.prototype={
     },
 
     close: function() {
+        // added by Hemiola SUN
         if ( !this.ins )
           return;
 
@@ -254,8 +255,6 @@ Conn.prototype={
         // added by Hemiola SUN
         if ( !this.ins )
           return;
-
-        this.idleTimeout.cancel();
 
         this.outs.write(str, str.length);
         this.outs.flush();

@@ -2,7 +2,8 @@
 
 function PCManOptions() {
     this.defaultGroup = 'default';
-    this.setupDefault = PrefDefault;
+    this.specifiedKey = PrefDefault;
+    this.setupDefault = PrefDefaults;
     this.isFX3 = this.getVersion();
     this.load();
 }
@@ -17,7 +18,7 @@ PCManOptions.prototype = {
             if(app.extensions) { // for firefox 3.x
                 document.getElementById('version').value = 
                     app.extensions.get('pcmanfx2@pcman.org').version;
-            } else { // for firefox 4+ 
+            } else { // for firefox 4+
                 //FIXME: get return value from this asynchronous function
                 app.getExtensions(function(extensions) {
                     document.getElementById('version').value = 
@@ -40,9 +41,7 @@ PCManOptions.prototype = {
         for(var i = groups.length - 1; i >= 0; --i) {
             var group = groups[i];
             this.prefs.groups[group] = {};
-            var uri = null;
-            if(group != this.defaultGroup)
-                uri = this.getURI(group);
+            var uri = this.getURI(group);
             for(var key in this.setupDefault) {
                 if(this.prefService.hasPref(uri, key)) {
                     var value = this.prefService.getPref(uri, key);
@@ -64,19 +63,16 @@ PCManOptions.prototype = {
         for(var i = groups.length - 1; i >= 0; --i) {
             var group = groups[i];
             if(this.hasGroup(group)) { // check if the group was removed or not
-                var uri = null;
-                if(group != this.defaultGroup)
-                    uri = this.getURI(group);
+                var uri = this.getURI(group);
                 for(var key in this.setupDefault) {
                     var value = this.prefs.groups[group][key];
                     this.prefService.setPref(uri, key, value);
                 }
             } else { // to be removed groups
-                if(group != this.defaultGroup) {
-                    var uri = this.getURI(group);
-                    for(var key in this.setupDefault)
-                        this.prefService.removePref(uri, key);
-                }
+                var uri = this.getURI(group);
+                if(!uri) continue; // Exclude the default group
+                for(var key in this.setupDefault)
+                    this.prefService.removePref(uri, key);
             }
         }
     },
@@ -85,20 +81,15 @@ PCManOptions.prototype = {
     getGroupNames: function(specifiedKey) {
         var groups = [];
         groups.push(this.defaultGroup);
-        if(!specifiedKey) {
-            for(var key in this.setupDefault) { // Choose one key arbitrarily
-                specifiedKey = key;
-                break;
-            }
-        }
-        // FIXME: Some groups may be missed for new prefs in upgraded version
+        if(!specifiedKey)
+            specifiedKey = this.specifiedKey;
         var groupedPrefs = this.prefService.getPrefsByName(specifiedKey);
         var enumerator = groupedPrefs.enumerator;
         while(enumerator.hasMoreElements()) {
             var property = enumerator.getNext()
                           .QueryInterface(Components.interfaces.nsIProperty);
             var group = property.name;
-            if(group)
+            if(group && this.getURI(group))
                 groups.push(group);
         }
         return groups;
@@ -112,21 +103,31 @@ PCManOptions.prototype = {
     // and optionally return default for not created site
     getGroup: function(url, realName) {
         if(!url) return this.defaultGroup;
-        var ios = Components.classes['@mozilla.org/network/io-service;1']
-                  .getService(Components.interfaces.nsIIOService);
-        var uri = ios.newURI(url, null, null);
-        var group = this.isFX3 ? uri.host : uri.hostPort;
-        if(!realName && !this.hasGroup(group)) // Not created, use default
-            group = this.defaultGroup;
+        try {
+            var uri = Components.classes['@mozilla.org/network/io-service;1']
+                      .getService(Components.interfaces.nsIIOService)
+                      .newURI(url, null, null);
+            var group = this.isFX3 ? uri.host : uri.hostPort;
+            if(!realName && !this.hasGroup(group)) // Not created, use default
+                group = this.defaultGroup;
+        } catch (e) { // incorrect url
+            var group = this.defaultGroup;
+        }
         return group;
     },
 
     // Get the key for the database from the group name
     getURI: function(group) {
-        var uri = Components.classes['@mozilla.org/network/io-service;1']
-                  .getService(Components.interfaces.nsIIOService)
-                  .newURI('telnet://'+group, null, null);
-        return this.isFX3 ? uri : uri.hostPort;
+        if(group == this.defaultGroup)
+            return null;
+        try {
+            var uri = Components.classes['@mozilla.org/network/io-service;1']
+                      .getService(Components.interfaces.nsIIOService)
+                      .newURI('telnet://'+group, null, null);
+            return this.isFX3 ? uri : uri.hostPort;
+        } catch (e) { // incorrect group
+            return null;
+        }
     },
 
     getVal: function(group, key, value) {
