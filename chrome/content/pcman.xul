@@ -66,11 +66,15 @@
         var options = new PCManOptions();
         // Show the real group name even if it is not created
         var group = options.getGroup(document.location.href, true);
-        if(options.hasGroup(group))
+        if(options.hasGroup(group)) {
             options.removeGroup(group);
-        else
+            options.save();
+            window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "");
+        } else {
             options.resetGroup(group); // Create prefs and set initial value
-        options.save();
+            options.save();
+            window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", group);
+        }
     }
     </script>
     <vbox align="center" id='box1'

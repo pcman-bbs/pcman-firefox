@@ -70,6 +70,12 @@ function TermView(canvas) {
     };
     this.input.addEventListener('input', text_input, false);
 
+    this.eventListener = {};
+    this.eventListener.composition_start = composition_start;
+    this.eventListener.composition_end = composition_end;
+    this.eventListener.key_press = key_press;
+    this.eventListener.text_input = text_input;
+
     var _this=this;
     this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
 }
@@ -652,5 +658,18 @@ TermView.prototype={
             }
         }
         this.redraw(false);
+    },
+
+    removeEventListener: function() {
+        var input = this.input;
+        var composition_start = this.eventListener.composition_start;
+        var composition_end = this.eventListener.composition_end;
+        var key_press = this.eventListener.key_press;
+        var text_input = this.eventListener.text_input;
+        input.removeEventListener('compositionstart', composition_start, false);
+        input.removeEventListener('compositionend', composition_end, false);
+        removeEventListener('keypress', key_press, false);
+        input.removeEventListener('input', text_input, false);
+        delete this.eventListener;
     }
 }

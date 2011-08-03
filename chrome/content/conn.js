@@ -83,6 +83,10 @@ Conn.prototype={
     },
 
     close: function() {
+        // added by Hemiola SUN
+        if ( !this.ins )
+          return;
+
         this.ins.close();
         this.outs.close();
         delete this._ins;
@@ -212,6 +216,10 @@ Conn.prototype={
     },
 
     send: function(str) {
+        // added by Hemiola SUN
+        if ( !this.ins )
+          return;
+
         this.outs.write(str, str.length);
         this.outs.flush();
     },

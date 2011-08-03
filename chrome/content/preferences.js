@@ -47,26 +47,32 @@ function saveObject() {
 function load() {
     options = new PCManOptions();
     itemTitles = options.getGroupNames();
-    // Fetch title from bookmarks. XXX: Places API can be slow!
-    var browserutils = new BrowserUtils();
-    for(var i=1; i<itemTitles.length; ++i) { // Exclude the default group
-        var title = browserutils.findBookmarkTitle('telnet://'+itemTitles[i]);
-        document.getElementById('siteList').appendItem(title);
-    }
     recentGroup = options.defaultGroup;
     loadObject();
+
+    var group = window.arguments ? window.arguments[0] : null;
+    if(!group) group = options.defaultGroup;
+    var siteList = document.getElementById('siteList');
+    // Fetch title from bookmarks. XXX: Places API can be slow!
+    var browserutils = new BrowserUtils();
+    for(var i=1; i<itemTitles.length; ++i) {
+        // Exclude itemTitles[0], the default group
+        var title = browserutils.findBookmarkTitle('telnet://'+itemTitles[i]);
+        if(!title) title = itemTitles[i]; // Not a url
+        siteList.appendItem(title);
+        if(itemTitles[i] == group) // siteChanged() will be fired automatically
+            siteList.selectedIndex = siteList.itemCount-1;
+    }
 }
 
 // Change the content of prefwindow to that of another group
 function siteChanged() {
     saveObject();
-    var siteList = document.getElementById('siteList');
-    var siteIndex = siteList.getIndexOfItem(siteList.selectedItems[0]);
+    var siteIndex = document.getElementById('siteList').selectedIndex;
     if(siteIndex == 0)
-        var groupname = options.defaultGroup;
+        recentGroup = options.defaultGroup;
     else
-        var groupname = itemTitles[siteIndex];
-    recentGroup = groupname;
+        recentGroup = itemTitles[siteIndex];
     loadObject();
 }
 
