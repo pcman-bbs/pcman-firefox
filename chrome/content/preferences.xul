@@ -9,6 +9,7 @@
                 minwidth="400"
                 onload="load();"
                 ondialogaccept="save();"
+                ondialogcancel="if ( document.documentElement.instantApply ) save();"
                 buttons="accept, cancel"
                 >
 
