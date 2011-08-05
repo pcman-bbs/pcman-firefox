@@ -279,6 +279,11 @@ TermView.prototype={
     onkeyPress: function(e) {
         // dump('onKeyPress:'+e.charCode + ', '+e.keyCode+'\n');
         var conn = this.conn;
+        
+        // give keypress control back to Firefox
+        if ( !conn.ins )
+          return;
+          
         if(e.charCode){
             // Control characters
             if(e.ctrlKey && !e.altKey && !e.shiftKey) {
