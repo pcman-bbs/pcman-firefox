@@ -28,9 +28,7 @@ function TermView(canvas) {
     this.cursorVisible=true; // false to hide the cursor
     this.cursorShow=false; // blinking state of cursor
 
-    // Process the input events
     this.input = document.getElementById('input_proxy');
-    this.inputHandler = new InputHandler(this);
 
     // initialize
     var ctx = this.ctx;
@@ -281,11 +279,6 @@ TermView.prototype={
     onkeyPress: function(e) {
         // dump('onKeyPress:'+e.charCode + ', '+e.keyCode+'\n');
         var conn = this.conn;
-        
-        // give keypress control back to Firefox
-        if ( !conn.ins )
-          return;
-          
         if(e.charCode){
             // Control characters
             if(e.ctrlKey && !e.altKey && !e.shiftKey) {
@@ -626,11 +619,6 @@ TermView.prototype={
     onClick: function(event) {
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
-
-        // Event dispatching order: mousedown -> mouseup -> click
-        // For a common click, previous selection always collapses in mouseup
-        if (this.selection.hasSelection()) return;
-
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
         if (!uris) return;
