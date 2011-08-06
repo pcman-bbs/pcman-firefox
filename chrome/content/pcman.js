@@ -198,5 +198,8 @@ PCMan.prototype={
       copy.disabled = !hasSelection;
       searchMenu.disabled = !hasSelection;
     },
-
+    
+    debug : function (text) {
+      Application.console.log(text);
+    }
 }
