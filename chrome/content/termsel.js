@@ -93,27 +93,16 @@ TermSel.prototype={
         var col = this.startCol;
         var line = buf.lines[this.startRow];
         if(col < buf.cols && col > 0) {
-            if(!line[col].isLeadByte && line[col-1].isLeadByte) {
-                line[col].isSelected = false;
+            if(!line[col].isLeadByte && line[col-1].isLeadByte)
                 this.startCol++;
-            }
         }
         
-        if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
-          this.cancelSel(true);
-          return;
-        }        
-        
-        // fit the real selection on the screen
-        if(this.endCol == buf.cols) this.endCol--;
         var col = this.endCol;
         var line = buf.lines[this.endRow];
-        if(!line[col].isSelected) {
-            if (!line[col].isLeadByte && line[col-1].isLeadByte)
-              line[col].isSelected = true;
-            else
-              this.endCol--;
-        }    
+        if(!line[col].isSelected)
+            this.endCol--;
+        
+        this.view.updateSel();
     },
 
     cancelSel: function(redraw) {
