@@ -79,12 +79,12 @@
     </stringbundleset>
 
     <popupset>
-      <menupopup id="popup-menu">
-        <menuitem label="&menu_copy.label;" oncommand="pcman.copy();"/>
-        <menuitem label="&menu_paste.label;" oncommand="pcman.paste();"/>
+      <menupopup id="popup-menu" onpopupshowing="pcman.onMenuPopupShowing();">
+        <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="pcman.copy();"/>
+        <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
         <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->
-        <menu label="&menu_search.label;">
+        <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
         </menu>
       </menupopup>
