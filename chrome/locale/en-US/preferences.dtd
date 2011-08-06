@@ -1,10 +1,18 @@
 <!ENTITY options_pcmanoptions.label "PCMan Options">
 <!ENTITY options_sitesetting.label "Site settings">
 <!ENTITY options_default.label "Default">
+<!ENTITY options_add.label "Create">
+<!ENTITY options_del.label "Remove">
 <!ENTITY options_general.label "General">
 <!ENTITY options_about.label "About">
 <!ENTITY options_codepage.label "Codepage:">
 <!ENTITY options_column.label "Column:">
 <!ENTITY options_row.label "Row:">
 <!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
+<!ENTITY options_addondescription.label "A GNU/GPL telnet client extension specifically designed for BBS browsing.">
+<!ENTITY options_creator.label "Author: Hong Jen Yee">
+<!ENTITY options_download.label "Download">
+<!ENTITY options_downloadurl.label "https://addons.mozilla.org/en-US/firefox/addon/pcman-bbs-extension/">
+<!ENTITY options_homepage.label "Homepage">
+<!ENTITY options_reportbug.label "Report Bugs">
 
