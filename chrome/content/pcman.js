@@ -189,6 +189,14 @@ PCMan.prototype={
       if (browserIndex > -1) {
         rw.gBrowser.mTabContainer.childNodes[browserIndex].image = icon;
       }
-    }
+    },
+    
+    onMenuPopupShowing : function () {
+      let copy = document.getElementById("popup-copy");
+      let searchMenu = document.getElementById("popup-search");
+      let hasSelection = pcman.view.selection.hasSelection();
+      copy.disabled = !hasSelection;
+      searchMenu.disabled = !hasSelection;
+    },
 
 }
