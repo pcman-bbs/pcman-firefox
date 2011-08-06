@@ -33,15 +33,6 @@ TermSel.prototype={
         this.isSelecting = true;
         this.blockMode = block_mode;
 
-        // ensure we don't select half of a DBCS character
-        var buf = this.view.buf;
-        var line = buf.lines[row];
-        if(col < buf.cols && col > 0) {
-            // if this is the second byte of DBCS char
-            if(!line[col].isLeadByte && line[col-1].isLeadByte)
-                ++col;
-        }
-
         this.realStartCol = this.startCol = this.realEndCol = this.endCol = col;
         this.realStartRow = this.startRow = this.realEndRow = this.endRow = row;
     },
@@ -50,15 +41,6 @@ TermSel.prototype={
         this.realEndCol = col;
         this.realEndRow = row;
         var col1, col2, row1, row2, col, row;
-
-        // ensure we don't select half of a DBCS character
-        var buf = this.view.buf;
-        var line = buf.lines[row];
-        if(col < buf.cols && col > 0) {
-            // if this is the second byte of DBCS char
-            if(!line[col].isLeadByte && line[col-1].isLeadByte)
-                ++col;
-        }
 
         // swap start and end points to kept them in correct order
         if(this.realEndRow == this.realStartRow) { // only one line is selected
@@ -97,6 +79,30 @@ TermSel.prototype={
     selEnd: function(col, row) {
         this.selUpdate(col, row);
         this.isSelecting = false;
+        if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
+          this.cancelSel(true);
+          return;
+        }
+        this.selTrim();
+    },
+
+    selTrim: function() {
+        var buf = this.view.buf;
+
+        // ensure we don't select half of a DBCS character
+        var col = this.startCol;
+        var line = buf.lines[this.startRow];
+        if(col < buf.cols && col > 0) {
+            if(!line[col].isLeadByte && line[col-1].isLeadByte)
+                this.startCol++;
+        }
+        
+        var col = this.endCol;
+        var line = buf.lines[this.endRow];
+        if(!line[col].isSelected)
+            this.endCol--;
+        
+        this.view.updateSel();
     },
 
     cancelSel: function(redraw) {
