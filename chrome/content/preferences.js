@@ -1,5 +1,24 @@
 // Process the operations of prefwindow
 
+function getVersion(app) {
+    //var app = Components.classes["@mozilla.org/fuel/application;1"]
+    //                    .getService(Components.interfaces.fuelIApplication);
+    if(app.extensions) { // for firefox 3.x
+        document.getElementById('addonID').value = 
+            app.extensions.get('pcmanfx2@pcman.org').name;
+        document.getElementById('version').value = 
+            app.extensions.get('pcmanfx2@pcman.org').version;
+    } else { // for firefox 4+
+        //FIXME: get return value from this asynchronous function
+        app.getExtensions(function(extensions) {
+            document.getElementById('addonID').value = 
+                extensions.get('pcmanfx2@pcman.org').name;
+            document.getElementById('version').value = 
+                extensions.get('pcmanfx2@pcman.org').version;
+        });
+    }
+}
+
 // Update values in the prefwindow from the object
 function loadObject() {
     for(var key in options.setupDefault) {
@@ -46,21 +65,24 @@ function saveObject() {
 // Initialize the prefwindow (fill bookmark titles in siteList)
 function load() {
     options = new PCManOptions();
-    itemTitles = options.getGroupNames();
+    groupNames = options.getGroupNames();
     recentGroup = options.defaultGroup;
     loadObject();
 
-    var group = window.arguments ? window.arguments[0] : null;
-    if(!group) group = options.defaultGroup;
+    var href = window.arguments ? window.arguments[0] : null;
+    callingGroup = href ? options.getGroup(href, true) : options.defaultGroup;
+    if(!options.hasGroup(callingGroup))
+        document.getElementById('addSite').disabled = false;
+
     var siteList = document.getElementById('siteList');
     // Fetch title from bookmarks. XXX: Places API can be slow!
     var browserutils = new BrowserUtils();
-    for(var i=1; i<itemTitles.length; ++i) {
-        // Exclude itemTitles[0], the default group
-        var title = browserutils.findBookmarkTitle('telnet://'+itemTitles[i]);
-        if(!title) title = itemTitles[i]; // Not a url
+    for(var i=1; i<groupNames.length; ++i) {
+        // Exclude groupNames[0], the default group
+        var title = browserutils.findBookmarkTitle('telnet://'+groupNames[i]);
+        if(!title) title = groupNames[i]; // Not a url
         siteList.appendItem(title);
-        if(itemTitles[i] == group) // siteChanged() will be fired automatically
+        if(groupNames[i] == callingGroup) // siteChanged() will be fired automatically
             siteList.selectedIndex = siteList.itemCount-1;
     }
 }
@@ -69,16 +91,49 @@ function load() {
 function siteChanged() {
     saveObject();
     var siteIndex = document.getElementById('siteList').selectedIndex;
-    if(siteIndex == 0)
+    if(siteIndex == 0) {
         recentGroup = options.defaultGroup;
-    else
-        recentGroup = itemTitles[siteIndex];
+        document.getElementById('delSite').disabled = true;
+    } else {
+        recentGroup = groupNames[siteIndex];
+        document.getElementById('delSite').disabled = false;
+    }
     loadObject();
 }
 
 // Save all changes to file
-function save() {
+function save(force) {
+    if(!document.documentElement.instantApply && !force)
+        return;
     saveObject();
     options.save();
 }
 
+// Create a new site pref
+function addSite() {
+    document.getElementById('addSite').disabled = true;
+    if(callingGroup == options.defaultGroup) return;
+    options.resetGroup(callingGroup); // Create prefs and set initial value
+    groupNames.push(callingGroup);
+    var siteList = document.getElementById('siteList');
+    // Fetch title from bookmarks. XXX: Places API can be slow!
+    var browserutils = new BrowserUtils();
+    var title = browserutils.findBookmarkTitle('telnet://'+callingGroup);
+    if(!title) title = callingGroup; // Not a url
+    siteList.appendItem(title);
+    siteList.selectedIndex = siteList.itemCount-1;
+    save();
+}
+
+// Delete an existed site pref
+function delSite() {
+    if(recentGroup == options.defaultGroup) return;
+    var removeGroup = recentGroup;
+    var siteList = document.getElementById('siteList');
+    var siteIndex = siteList.selectedIndex;
+    siteList.selectedIndex = 0;
+    siteList.removeItemAt(siteIndex);
+    groupNames.splice(siteIndex,1);
+    options.removeGroup(removeGroup);
+    save();
+}

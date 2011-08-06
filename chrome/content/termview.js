@@ -666,6 +666,7 @@ TermView.prototype={
     },
 
     removeEventListener: function() {
+        if(!this.eventListener) return;
         var input = this.input;
         var composition_start = this.eventListener.composition_start;
         var composition_end = this.eventListener.composition_end;
@@ -675,6 +676,7 @@ TermView.prototype={
         input.removeEventListener('compositionend', composition_end, false);
         removeEventListener('keypress', key_press, false);
         input.removeEventListener('input', text_input, false);
+        this.onCompositionEnd();
         delete this.eventListener;
     }
 }

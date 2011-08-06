@@ -63,18 +63,7 @@
     }
 
     function sitePref() {
-        var options = new PCManOptions();
-        // Show the real group name even if it is not created
-        var group = options.getGroup(document.location.href, true);
-        if(options.hasGroup(group)) {
-            options.removeGroup(group);
-            options.save();
-            window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "");
-        } else {
-            options.resetGroup(group); // Create prefs and set initial value
-            options.save();
-            window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", group);
-        }
+        window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", document.location.href);
     }
     </script>
     <vbox align="center" id='box1'
@@ -106,6 +95,7 @@
         <menu label="&menu_search.label;">
           <menupopup id="search_menu" />
         </menu>
+        <menuseparator/>
         <menuitem label="&menu_sitepref.label;" oncommand="sitePref();"/>
       </menupopup>
     </popupset>

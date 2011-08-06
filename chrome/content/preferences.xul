@@ -8,8 +8,7 @@
                 xmlns:html="http://www.w3.org/1999/xhtml"
                 minwidth="400"
                 onload="load();"
-                ondialogaccept="save();"
-                ondialogcancel="if ( document.documentElement.instantApply ) save();"
+                ondialogaccept="save(true);"
                 buttons="accept, cancel"
                 >
 
@@ -23,6 +22,11 @@
                 <listbox id="siteList" onselect="siteChanged()" rows="11" width="100">
                     <listitem label="&options_default.label;" selected="true"/>
                 </listbox>
+                <hbox>
+                    <spacer flex="1"/>
+                    <button id="addSite" label="&options_add.label;" oncommand="addSite();" disabled="true"/>
+                    <button id="delSite" label="&options_del.label;" oncommand="delSite();" disabled="true"/>
+                </hbox>
             </groupbox>
             <spacer flex="1"/>
         </vbox>
@@ -38,7 +42,7 @@
                     <vbox>
                         <hbox>
                             <label control="Encoding" value="&options_codepage.label;"/>
-                            <menulist editable="true" id="Encoding">
+                            <menulist editable="true" id="Encoding" oncommand="save();">
                                 <menupopup>
                                     <menuitem label="big5"/>
                                     <menuitem label="gb2312"/>
@@ -47,21 +51,33 @@
                         </hbox>
                         <hbox>
                             <label control="Cols" value="&options_column.label;"/>
-                            <textbox id="Cols" type="number" min="1" max="65535" size="3"/>
+                            <textbox id="Cols" type="number" min="1" max="65535" size="3" onchange="save();"/>
                             <label control="Rows" value="&options_row.label;"/>
-                            <textbox id="Rows" type="number" min="1" max="65535" size="3"/>
+                            <textbox id="Rows" type="number" min="1" max="65535" size="3" onchange="save();"/>
                         </hbox>
                         <hbox>
-                            <checkbox id="NewTab" label="&options_newtab.label;"/>
+                            <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                         </hbox>
                     </vbox>
                 </tabpanel>
 
                 <tabpanel>
-                    <hbox>
-                        <label value="pcmanfx "/>
-                        <label id="version"/>
-                    </hbox>
+                    <vbox>
+                        <hbox>
+                            <image src="chrome://pcmanfx2/skin/PCMan.png"/>
+                            <label id="addonID"/>
+                            <label id="version"/>
+                        </hbox>
+                        <description maxwidth="300">&options_addondescription.label;</description>
+                        <label value="&options_creator.label;"/>
+                        <hbox>
+                            <button label="&options_download.label;" onclick="openURI('&options_downloadurl.label;', true)"/>
+                            <spacer flex="1"/>
+                            <button label="&options_homepage.label;" onclick="openURI('http://code.google.com/p/pcmanfx/', true)"/>
+                            <spacer flex="1"/>
+                            <button label="&options_reportbug.label;" onclick="openURI('http://code.google.com/p/pcmanfx/issues/list', true)"/>
+                        </hbox>
+                    </vbox>
                 </tabpanel>
             </tabpanels>
         </tabbox>

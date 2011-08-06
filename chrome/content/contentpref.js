@@ -14,18 +14,8 @@ PCManOptions.prototype = {
         var app = Components.classes["@mozilla.org/fuel/application;1"]
                             .getService(Components.interfaces.fuelIApplication);
 
-        if(document.getElementById('pcmanOption')) {
-            if(app.extensions) { // for firefox 3.x
-                document.getElementById('version').value = 
-                    app.extensions.get('pcmanfx2@pcman.org').version;
-            } else { // for firefox 4+
-                //FIXME: get return value from this asynchronous function
-                app.getExtensions(function(extensions) {
-                    document.getElementById('version').value = 
-                        extensions.get('pcmanfx2@pcman.org').version;
-                });
-            }
-        }
+        if(document.getElementById('pcmanOption'))
+            getVersion(app);
 
         return Boolean(app.extensions);
     },
@@ -58,7 +48,7 @@ PCManOptions.prototype = {
     save: function() {
         var groups = this.getGroupNames();
         for(var grp in this.prefs.groups) {
-            if(!groups[grp]) groups.push(grp); // just added groups
+            if(grp && !groups[grp]) groups.push(grp); // just added groups
         }
         for(var i = groups.length - 1; i >= 0; --i) {
             var group = groups[i];
