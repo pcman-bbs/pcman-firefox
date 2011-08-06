@@ -29,9 +29,9 @@ PCMan.prototype={
         if(this.conn.ins) {
             this.abnormalClose = true;
             this.conn.close();
+            this.view.removeEventListener();
         }
 
-        this.view.removeEventListener();
         this.view.input.controllers.removeController(this.textboxControllers);
 
         // added by Hemiola SUN 
@@ -51,6 +51,7 @@ PCMan.prototype={
 
     onClose: function(conn) {
         if(this.abnormalClose) return;
+        this.view.removeEventListener();
 
         /* alert(this.stringBundle.getString("alert_conn_close")); */
         this.updateTabIcon('disconnect');
