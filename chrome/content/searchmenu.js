@@ -25,7 +25,7 @@ function onSearchItemCommand(event, name) {
         var engine = searchService.getEngineByName(name);
         var submission = engine.getSubmission(text, null);
         if(submission)
-            openURI(submission.uri.spec, false);
+            openURI(submission.uri.spec, false, submission.postData);
     }
 }
 

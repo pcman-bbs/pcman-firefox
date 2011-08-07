@@ -627,6 +627,11 @@ TermView.prototype={
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
         if (!uris) return;
+
+        // Event dispatching order: mousedown -> mouseup -> click
+        // For a common click, previous selection always collapses in mouseup
+        if (this.selection.hasSelection()) return;
+
         for (var i=0;i<uris.length;i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 var uri = "";

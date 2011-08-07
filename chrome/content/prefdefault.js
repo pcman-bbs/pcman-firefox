@@ -1,5 +1,5 @@
 var PrefDefaults = {
-    'Encoding': 'big5',
+    'Encoding': (window.navigator.language == 'zh-CN' ? 'gb2312' : 'big5'),
     'Cols': 80,
     'Rows': 24,
     'NewTab': false
