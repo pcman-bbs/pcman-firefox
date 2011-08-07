@@ -26,6 +26,9 @@ PCMan.prototype={
         if(parts.length > 1)
             port=parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
+        
+        let temp = this;
+        this.conn.idleTimeout = setTimer( false, function (){ temp.conn.sendIdleString(); }, 180000 );
     },
 
     close: function() {
@@ -40,6 +43,7 @@ PCMan.prototype={
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
+        this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {

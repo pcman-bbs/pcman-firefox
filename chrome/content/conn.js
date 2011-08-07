@@ -220,8 +220,13 @@ Conn.prototype={
         if ( !this.ins )
           return;
 
+        this.idleTimeout.cancel();
+
         this.outs.write(str, str.length);
         this.outs.flush();
+
+        let temp = this;
+        this.idleTimeout = setTimer( false, function (){ temp.sendIdleString(); }, 180000 );
     },
 
     convSend: function(unicode_str, charset) {
@@ -242,5 +247,9 @@ Conn.prototype={
         }
         if(s)
             this.send(s);
+    },
+    
+    sendIdleString : function () {
+        this.send("\x1b[A"); // Arrow Up
     }
 }
