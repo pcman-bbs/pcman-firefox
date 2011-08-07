@@ -43,6 +43,7 @@ PCMan.prototype={
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
+        this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {

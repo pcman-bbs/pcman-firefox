@@ -256,6 +256,8 @@ Conn.prototype={
         if ( !this.ins )
           return;
 
+        this.idleTimeout.cancel();
+
         this.outs.write(str, str.length);
         this.outs.flush();
 
@@ -284,6 +286,6 @@ Conn.prototype={
     },
     
     sendIdleString : function () {
-        this.send("\x1b[A\x1b[B"); // Arrow Up and Arrow Down
+        this.send("\x1b[A"); // Arrow Up
     }
 }
