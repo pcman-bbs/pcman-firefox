@@ -86,7 +86,6 @@ Conn.prototype={
         this.ipump = pump;
         
         this.connectTime = Date.now();
-        this.connectCount++;
     },
 
     close: function() {
@@ -101,34 +100,10 @@ Conn.prototype={
         delete this.outs;
         delete this.trans;
 
-        if(this.listener.abnormalClose)
-            return;
-
-        if(this.connectCount >= 100) {
-            this.connectFailed = true; //FIXME: show something on UI?
-            return;
-        }
-
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
-        if ( time - this.connectTime < 15000 ) {
-            this.listener.buf.clear(2);
-            this.listener.buf.attr.resetAttr();
-            var connectDelay = 0;
-            if(this.reconnectTimer) {
-                this.reconnectTimer.cancel(); // wait for this reconnection
-                delete this.reconnectTimer;
-            }
-            if(!connectDelay) {
-                this.connect();
-            } else {
-                var _this = this;
-                this.reconnectTimer = setTimer(false, function() {
-                    delete _this.reconnectTimer;
-                    _this.connect();
-                }, connectDelay * 1000);
-            }
-        }
+        if ( time - this.connectTime < 15000 )
+          setup();
     },
 
     // data listener
