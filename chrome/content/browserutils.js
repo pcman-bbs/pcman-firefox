@@ -39,11 +39,13 @@ BrowserUtils.prototype = {
   }
 }
 
-function openURI(uri, activate) {
+function openURI(uri, activate, postData) {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                 .getService(Components.interfaces.nsIWindowMediator);
     var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-    var tab = gBrowser.addTab(uri, gBrowser.currentURI);
+    var tab = postData ?
+              gBrowser.addTab(uri, gBrowser.currentURI, null, postData) :
+              gBrowser.addTab(uri, gBrowser.currentURI);
     if(activate)
         gBrowser.selectedTab = tab;
 }

@@ -97,12 +97,20 @@ TermSel.prototype={
                 this.startCol++;
         }
         
+        if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
+          this.cancelSel(true);
+          return;
+        }        
+        
+        // fit the real selection on the screen
         var col = this.endCol;
         var line = buf.lines[this.endRow];
-        if(!line[col].isSelected)
-            this.endCol--;
-        
-        this.view.updateSel();
+        if(!line[col].isSelected) {
+            if (!line[col].isLeadByte && line[col-1].isLeadByte)
+              this.endCol++
+            else
+              this.endCol--;
+        }    
     },
 
     cancelSel: function(redraw) {
