@@ -59,13 +59,15 @@ Conn.prototype={
                                     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
 
     connect: function(host, port) {
-        this.host = host;
-        this.port = port;
+        if(host) {
+            this.host = host;
+            this.port = port;
+        }
         this.isConnected = false;
 
         // create the socket
         this.trans=this.ts.createTransport(null, 0,
-                                        host, port, null);
+                                        this.host, this.port, null);
         this._ins=this.trans.openInputStream(0,0,0);
         this.outs=this.trans.openOutputStream(0,0,0);
 
@@ -80,10 +82,11 @@ Conn.prototype={
         pump.init(this._ins, -1, -1, 0, 0, false);
         pump.asyncRead(this, null);
         this.ipump = pump;
+        
+        this.connectTime = Date.now();
     },
 
     close: function() {
-        // added by Hemiola SUN
         if ( !this.ins )
           return;
 
@@ -93,6 +96,17 @@ Conn.prototype={
         delete this.ins;
         delete this.outs;
         delete this.trans;
+
+        if(this.listener.abnormalClose)
+            return;
+
+        // reconnect automatically if the site is disconnected in 15 seconds
+        let time = Date.now();
+        if ( time - this.connectTime < 15000 ) {
+            this.listener.buf.clear(2);
+            this.listener.buf.attr.resetAttr();
+            this.connect();
+        }
     },
 
     // data listener
@@ -208,8 +222,13 @@ Conn.prototype={
         if ( !this.ins )
           return;
 
+        this.idleTimeout.cancel();
+
         this.outs.write(str, str.length);
         this.outs.flush();
+
+        let temp = this;
+        this.idleTimeout = setTimer( false, function (){ temp.sendIdleString(); }, 180000 );
     },
 
     convSend: function(unicode_str, charset) {
@@ -230,5 +249,9 @@ Conn.prototype={
         }
         if(s)
             this.send(s);
+    },
+    
+    sendIdleString : function () {
+        this.send("\x1b[A"); // Arrow Up
     }
 }
