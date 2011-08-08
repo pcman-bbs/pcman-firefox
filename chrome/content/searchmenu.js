@@ -42,7 +42,7 @@ function createSearchMenu(menu) {
         var i;
         for(i = 0; i < n.value; ++i) {
             var engine = engines[i];
-            var item = createMenuItem(engine.name, engine.iconURI.spec);
+            var item = createMenuItem(engine.name, engine.iconURI ? engine.iconURI.spec : null);
             var oncommand ={
                 handleEvent: function(e) {
                     alert(this.engine.name);
