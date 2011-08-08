@@ -66,7 +66,6 @@ Conn.prototype={
             this.port = port;
         }
         this.isConnected = false;
-
         // create the socket
         this.trans=this.ts.createTransport(null, 0,
                                         this.host, this.port, null);
@@ -99,11 +98,15 @@ Conn.prototype={
         delete this.outs;
         delete this.trans;
 
+        if(this.listener.abnormalClose)
+            return;
+
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
         if ( time - this.connectTime < 15000 ) {
-          pcman.close();
-          setup();
+            this.listener.buf.clear(2);
+            this.listener.buf.attr.resetAttr();
+            this.connect();
         }
     },
 
