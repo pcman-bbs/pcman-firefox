@@ -85,7 +85,6 @@ Conn.prototype={
     },
 
     close: function() {
-        // added by Hemiola SUN
         if ( !this.ins )
           return;
 
@@ -98,8 +97,10 @@ Conn.prototype={
 
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
-        if ( time - this.connectTime < 15000 )
+        if ( time - this.connectTime < 15000 ) {
+          pcman.close();
           setup();
+        }
     },
 
     // data listener
