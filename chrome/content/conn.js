@@ -80,6 +80,8 @@ Conn.prototype={
         pump.init(this._ins, -1, -1, 0, 0, false);
         pump.asyncRead(this, null);
         this.ipump = pump;
+        
+        this.connectTime = Date.now();
     },
 
     close: function() {
@@ -93,6 +95,11 @@ Conn.prototype={
         delete this.ins;
         delete this.outs;
         delete this.trans;
+
+        // reconnect automatically if the site is disconnected in 15 seconds
+        let time = Date.now();
+        if ( time - this.connectTime < 15000 )
+          setup();
     },
 
     // data listener
