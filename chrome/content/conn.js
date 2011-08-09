@@ -265,6 +265,6 @@ Conn.prototype={
     },
     
     sendIdleString : function () {
-        this.send("\x1b[A"); // Arrow Up
+        this.send("\x1b[A\x1b[B"); // Arrow Up and Arrow Down
     }
 }
