@@ -6,7 +6,7 @@ function createMenuItem(label, image) {
     var item = document.createElementNS(XUL_NS, "menuitem"); // create a new XUL menuitem
     item.setAttribute("label", label);
     if(image) {
-        item.setAttribute('class', 'menuitem-iconic');
+        item.setAttribute('class', 'menuitem-iconic menuitem-with-favicon');
         item.setAttribute('image', image);
     }
     return item;
