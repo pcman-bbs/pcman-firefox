@@ -553,23 +553,6 @@ TermBuf.prototype={
       }).join('');
     },
 
-    findText: function(text, searchRow) {
-      var result = {col: -1, row: -1}
-      var searchStart = 0;
-      var searchEnd = this.cols - 1;
-      if(0 <= searchRow && searchRow < this.rows)
-        searchStart = searchEnd = searchRow;
-      for(var row = searchStart; row <= searchEnd; ++row) {
-        var line = this.getRowText(row, 0, this.cols);
-        result.col = line.indexOf(text);
-        if(result.col >= 0) {
-          result.row = row;
-          break;
-        }
-      }
-      return result;
-    },
-
     onResize: function() {
         var newcols = this.view.conn.listener.prefs.Cols;
         var newrows = this.view.conn.listener.prefs.Rows;

@@ -300,8 +300,8 @@ Conn.prototype={
             return;
         }
 
-        var textPos = this.listener.buf.findText(this.loginPrompt[this.autoLoginStage - 1], row);
-        if(textPos.row < 0 || textPos.col < 0)
+        var line = this.listener.buf.getRowText(row, 0, this.listener.buf.cols);
+        if(line.indexOf(this.loginPrompt[this.autoLoginStage - 1]) < 0)
             return;
 
         var Encoding = this.listener.prefs.Encoding;
