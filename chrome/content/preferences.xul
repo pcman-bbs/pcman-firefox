@@ -34,6 +34,7 @@
         <tabbox>
             <tabs>
                 <tab label="&options_general.label;"/>
+                <tab label="&options_connection.label;"/>
                 <tab label="&options_about.label;"/>
             </tabs>
 
@@ -58,6 +59,74 @@
                         <hbox>
                             <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                         </hbox>
+                    </vbox>
+                </tabpanel>
+
+                <tabpanel>
+                    <vbox>
+                        <hbox>
+                            <label control="AntiIdleTime" value="&options_antiidle1.label;"/>
+                            <textbox id="AntiIdleTime" type="number" size="3" onchange="save();"/>
+                            <label control="AntiIdleStr" value="&options_antiidle2.label;"/>
+                            <textbox id="AntiIdleStr" size="15" onchange="save();"/>
+                            <label control="AntiIdleTime" value="&options_antiidle3.label;"/>
+                        </hbox>
+                        <hbox>
+                            <label control="ReconnectTime" value="&options_reconnect1.label;"/>
+                            <textbox id="ReconnectTime" type="number" size="3" onchange="save();"/>
+                            <label control="ReconnectTime" value="&options_reconnect2.label;"/>
+                        </hbox>
+                        <groupbox>
+                            <caption label="&options_autologin.label;"/>
+                            <vbox>
+                                <hbox>
+                                    <vbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="PreLoginPrompt" value="&options_preloginprompt.label;"/>
+                                            <textbox id="PreLoginPrompt" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="LoginPrompt" value="&options_loginprompt.label;"/>
+                                            <textbox id="LoginPrompt" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="PasswdPrompt" value="&options_passwordprompt.label;"/>
+                                            <textbox id="PasswdPrompt" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="PostLogin" value="&options_postlogin.label;"/>
+                                            <textbox id="PostLogin" size="15" onchange="save();"/>
+                                        </hbox>
+                                    </vbox>
+                                    <vbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="PreLogin" value="&options_prelogin.label;"/>
+                                            <textbox id="PreLogin" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="Login" value="&options_login.label;"/>
+                                            <textbox id="Login" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <spacer flex="1"/>
+                                            <label control="Passwd" value="&options_passwd.label;"/>
+                                            <textbox id="Passwd" type="password" size="15" onchange="save();"/>
+                                        </hbox>
+                                    </vbox>
+                                </hbox>
+                                <hbox>
+                                    <spacer flex="1"/>
+                                    <description width="400" height="50">&options_autologincaution.label;</description>
+                                    <spacer flex="1"/>
+                                </hbox>
+                            </vbox>
+                        </groupbox>
                     </vbox>
                 </tabpanel>
 

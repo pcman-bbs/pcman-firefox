@@ -28,6 +28,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/searchmenu.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/stringutil.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {

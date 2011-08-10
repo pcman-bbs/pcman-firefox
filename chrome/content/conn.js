@@ -64,6 +64,7 @@ Conn.prototype={
             this.port = port;
         }
         this.isConnected = false;
+
         // create the socket
         this.trans=this.ts.createTransport(null, 0,
                                         this.host, this.port, null);
@@ -83,6 +84,8 @@ Conn.prototype={
         this.ipump = pump;
         
         this.connectTime = Date.now();
+
+        this.initialAutoLogin();
     },
 
     close: function() {
@@ -101,7 +104,7 @@ Conn.prototype={
 
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
-        if ( time - this.connectTime < 15000 ) {
+        if ( time - this.connectTime < this.listener.prefs.ReconnectTime * 1000 ) {
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
             this.connect();
@@ -233,13 +236,20 @@ Conn.prototype={
         if ( !this.ins )
           return;
 
-        this.idleTimeout.cancel();
+        if(this.idleTimeout)
+            this.idleTimeout.cancel();
 
-        this.outs.write(str, str.length);
-        this.outs.flush();
+        if(str) {
+            this.outs.write(str, str.length);
+            this.outs.flush();
+        }
 
-        let temp = this;
-        this.idleTimeout = setTimer( false, function (){ temp.sendIdleString(); }, 180000 );
+        if(this.listener.prefs.AntiIdleTime > 0) {
+            let temp = this;
+            this.idleTimeout = setTimer( false, function (){
+                temp.sendIdleString();
+            }, this.listener.prefs.AntiIdleTime * 1000 );
+        }
     },
 
     convSend: function(unicode_str, charset) {
@@ -263,6 +273,47 @@ Conn.prototype={
     },
     
     sendIdleString : function () {
-        this.send("\x1b[A\x1b[B"); // Arrow Up and Arrow Down
+        this.send(UnEscapeStr(this.listener.prefs.AntiIdleStr));
+    },
+
+    // Modified from pcmanx-gtk2
+    initialAutoLogin: function() {
+        this.loginPrompt = [
+            UnEscapeStr(this.listener.prefs.PreLoginPrompt),
+            UnEscapeStr(this.listener.prefs.LoginPrompt),
+            UnEscapeStr(this.listener.prefs.PasswdPrompt)];
+        this.loginStr = [
+            UnEscapeStr(this.listener.prefs.PreLogin),
+            UnEscapeStr(this.listener.prefs.Login),
+            UnEscapeStr(this.listener.prefs.Passwd),
+            UnEscapeStr(this.listener.prefs.PostLogin)];
+        if(this.loginStr[1])
+            this.autoLoginStage = this.loginStr[0] ? 1 : 2;
+        else if(this.loginStr[2]) this.autoLoginStage = 3;
+        else this.autoLoginStage = 0;
+    },
+
+    // Modified from pcmanx-gtk2
+    checkAutoLogin: function(row) {
+        if(this.autoLoginStage > 3 || this.autoLoginStage < 1) {
+            this.autoLoginStage = 0;
+            return;
+        }
+
+        var textPos = this.listener.buf.findText(this.loginPrompt[this.autoLoginStage - 1], row);
+        if(textPos.row < 0 || textPos.col < 0)
+            return;
+
+        var Encoding = this.listener.prefs.Encoding;
+        this.convSend(this.loginStr[this.autoLoginStage - 1] + '\r', Encoding);
+
+        if(this.autoLoginStage == 3) {
+            if(this.loginStr[3])
+                this.convSend(this.loginStr[3], Encoding);
+            this.autoLoginStage = 0;
+            return;
+        }
+
+        ++this.autoLoginStage;
     }
 }

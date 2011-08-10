@@ -216,6 +216,8 @@ TermBuf.prototype={
                     line.uris=uris;
                     // dump(line.uris.length + "uris found\n");
                 }
+
+                this.view.conn.checkAutoLogin(row);
             }
         }
     },
@@ -549,6 +551,23 @@ TermBuf.prototype={
             return c.ch;
         }
       }).join('');
+    },
+
+    findText: function(text, searchRow) {
+      var result = {col: -1, row: -1}
+      var searchStart = 0;
+      var searchEnd = this.cols - 1;
+      if(0 <= searchRow && searchRow < this.rows)
+        searchStart = searchEnd = searchRow;
+      for(var row = searchStart; row <= searchEnd; ++row) {
+        var line = this.getRowText(row, 0, this.cols);
+        result.col = line.indexOf(text);
+        if(result.col >= 0) {
+          result.row = row;
+          break;
+        }
+      }
+      return result;
     },
 
     onResize: function() {
