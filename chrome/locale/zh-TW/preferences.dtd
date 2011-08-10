@@ -4,11 +4,26 @@
 <!ENTITY options_add.label "新增站台">
 <!ENTITY options_del.label "移除站台">
 <!ENTITY options_general.label "一般">
+<!ENTITY options_connection.label "連線">
 <!ENTITY options_about.label "關於">
 <!ENTITY options_codepage.label "編碼：">
 <!ENTITY options_column.label "行數：">
 <!ENTITY options_row.label "列數：">
 <!ENTITY options_newtab.label "BBS畫面點擊鏈結後自動跳到新的分頁">
+<!ENTITY options_antiidle1.label "閒置">
+<!ENTITY options_antiidle2.label "秒後送出">
+<!ENTITY options_antiidle3.label "（0 秒＝關閉不用）">
+<!ENTITY options_reconnect1.label "在">
+<!ENTITY options_reconnect2.label "秒內斷線則自動重連（0 秒＝關閉不用）">
+<!ENTITY options_autologin.label "自動登入">
+<!ENTITY options_preloginprompt.label "登入前的提示：">
+<!ENTITY options_prelogin.label "登入前送出：">
+<!ENTITY options_loginprompt.label "登入提示：">
+<!ENTITY options_login.label "帳號：">
+<!ENTITY options_passwordprompt.label "密碼提示：">
+<!ENTITY options_passwd.label "密碼：">
+<!ENTITY options_postlogin.label "登入後送出：">
+<!ENTITY options_autologincaution.label "警告：你的密碼將會以明碼形式儲存，並不會有任何加密處理。這裡不作任何關於密碼的擔保，請小心使用。">
 <!ENTITY options_addondescription.label "專為 BBS 瀏覽設計，採 GNU/GPL 授權的 telnet 連線程式套件">
 <!ENTITY options_creator.label "作者：洪任諭">
 <!ENTITY options_download.label "下載網址">

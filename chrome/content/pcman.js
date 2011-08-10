@@ -27,8 +27,12 @@ PCMan.prototype={
             port=parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
         
-        let temp = this;
-        this.conn.idleTimeout = setTimer( false, function (){ temp.conn.sendIdleString(); }, 180000 );
+        if(this.prefs.AntiIdleTime > 0) {
+            let temp = this;
+            this.conn.idleTimeout = setTimer( false, function (){
+                temp.conn.sendIdleString();
+            }, this.prefs.AntiIdleTime * 1000 );
+        }
     },
 
     close: function() {
@@ -43,7 +47,8 @@ PCMan.prototype={
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
-        this.conn.idleTimeout.cancel();
+        if(this.conn.idleTimeout)
+            this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {

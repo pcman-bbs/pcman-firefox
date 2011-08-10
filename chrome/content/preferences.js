@@ -30,16 +30,6 @@ function loadObject() {
             element.value = options.getVal(recentGroup, key, value);
     }
 }
-/*function loadObject() {
-    document.getElementById('Encoding').value =
-        options.getVal(recentGroup, 'Encoding', options.setupDefault.Encoding);
-    document.getElementById('Cols').value =
-        options.getVal(recentGroup, 'Cols', options.setupDefault.Cols);
-    document.getElementById('Rows').value =
-        options.getVal(recentGroup, 'Rows', options.setupDefault.Rows);
-    document.getElementById('NewTab').checked =
-        options.getVal(recentGroup, 'NewTab', options.setupDefault.NewTab);
-}*/
 
 // Update values in the prefwindow to the object
 function saveObject() {
@@ -51,16 +41,6 @@ function saveObject() {
             options.setVal(recentGroup, key, element.value);
     }
 }
-/*function saveObject() {
-    options.setVal(recentGroup, 'Encoding',
-        document.getElementById('Encoding').value);
-    options.setVal(recentGroup, 'Cols',
-        document.getElementById('Cols').value);
-    options.setVal(recentGroup, 'Rows',
-        document.getElementById('Rows').value);
-    options.setVal(recentGroup, 'NewTab',
-        document.getElementById('NewTab').checked);
-}*/
 
 // Initialize the prefwindow (fill bookmark titles in siteList)
 function load() {
