@@ -56,9 +56,8 @@
                             <label control="Rows" value="&options_row.label;"/>
                             <textbox id="Rows" type="number" min="1" max="65535" size="3" onchange="save();"/>
                         </hbox>
-                        <hbox>
-                            <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
-                        </hbox>
+                        <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
+                        <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
                     </vbox>
                 </tabpanel>
 
@@ -119,11 +118,6 @@
                                             <textbox id="Passwd" type="password" size="15" onchange="save();"/>
                                         </hbox>
                                     </vbox>
-                                </hbox>
-                                <hbox>
-                                    <spacer flex="1"/>
-                                    <description width="400" height="50">&options_autologincaution.label;</description>
-                                    <spacer flex="1"/>
                                 </hbox>
                             </vbox>
                         </groupbox>

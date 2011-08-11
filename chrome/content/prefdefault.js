@@ -3,6 +3,7 @@ var PrefDefaults = {
     'Cols': 80,
     'Rows': 24,
     'NewTab': false,
+    'LineFeed': true,
     'AntiIdleTime': 180,
     'AntiIdleStr': '^[[A^[[B',
     'ReconnectTime': 15,
@@ -16,3 +17,9 @@ var PrefDefaults = {
 }
 
 var PrefDefault = 'Encoding';
+
+// the value of an element corresponds to the property of nsILoginInfo
+var PrefLoginMgr = {
+    'Login': 'username',
+    'Passwd': 'password'
+}

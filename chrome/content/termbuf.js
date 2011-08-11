@@ -132,7 +132,8 @@ TermBuf.prototype={
 
             if(this.curX >= cols) {
                 // next line
-                this.lineFeed();
+                if(this.view.conn.listener.prefs.LineFeed)
+                    this.lineFeed(); // some poor-designed bbs don't need it
                 this.curX=0;
                 line = lines[this.curY];
                 this.posChanged=true;
@@ -217,7 +218,8 @@ TermBuf.prototype={
                     // dump(line.uris.length + "uris found\n");
                 }
 
-                this.view.conn.checkAutoLogin(row);
+                if(this.view.conn.autoLoginStage > 0)
+                    this.view.conn.checkAutoLogin(row);
             }
         }
     },

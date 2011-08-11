@@ -4,6 +4,7 @@ function PCManOptions() {
     this.defaultGroup = 'default';
     this.specifiedKey = PrefDefault;
     this.setupDefault = PrefDefaults;
+    this.useLoginMgr = PrefLoginMgr;
     this.isFX3 = this.getVersion();
     this.load();
 }
@@ -33,6 +34,8 @@ PCManOptions.prototype = {
             this.prefs.groups[group] = {};
             var uri = this.getURI(group);
             for(var key in this.setupDefault) {
+                if(this.useLoginMgr[key])
+                    continue;
                 if(this.prefService.hasPref(uri, key)) {
                     var value = this.prefService.getPref(uri, key);
                 } else {
@@ -41,6 +44,7 @@ PCManOptions.prototype = {
                 }
                 this.prefs.groups[group][key] = value;
             }
+            this.getLoginMsg(group);
         }
     },
 
@@ -55,14 +59,21 @@ PCManOptions.prototype = {
             if(this.hasGroup(group)) { // check if the group was removed or not
                 var uri = this.getURI(group);
                 for(var key in this.setupDefault) {
+                    if(this.useLoginMgr[key])
+                        continue;
                     var value = this.prefs.groups[group][key];
                     this.prefService.setPref(uri, key, value);
                 }
+                this.setLoginMsg(group);
             } else { // to be removed groups
                 var uri = this.getURI(group);
                 if(!uri) continue; // Exclude the default group
-                for(var key in this.setupDefault)
+                for(var key in this.setupDefault) {
+                    if(this.useLoginMgr[key])
+                        continue;
                     this.prefService.removePref(uri, key);
+                }
+                this.delLoginMsg(group);
             }
         }
     },
@@ -145,6 +156,55 @@ PCManOptions.prototype = {
         if(group == this.defaultGroup)
             return this.resetGroup(this.defaultGroup);
         delete this.prefs.groups[group];
+    },
+
+    // Processing the Login information
+    // https://developer.mozilla.org/En/Using_nsILoginManager
+
+    getLoginMsg: function(group) {
+        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+        try {
+            var logins = Components.classes["@mozilla.org/login-manager;1"]
+                                   .getService(Components.interfaces.nsILoginManager)
+                                   .findLogins({}, url, 'chrome://pcmanfx2', null);
+
+            for(var key in this.useLoginMgr) {
+                this.prefs.groups[group][key] = logins.length ?
+                    logins[0][this.useLoginMgr[key]] :
+                    this.setupDefault[key];
+            }
+        } catch(e) {}
+    },
+
+    setLoginMsg: function(group) {
+        this.delLoginMsg(group);
+        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+        var userPass = {}
+        for(var key in this.useLoginMgr)
+            userPass[this.useLoginMgr[key]] = this.prefs.groups[group][key];
+        try {
+            var myLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                                         Components.interfaces.nsILoginInfo,
+                                                         "init");
+            var login = new myLoginInfo(url, 'chrome://pcmanfx2', null,
+                                        userPass.username, userPass.password, '', '');
+
+            Components.classes["@mozilla.org/login-manager;1"]
+                      .getService(Components.interfaces.nsILoginManager)
+                      .addLogin(login);
+        } catch(e) {}
+    },
+
+    delLoginMsg: function(group) {
+        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+        try {
+            var loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                                         .getService(Components.interfaces.nsILoginManager);
+            var logins = loginManager.findLogins({}, url, 'chrome://pcmanfx2', null);
+
+            for (var i = 0; i < logins.length; i++)
+                loginManager.removeLogin(logins[i]);
+        } catch(e) {}
     }
 }
 

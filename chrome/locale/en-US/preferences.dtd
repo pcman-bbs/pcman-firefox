@@ -10,6 +10,7 @@
 <!ENTITY options_column.label "Column:">
 <!ENTITY options_row.label "Row:">
 <!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
+<!ENTITY options_linefeed.label "Line feeds if text is longer than screen">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">
 <!ENTITY options_antiidle3.label " - 0 sec: disabled">
@@ -23,7 +24,6 @@
 <!ENTITY options_passwordprompt.label "Password Prompt:">
 <!ENTITY options_passwd.label "Password:">
 <!ENTITY options_postlogin.label "Post Login String:">
-<!ENTITY options_autologincaution.label "WARNING: Your password will be stored in plain text without any encryption. There is no guarantee that others won't get your password. Use this at your own risk.">
 <!ENTITY options_addondescription.label "A GNU/GPL telnet client extension specifically designed for BBS browsing.">
 <!ENTITY options_creator.label "Author: Hong Jen Yee">
 <!ENTITY options_download.label "Download">
