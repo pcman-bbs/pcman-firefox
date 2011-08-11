@@ -28,12 +28,16 @@ PrefHandler.prototype={
             }
             options.prefService.addObserver(key, this.observer[key]);
         }
+        // the observer for the username and the password doesn't work here.
+        // is it necessary observe the changes immediately?
+        // https://developer.mozilla.org/en/Observer_Notifications#Login_Manager
     },
 
-    load: function() {
+    load: function(onlyLogin) {
         var options = new PCManOptions();
         var group = options.getGroup(document.location.href);
-        for(var key in options.setupDefault)
+        var settings = onlyLogin ? options.useLoginMgr : options.setupDefault;
+        for(var key in settings)
             this[key] = options.getVal(group, key, options.setupDefault[key]);
     },
 

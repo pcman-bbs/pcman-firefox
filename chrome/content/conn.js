@@ -278,10 +278,11 @@ Conn.prototype={
 
     // Modified from pcmanx-gtk2
     initialAutoLogin: function() {
+        this.listener.prefs.load(true); // Update Login and Passwd
         this.loginPrompt = [
-            UnEscapeStr(this.listener.prefs.PreLoginPrompt),
-            UnEscapeStr(this.listener.prefs.LoginPrompt),
-            UnEscapeStr(this.listener.prefs.PasswdPrompt)];
+            this.listener.prefs.PreLoginPrompt,
+            this.listener.prefs.LoginPrompt,
+            this.listener.prefs.PasswdPrompt];
         this.loginStr = [
             UnEscapeStr(this.listener.prefs.PreLogin),
             UnEscapeStr(this.listener.prefs.Login),
