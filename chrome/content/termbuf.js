@@ -94,7 +94,7 @@ TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
     //uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
     // Modified by Hemiola
-    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(?+=&%@!~\-\/])*/ig,
+    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(\)?+=&%@!~\-\/])*/ig,
 
     setView: function(view) {
         this.view = view;
