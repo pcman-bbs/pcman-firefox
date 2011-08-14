@@ -71,5 +71,9 @@ PrefHandler.prototype={
 
     setAntiIdleTime: function() {
         this.listener.conn.send();
+    },
+
+    setAskForClose: function() {
+        this.listener.conn.closeConfirm();
     }
 }
