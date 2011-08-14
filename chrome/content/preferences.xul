@@ -56,6 +56,12 @@
                             <label control="Rows" value="&options_row.label;"/>
                             <textbox id="Rows" type="number" min="1" max="65535" size="3" onchange="save();"/>
                         </hbox>
+                        <hbox>
+                            <label control="LineWrap" value="&options_linewrap1.label;"/>
+                            <textbox id="LineWrap" type="number" size="3" onchange="save();"/>
+                            <label control="LineWrap" value="&options_linewrap2.label;"/>
+                        </hbox>
+                        <checkbox id="DetectDBCS" label="&options_detectdbcs.label;" oncommand="save();"/>
                         <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                         <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
                     </vbox>
@@ -63,6 +69,7 @@
 
                 <tabpanel>
                     <vbox>
+                        <checkbox id="AskForClose" label="&options_askforclose.label;" oncommand="save();"/>
                         <hbox>
                             <label control="AntiIdleTime" value="&options_antiidle1.label;"/>
                             <textbox id="AntiIdleTime" type="number" size="3" onchange="save();"/>

@@ -305,7 +305,10 @@ TermView.prototype={
         else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch(e.keyCode){
             case 8:
-                conn.send('\b');
+                if(this.detectDBCS(true))
+                    conn.send('\b\b');
+                else
+                    conn.send('\b');
                 break;
             case 9:
                 conn.send('\t');
@@ -332,13 +335,19 @@ TermView.prototype={
                 conn.send('\x1b[1~');
                 break;
             case 37: //Arrow Left
-                conn.send('\x1b[D');
+                if(this.detectDBCS(true))
+                    conn.send('\x1b[D\x1b[D');
+                else
+                    conn.send('\x1b[D');
                 break;
             case 38: //Arrow Up
                 conn.send('\x1b[A');
                 break;
             case 39: //Arrow Right
-                conn.send('\x1b[C');
+                if(this.detectDBCS(false))
+                    conn.send('\x1b[C\x1b[C');
+                else
+                    conn.send('\x1b[C');
                 break;
             case 40: //Arrow Down
                 conn.send('\x1b[B');
@@ -347,10 +356,24 @@ TermView.prototype={
                 conn.send('\x1b[2~');
                 break;
             case 46: //DEL
-                conn.send('\x1b[3~');
+                if(this.detectDBCS(false))
+                    conn.send('\x1b[3~\x1b[3~');
+                else
+                    conn.send('\x1b[3~');
                 break;
             }
         }
+    },
+
+    detectDBCS: function(back) {
+        if(!this.conn.listener.prefs.DetectDBCS || !this.buf)
+            return false;
+        var line = this.buf.lines[this.buf.curY];
+        if(back && this.buf.curX > 1)
+            return line[this.buf.curX-2].isLeadByte;
+        if(!back && this.buf.curX < this.buf.cols)
+            return line[this.buf.curX].isLeadByte;
+        return false;
     },
 
     onResize: function() {

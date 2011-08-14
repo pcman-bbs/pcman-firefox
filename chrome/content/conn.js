@@ -85,6 +85,7 @@ Conn.prototype={
         
         this.connectTime = Date.now();
 
+        this.closeConfirm();
         this.initialAutoLogin();
     },
 
@@ -98,6 +99,8 @@ Conn.prototype={
         delete this.ins;
         delete this.outs;
         delete this.trans;
+
+        this.closeConfirm();
 
         if(this.listener.abnormalClose)
             return;
@@ -274,6 +277,22 @@ Conn.prototype={
     
     sendIdleString : function () {
         this.send(UnEscapeStr(this.listener.prefs.AntiIdleStr));
+    },
+
+    closeConfirm: function() {
+        if(this.listener.prefs.AskForClose && this.ins) {
+            //window.onbeforeunload = function() { return document.title; } // Warning in AMO
+            this.beforeunload = function(e) {
+                e.preventDefault();
+            };
+            window.addEventListener('beforeunload', this.beforeunload, false);
+        } else {
+            //window.onbeforeunload = null; // Warning in AMO
+            if(this.beforeunload) {
+                window.removeEventListener('beforeunload', this.beforeunload, false);
+                delete this.beforeunload;
+            }
+        } 
     },
 
     // Modified from pcmanx-gtk2

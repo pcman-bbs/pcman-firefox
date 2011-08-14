@@ -9,8 +9,12 @@
 <!ENTITY options_codepage.label "Codepage:">
 <!ENTITY options_column.label "Column:">
 <!ENTITY options_row.label "Row:">
+<!ENTITY options_linewrap1.label "Wrap line for copied texts longer than">
+<!ENTITY options_linewrap2.label "- 0: disabled">
+<!ENTITY options_detectdbcs.label "Detect DBCS words">
 <!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
 <!ENTITY options_linefeed.label "Line feeds if text is longer than screen">
+<!ENTITY options_askforclose.label "Ask before closing connecting BBS">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">
 <!ENTITY options_antiidle3.label " - 0 sec: disabled">

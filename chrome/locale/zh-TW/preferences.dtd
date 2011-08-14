@@ -9,8 +9,12 @@
 <!ENTITY options_codepage.label "編碼：">
 <!ENTITY options_column.label "行數：">
 <!ENTITY options_row.label "列數：">
+<!ENTITY options_linewrap1.label "貼上文字超過">
+<!ENTITY options_linewrap2.label "字元自動換行（0 ＝關閉不用）">
+<!ENTITY options_detectdbcs.label "自動偵測雙位元組字集文字">
 <!ENTITY options_newtab.label "BBS畫面點擊鏈結後自動跳到新的分頁">
 <!ENTITY options_linefeed.label "文字超出畫面自動換行">
+<!ENTITY options_askforclose.label "關閉連線中BBS分頁時先詢問">
 <!ENTITY options_antiidle1.label "閒置">
 <!ENTITY options_antiidle2.label "秒後送出">
 <!ENTITY options_antiidle3.label "（0 秒＝關閉不用）">

@@ -105,6 +105,8 @@ PCMan.prototype={
                 s = s.data.substring(0, len.value / 2);
                 s=s.replace(/\r\n/g, '\r');
                 s=s.replace(/\n/g, '\r');
+                if(s.indexOf('\x1b') < 0 && this.prefs.LineWrap > 0)
+                    s = wrapText(s, this.prefs.LineWrap, '\r');
                 var charset = this.prefs.Encoding;
                 this.conn.convSend(s, charset);
             }
