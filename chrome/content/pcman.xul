@@ -39,13 +39,18 @@
         var browserutils = new BrowserUtils();
         document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
         document.getElementById('input_proxy').focus();
-        document.onfocus="document.getElementById('input_proxy').focus();";
+        //document.onfocus="document.getElementById('input_proxy').focus();";
+        document.addEventListener('focus', set_focus, false);
         resize();
     }
+
+    function set_focus(e) { document.getElementById('input_proxy').focus(); }
 
     function finalize() {
         pcman.close();
         pcman=null;
+        document.removeEventListener('focus', set_focus, false);
+        createSearchMenu(document.getElementById('search_menu'), true);
     }
 
     function resize(){
