@@ -107,7 +107,7 @@ TermSel.prototype={
         var line = buf.lines[this.endRow];
         if(!line[col].isSelected) {
             if (!line[col].isLeadByte && line[col-1].isLeadByte)
-              this.endCol++
+              line[col].isSelected = true;
             else
               this.endCol--;
         }    
