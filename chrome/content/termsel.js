@@ -83,6 +83,13 @@ TermSel.prototype={
           this.cancelSel(true);
           return;
         }
+
+        if(this.blockMode) {
+          if(this.startCol == this.endCol)
+            this.cancelSel(true);
+          return;
+        }
+
         this.selTrim();
     },
 
@@ -105,6 +112,7 @@ TermSel.prototype={
         // fit the real selection on the screen
         var col = this.endCol;
         var line = buf.lines[this.endRow];
+        if(col == buf.cols) col--;
         if(!line[col].isSelected) {
             if (!line[col].isLeadByte && line[col-1].isLeadByte)
               line[col].isSelected = true;
@@ -130,6 +138,12 @@ TermSel.prototype={
             if(this.startCol == this.endCol)
                 return false;
             return row == this.startRow && col >= this.startCol && col < this.endCol;
+        }
+
+        if(this.blockMode) {
+            return this.startRow <= row && row <= this.endRow &&
+                        ( (this.startCol <= col && col < this.endCol) ||
+                        (this.endCol <= col && col < this.startCol) );
         }
 
         // if multiple lines are selected
@@ -186,6 +200,10 @@ TermSel.prototype={
     getText: function() {
         if(!this.hasSelection())
             return null;
+
+        if(this.blockMode)
+            return this.getBlockText();
+
         var buf = this.view.buf;
         var lines = buf.lines;
         var row, col;
@@ -223,6 +241,37 @@ TermSel.prototype={
         var charset = this.view.conn.listener.prefs.Encoding;
         ret = this.view.conv.convertStringToUTF8(ret, charset,  true);
         return ret;
+    },
+
+    getBlockText: function() {
+        if(this.startCol == this.endCol)
+            return null;
+        var buf = this.view.buf;
+        var lines = buf.lines;
+        var row, col;
+        if(this.startCol < this.endCol) {
+            var startCol = this.startCol;
+            var endCol = this.endCol;
+        } else {
+            var startCol = this.endCol;
+            var endCol = this.startCol;
+        }
+        var ret = '';
+        var tmp = '';
+        for(row = this.startRow; row <= this.endRow; ++row) {
+            var line = lines[row];
+            tmp = '';
+            for(col = startCol; col < endCol; ++col)
+                tmp += line[col].ch;
+            // Detect DBCS
+            if(startCol > 0 && line[startCol-1].isLeadByte)
+                tmp = tmp.replace(/^./, ' '); // keep the position of selection
+            if(line[endCol-1].isLeadByte)
+                tmp += line[endCol].ch;
+            ret += strStrip(tmp) + (row < this.endRow ? '\n' : '');
+        }
+        var charset = this.view.conn.listener.prefs.Encoding;
+        return this.view.conv.convertStringToUTF8(ret, charset, true);
     }
 }
 

@@ -607,7 +607,7 @@ TermView.prototype={
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
             if(!cursor) return;
             // FIXME: only handle left button
-            this.selection.selStart(false, cursor.col, cursor.row);
+            this.selection.selStart(event.shiftKey, cursor.col, cursor.row);
         }
     },
 
