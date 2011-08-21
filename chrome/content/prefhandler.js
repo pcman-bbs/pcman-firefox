@@ -37,8 +37,11 @@ PrefHandler.prototype={
         var options = new PCManOptions();
         var group = options.getGroup(document.location.href);
         var settings = onlyLogin ? options.useLoginMgr : options.setupDefault;
-        for(var key in settings)
+        for(var key in settings) {
             this[key] = options.getVal(group, key, options.setupDefault[key]);
+            if(typeof(options.setupDefault[key]) == 'number')
+                this[key] = parseInt(this[key]);
+        }
     },
 
     onPrefChange: function() {
@@ -46,6 +49,8 @@ PrefHandler.prototype={
         var group = options.getGroup(document.location.href);
         for(var key in options.setupDefault) {
             var newVal = options.getVal(group, key, this[key]);
+            if(typeof(options.setupDefault[key]) == 'number')
+                newVal = parseInt(newVal);
             if(newVal != this[key]) { // setting is changed
                 this[key] = newVal;
                 if(this['set'+key]) this['set'+key]();
