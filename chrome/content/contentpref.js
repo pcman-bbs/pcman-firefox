@@ -52,7 +52,8 @@ PCManOptions.prototype = {
     save: function() {
         var groups = this.getGroupNames();
         for(var grp in this.prefs.groups) {
-            if(grp && !groups[grp]) groups.push(grp); // just added groups
+            if(groups.join(', ').indexOf(grp) < 0)
+                groups.push(grp); // just added groups
         }
         for(var i = groups.length - 1; i >= 0; --i) {
             var group = groups[i];
@@ -173,7 +174,10 @@ PCManOptions.prototype = {
                     logins[0][this.useLoginMgr[key]] :
                     this.setupDefault[key];
             }
-        } catch(e) {}
+        } catch(e) {
+            for(var key in this.useLoginMgr)
+                this.prefs.groups[group][key] = this.setupDefault[key];
+        }
     },
 
     setLoginMsg: function(group) {

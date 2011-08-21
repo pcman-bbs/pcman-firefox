@@ -426,8 +426,10 @@ TermBuf.prototype={
                 var bottom = this.bottom;
                 for(var row = this.top; row <= bottom; ++row) {
                     var line = lines[row];
-                    for(var col=0; col < cols;++col)
+                    for(var col=0; col < cols;++col) {
                         line[col].copyFrom(this.newChar);
+                        line[col].needUpdate=true;
+                    }
                 }
             }
         }
