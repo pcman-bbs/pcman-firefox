@@ -14,6 +14,9 @@
 <!ENTITY options_detectdbcs.label "Detect DBCS words">
 <!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
 <!ENTITY options_linefeed.label "Line feeds if text is longer than screen">
+<!ENTITY options_msgnotify.label "Message notification:">
+<!ENTITY options_beep.label "Beep">
+<!ENTITY options_popup.label "Show popup windows">
 <!ENTITY options_askforclose.label "Ask before closing connecting BBS">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">

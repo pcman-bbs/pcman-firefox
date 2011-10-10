@@ -63,6 +63,7 @@ TermChar.prototype={
 
 function TermBuf(cols, rows) {
     this.view=null;
+    this.popupMsg=new AlertsService(this);
     // numbers of columns and rows
     this.cols=cols;
     this.rows=rows;
@@ -113,6 +114,7 @@ TermBuf.prototype={
             switch(ch) {
             case '\x07':
                 // FIXME: beep
+                this.popupMsg.alert();
                 continue;
             case '\b':
                 this.back();
@@ -220,6 +222,9 @@ TermBuf.prototype={
 
                 if(this.view.conn.autoLoginStage > 0)
                     this.view.conn.checkAutoLogin(row);
+
+                if(row == rows - 1)
+                    this.popupMsg.lineUpdated();
             }
         }
     },

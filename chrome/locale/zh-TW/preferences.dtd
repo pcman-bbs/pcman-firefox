@@ -14,6 +14,9 @@
 <!ENTITY options_detectdbcs.label "自動偵測雙位元組字集文字">
 <!ENTITY options_newtab.label "BBS畫面點擊鏈結後自動跳到新的分頁">
 <!ENTITY options_linefeed.label "文字超出畫面自動換行">
+<!ENTITY options_msgnotify.label "來訊通知：">
+<!ENTITY options_beep.label "發出嗶聲">
+<!ENTITY options_popup.label "彈出通知視窗">
 <!ENTITY options_askforclose.label "關閉連線中BBS分頁時先詢問">
 <!ENTITY options_antiidle1.label "閒置">
 <!ENTITY options_antiidle2.label "秒後送出">
