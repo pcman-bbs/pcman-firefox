@@ -64,6 +64,13 @@
                         <checkbox id="DetectDBCS" label="&options_detectdbcs.label;" oncommand="save();"/>
                         <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                         <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
+                        <groupbox>
+                            <caption label="&options_msgnotify.label;"/>
+                            <hbox>
+                                <checkbox id="Beep" label="&options_beep.label;" oncommand="save();"/>
+                                <checkbox id="Popup" label="&options_popup.label;" oncommand="save();"/>
+                            </hbox>
+                        </groupbox>
                     </vbox>
                 </tabpanel>
 

@@ -50,7 +50,7 @@ function load() {
     loadObject();
 
     var href = window.arguments ? window.arguments[0] : null;
-    callingGroup = href ? options.getGroup(href, true) : options.defaultGroup;
+    callingGroup = options.getGroup(href, true);
     if(!options.hasGroup(callingGroup))
         document.getElementById('addSite').disabled = false;
 
@@ -90,16 +90,20 @@ function save(force) {
 }
 
 // Create a new site pref
-function addSite() {
+function addSite(href) {
     document.getElementById('addSite').disabled = true;
-    if(callingGroup == options.defaultGroup) return;
-    options.resetGroup(callingGroup); // Create prefs and set initial value
-    groupNames.push(callingGroup);
+    var newGroup = options.getGroup(href, true);
+    if(newGroup == options.defaultGroup)
+        newGroup = callingGroup;
+    if(newGroup == options.defaultGroup)
+        return;
+    options.resetGroup(newGroup); // Create prefs and set initial value
+    groupNames.push(newGroup);
     var siteList = document.getElementById('siteList');
     // Fetch title from bookmarks. XXX: Places API can be slow!
     var browserutils = new BrowserUtils();
-    var title = browserutils.findBookmarkTitle('telnet://'+callingGroup);
-    if(!title) title = callingGroup; // Not a url
+    var title = browserutils.findBookmarkTitle('telnet://'+newGroup);
+    if(!title) title = newGroup; // Not a url
     siteList.appendItem(title);
     siteList.selectedIndex = siteList.itemCount-1;
     save();

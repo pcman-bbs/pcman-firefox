@@ -16,7 +16,9 @@ var PrefDefaults = {
     'Login': '',
     'PasswdPrompt': '',
     'Passwd': '',
-    'PostLogin': ''
+    'PostLogin': '',
+    'Beep': false,
+    'Popup': true
 }
 
 var PrefDefault = 'Encoding';
