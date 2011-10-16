@@ -16,6 +16,8 @@
 <!ENTITY options_linefeed.label "文字超出畫面自動換行">
 <!ENTITY options_msgnotify.label "來訊通知：">
 <!ENTITY options_beep.label "發出嗶聲">
+<!ENTITY options_replaceesc1.label "貼上彩色文字把ESC轉換成：">
+<!ENTITY options_replaceesc2.label "大多數站台用^U或^C^H^H">
 <!ENTITY options_popup.label "彈出通知視窗">
 <!ENTITY options_askforclose.label "關閉連線中BBS分頁時先詢問">
 <!ENTITY options_antiidle1.label "閒置">

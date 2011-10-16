@@ -10,6 +10,7 @@ function PCMan() {
     this.view.setBuf(this.buf);
     this.view.setConn(this.conn);
     this.parser=new AnsiParser(this.buf);
+    this.ansiColor=new AnsiColor(this);
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
@@ -86,6 +87,9 @@ PCMan.prototype={
 
     paste: function() {
         if(this.conn) {
+            if(this.ansiColor.paste())
+                return;
+
             // From: https://developer.mozilla.org/en/Using_the_Clipboard
             var clip = Components.classes["@mozilla.org/widget/clipboard;1"]
                             .getService(Components.interfaces.nsIClipboard);
@@ -107,6 +111,8 @@ PCMan.prototype={
                 s=s.replace(/\n/g, '\r');
                 if(s.indexOf('\x1b') < 0 && this.prefs.LineWrap > 0)
                     s = wrapText(s, this.prefs.LineWrap, '\r');
+                //FIXME: stop user from pasting DBCS words with 2-color
+                s = s.replace(/\x1b/g, UnEscapeStr(this.prefs.EscapeString));
                 var charset = this.prefs.Encoding;
                 this.conn.convSend(s, charset);
             }
@@ -209,9 +215,11 @@ PCMan.prototype={
     
     onMenuPopupShowing : function () {
       let copy = document.getElementById("popup-copy");
+      let coloredCopy = document.getElementById("popup-coloredCopy");
       let searchMenu = document.getElementById("popup-search");
       let hasSelection = pcman.view.selection.hasSelection();
       copy.disabled = !hasSelection;
+      coloredCopy.disabled = !hasSelection;
       searchMenu.disabled = !hasSelection;
     },
     

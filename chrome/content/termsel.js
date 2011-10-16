@@ -72,6 +72,13 @@ TermSel.prototype={
         this.endCol = col2;
         this.endRow = row2;
 
+        if(this.blockMode) {
+            if(this.startCol > this.endCol) { // swap
+                this.startCol = col2;
+                this.endCol = col1;
+            }
+        }
+
         // ask the term view to redraw selected text
         this.view.updateSel();
     },
@@ -142,8 +149,7 @@ TermSel.prototype={
 
         if(this.blockMode) {
             return this.startRow <= row && row <= this.endRow &&
-                        ( (this.startCol <= col && col < this.endCol) ||
-                        (this.endCol <= col && col < this.startCol) );
+                   this.startCol <= col && col < this.endCol;
         }
 
         // if multiple lines are selected
@@ -249,13 +255,8 @@ TermSel.prototype={
         var buf = this.view.buf;
         var lines = buf.lines;
         var row, col;
-        if(this.startCol < this.endCol) {
-            var startCol = this.startCol;
-            var endCol = this.endCol;
-        } else {
-            var startCol = this.endCol;
-            var endCol = this.startCol;
-        }
+        var startCol = this.startCol;
+        var endCol = this.endCol;
         var ret = '';
         var tmp = '';
         for(row = this.startRow; row <= this.endRow; ++row) {

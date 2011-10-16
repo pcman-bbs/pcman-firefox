@@ -17,6 +17,8 @@
 <!ENTITY options_msgnotify.label "Message notification:">
 <!ENTITY options_beep.label "Beep">
 <!ENTITY options_popup.label "Show popup windows">
+<!ENTITY options_replaceesc1.label "As pasting replace ESC as:">
+<!ENTITY options_replaceesc2.label "Most BBS use ^U or ^C^H^H">
 <!ENTITY options_askforclose.label "Ask before closing connecting BBS">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">
