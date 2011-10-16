@@ -30,6 +30,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/searchmenu.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/stringutil.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/alertService.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiColor.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {
@@ -96,6 +97,7 @@
     <popupset>
       <menupopup id="popup-menu" onpopupshowing="pcman.onMenuPopupShowing();">
         <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="pcman.copy();"/>
+        <menuitem label="&menu_coloredCopy.label;" id="popup-coloredCopy" oncommand="pcman.ansiColor.copy();"/>
         <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
         <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->

@@ -6,6 +6,7 @@ var PrefDefaults = {
     'DetectDBCS': true,
     'NewTab': false,
     'LineFeed': true,
+    'EscapeString': '^U',
     'AskForClose': false,
     'AntiIdleTime': 180,
     'AntiIdleStr': '^[[A^[[B',

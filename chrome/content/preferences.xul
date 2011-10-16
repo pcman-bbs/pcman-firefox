@@ -49,8 +49,6 @@
                                     <menuitem label="gb2312"/>
                                 </menupopup>
                             </menulist>
-                        </hbox>
-                        <hbox>
                             <label control="Cols" value="&options_column.label;"/>
                             <textbox id="Cols" type="number" min="1" max="65535" size="3" onchange="save();"/>
                             <label control="Rows" value="&options_row.label;"/>
@@ -71,6 +69,18 @@
                                 <checkbox id="Popup" label="&options_popup.label;" oncommand="save();"/>
                             </hbox>
                         </groupbox>
+                        <hbox>
+                            <label control="EscapeString" value="&options_replaceesc1.label;"/>
+                            <menulist editable="true" id="EscapeString">
+                                <menupopup>
+                                    <menuitem label="^["/>
+                                    <menuitem label="^[^["/>
+                                    <menuitem label="^C^H^H"/>
+                                    <menuitem label="^U"/>
+                                </menupopup>
+                            </menulist>
+                            <label control="EscapeString" value="&options_replaceesc2.label;"/>
+                        </hbox>
                     </vbox>
                 </tabpanel>
 
