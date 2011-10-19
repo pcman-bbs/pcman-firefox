@@ -74,6 +74,14 @@ PrefHandler.prototype={
         this.listener.buf.onResize();
     },
 
+    setHAlignCenter: function() {
+        this.listener.view.setAlign();
+    },
+
+    setVAlignCenter: function() {
+        this.listener.view.setAlign();
+    },
+
     setAntiIdleTime: function() {
         this.listener.conn.send();
     },

@@ -2,11 +2,12 @@ var PrefDefaults = {
     'Encoding': (window.navigator.language == 'zh-CN' ? 'gb2312' : 'big5'),
     'Cols': 80,
     'Rows': 24,
-    'LineWrap': 78,
+    'HAlignCenter': true,
+    'VAlignCenter': true,
     'DetectDBCS': true,
-    'NewTab': false,
-    'LineFeed': true,
-    'EscapeString': '^U',
+    'ShowConnTimer': false,
+    'Beep': false,
+    'Popup': true,
     'AskForClose': false,
     'AntiIdleTime': 180,
     'AntiIdleStr': '^[[A^[[B',
@@ -18,8 +19,16 @@ var PrefDefaults = {
     'PasswdPrompt': '',
     'Passwd': '',
     'PostLogin': '',
-    'Beep': false,
-    'Popup': true
+    'ClearCopiedSel': true,
+    'CopyAfterSel': false,
+    'KeepSelAtBufUpd': false,
+    'TrimTail': true,
+    'LineWrap': 78,
+    'EscapeString': '^U',
+    'TermType': 'VT100',
+    'EnterKey': '^M',
+    'LineFeed': true,
+    'NewTab': false
 }
 
 var PrefDefault = 'Encoding';

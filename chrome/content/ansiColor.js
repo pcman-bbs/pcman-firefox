@@ -15,7 +15,8 @@ AnsiColor.prototype = {
         //FIXME: If user copy string the same as follows, it won't work
         this.systemClipboard("\x02 Not Implemented \x03");
 
-        sel.cancelSel(true);
+        if(this.listener.prefs.ClearCopiedSel)
+            sel.cancelSel(true);
     },
 
     paste: function() {
@@ -33,6 +34,7 @@ AnsiColor.prototype = {
         text = this.convertFromUnicode(text);
         text = text.replace(/\r\n/g, '\r');
         text = text.replace(/\n/g, '\r');
+        text = text.replace(/\r/g, UnEscapeStr(this.listener.prefs.EnterKey));
         var EscapeString = this.listener.prefs.EscapeString;
         text = text.replace(/\x1b/g, UnEscapeStr(EscapeString));
         this.listener.conn.send(text);
@@ -106,7 +108,9 @@ AnsiColor.prototype = {
                 text += this.getText(sel.endRow, 0, sel.endCol+1, false, convertBiColor);
             }
         }
-        return text.replace(/\n+$/,'\n');
+        if(this.listener.prefs.TrimTail)
+            text = text.replace(/\n+$/,'\n');
+        return text;
     },
 
     //get text in one line
@@ -134,7 +138,9 @@ AnsiColor.prototype = {
             else
                 output += text[col].ch + this.ansiCmp(text[col], this.buf.newChar);
         }
-        return output.replace(/ +$/,"");
+        if(this.listener.prefs.TrimTail)
+            output = output.replace(/ +$/,"");
+        return output;
     },
 
     ansiCmp: function(preChar, thisChar, forceReset) {

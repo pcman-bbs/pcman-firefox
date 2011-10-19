@@ -317,7 +317,8 @@ TermView.prototype={
                 e.stopPropagation();
                 break;
             case 13:
-                conn.send('\r');
+                var EnterKey = UnEscapeStr(this.conn.listener.prefs.EnterKey);
+                conn.send(EnterKey);
                 break;
             case 27: //ESC
                 conn.send('\x1b');
@@ -426,6 +427,21 @@ TermView.prototype={
 
         if(visible)
             this.showCursor();
+    },
+
+    setAlign: function() {
+        var HAlignCenter = this.conn.listener.prefs.HAlignCenter;
+        var VAlignCenter = this.conn.listener.prefs.VAlignCenter;
+
+        if(HAlignCenter)
+            document.getElementById('box1').align = "center";
+        else
+            document.getElementById('box1').align = "start";
+
+        if(VAlignCenter)
+            document.getElementById('topwin').pack = "center";
+        else
+            document.getElementById('topwin').pack = "start";
     },
 
     // Cursor
@@ -671,8 +687,8 @@ TermView.prototype={
         this.selection.selectWordAt(cursor.col, cursor.row);
     },
 
-    updateSel: function() {
-        if(this.buf.changed) // we're in the middle of screen update
+    updateSel: function(updateCharAttr) {
+        if(!updateCharAttr && this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;
@@ -690,7 +706,9 @@ TermView.prototype={
                 }
             }
         }
-        this.redraw(false);
+
+        if(!updateCharAttr)
+            this.redraw(false);
     },
 
     removeEventListener: function() {

@@ -5,20 +5,19 @@
 <!ENTITY options_del.label "Remove">
 <!ENTITY options_general.label "General">
 <!ENTITY options_connection.label "Connect">
+<!ENTITY options_copypaste.label "CopyPaste">
+<!ENTITY options_advance.label "Advance">
 <!ENTITY options_about.label "About">
 <!ENTITY options_codepage.label "Codepage:">
 <!ENTITY options_column.label "Column:">
 <!ENTITY options_row.label "Row:">
-<!ENTITY options_linewrap1.label "Wrap line for copied texts longer than">
-<!ENTITY options_linewrap2.label "- 0: disabled">
+<!ENTITY options_haligncenter.label "Horizontally centerd">
+<!ENTITY options_valigncenter.label "Vertically centerd">
 <!ENTITY options_detectdbcs.label "Detect DBCS words">
-<!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
-<!ENTITY options_linefeed.label "Line feeds if text is longer than screen">
+<!ENTITY options_showconntimer.label "Show connection time">
 <!ENTITY options_msgnotify.label "Message notification:">
 <!ENTITY options_beep.label "Beep">
 <!ENTITY options_popup.label "Show popup windows">
-<!ENTITY options_replaceesc1.label "As pasting replace ESC as:">
-<!ENTITY options_replaceesc2.label "Most BBS use ^U or ^C^H^H">
 <!ENTITY options_askforclose.label "Ask before closing connecting BBS">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">
@@ -33,6 +32,18 @@
 <!ENTITY options_passwordprompt.label "Password Prompt:">
 <!ENTITY options_passwd.label "Password:">
 <!ENTITY options_postlogin.label "Post Login String:">
+<!ENTITY options_clearcopiedsel.label "Cancel selection after copying">
+<!ENTITY options_copyaftersel.label "Copy text after selection">
+<!ENTITY options_keepselatbufupd.label "Keep selection after text varying">
+<!ENTITY options_trimtail.label "Trim spaces at the tail of copied text">
+<!ENTITY options_linewrap1.label "Wrap line for copied texts longer than">
+<!ENTITY options_linewrap2.label "- 0: disabled">
+<!ENTITY options_replaceesc1.label "As pasting replace ESC as:">
+<!ENTITY options_replaceesc2.label "Most BBS use ^U or ^C^H^H">
+<!ENTITY options_termtype.label "Terminal type:">
+<!ENTITY options_enterkey.label "When pressing ENTER send:">
+<!ENTITY options_linefeed.label "Line feeds if text is longer than screen">
+<!ENTITY options_newtab.label "Go to the new tab after clicking links in BBS">
 <!ENTITY options_addondescription.label "A GNU/GPL telnet client extension specifically designed for BBS browsing.">
 <!ENTITY options_creator.label "Author: Hong Jen Yee">
 <!ENTITY options_download.label "Download">

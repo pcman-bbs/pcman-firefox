@@ -17,6 +17,7 @@ function PCMan() {
                  .getService(Components.interfaces.nsIXULRuntime).OS;
 
     this.prefs.observe(true);
+    this.view.setAlign();
 }
 
 PCMan.prototype={
@@ -28,6 +29,11 @@ PCMan.prototype={
             port=parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
         
+        let temp = this;
+        this.connTimer = setTimer( true, function (){
+            temp.conn.showConnTime();
+        }, 1000 );
+
         if(this.prefs.AntiIdleTime > 0) {
             let temp = this;
             this.conn.idleTimeout = setTimer( false, function (){
@@ -45,6 +51,8 @@ PCMan.prototype={
         this.view.removeEventListener();
         this.view.input.controllers.removeController(this.textboxControllers);
         this.prefs.observe(false);
+
+        this.connTimer.cancel();
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
@@ -81,7 +89,8 @@ PCMan.prototype={
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
             this.view.input.dispatchEvent(evt);
-            this.view.selection.cancelSel(true);
+            if(this.prefs.ClearCopiedSel)
+                this.view.selection.cancelSel(true);
         }
     },
 
@@ -109,8 +118,9 @@ PCMan.prototype={
                 s = s.data.substring(0, len.value / 2);
                 s=s.replace(/\r\n/g, '\r');
                 s=s.replace(/\n/g, '\r');
+                s = s.replace(/\r/g, UnEscapeStr(this.prefs.EnterKey));
                 if(s.indexOf('\x1b') < 0 && this.prefs.LineWrap > 0)
-                    s = wrapText(s, this.prefs.LineWrap, '\r');
+                    s = wrapText(s, this.prefs.LineWrap, UnEscapeStr(this.prefs.EnterKey));
                 //FIXME: stop user from pasting DBCS words with 2-color
                 s = s.replace(/\x1b/g, UnEscapeStr(this.prefs.EscapeString));
                 var charset = this.prefs.Encoding;
