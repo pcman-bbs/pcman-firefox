@@ -35,6 +35,8 @@
             <tabs>
                 <tab label="&options_general.label;"/>
                 <tab label="&options_connection.label;"/>
+                <tab label="&options_copypaste.label;"/>
+                <tab label="&options_advance.label;"/>
                 <tab label="&options_about.label;"/>
             </tabs>
 
@@ -43,25 +45,23 @@
                     <vbox>
                         <hbox>
                             <label control="Encoding" value="&options_codepage.label;"/>
-                            <menulist editable="true" id="Encoding" oncommand="save();">
+                            <menulist editable="true" id="Encoding" oncommand="save();" onchange="save();">
                                 <menupopup>
                                     <menuitem label="big5"/>
                                     <menuitem label="gb2312"/>
                                 </menupopup>
                             </menulist>
+                        </hbox>
+                        <hbox>
                             <label control="Cols" value="&options_column.label;"/>
                             <textbox id="Cols" type="number" min="1" max="65535" size="3" onchange="save();"/>
                             <label control="Rows" value="&options_row.label;"/>
                             <textbox id="Rows" type="number" min="1" max="65535" size="3" onchange="save();"/>
                         </hbox>
-                        <hbox>
-                            <label control="LineWrap" value="&options_linewrap1.label;"/>
-                            <textbox id="LineWrap" type="number" size="3" onchange="save();"/>
-                            <label control="LineWrap" value="&options_linewrap2.label;"/>
-                        </hbox>
+                        <checkbox id="HAlignCenter" label="&options_haligncenter.label;" oncommand="save();"/>
+                        <checkbox id="VAlignCenter" label="&options_valigncenter.label;" oncommand="save();"/>
                         <checkbox id="DetectDBCS" label="&options_detectdbcs.label;" oncommand="save();"/>
-                        <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
-                        <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
+                        <checkbox id="ShowConnTimer" label="&options_showconntimer.label;" oncommand="save();"/>
                         <groupbox>
                             <caption label="&options_msgnotify.label;"/>
                             <hbox>
@@ -69,18 +69,6 @@
                                 <checkbox id="Popup" label="&options_popup.label;" oncommand="save();"/>
                             </hbox>
                         </groupbox>
-                        <hbox>
-                            <label control="EscapeString" value="&options_replaceesc1.label;"/>
-                            <menulist editable="true" id="EscapeString">
-                                <menupopup>
-                                    <menuitem label="^["/>
-                                    <menuitem label="^[^["/>
-                                    <menuitem label="^C^H^H"/>
-                                    <menuitem label="^U"/>
-                                </menupopup>
-                            </menulist>
-                            <label control="EscapeString" value="&options_replaceesc2.label;"/>
-                        </hbox>
                     </vbox>
                 </tabpanel>
 
@@ -145,6 +133,55 @@
                                 </hbox>
                             </vbox>
                         </groupbox>
+                    </vbox>
+                </tabpanel>
+
+                <tabpanel>
+                    <vbox>
+                        <checkbox id="ClearCopiedSel" label="&options_clearcopiedsel.label;" oncommand="save();"/>
+                        <checkbox id="CopyAfterSel" label="&options_copyaftersel.label;" oncommand="save();"/>
+                        <checkbox id="KeepSelAtBufUpd" label="&options_keepselatbufupd.label;" oncommand="save();"/>
+                        <checkbox id="TrimTail" label="&options_trimtail.label;" oncommand="save();"/>
+                        <hbox>
+                            <label control="LineWrap" value="&options_linewrap1.label;"/>
+                            <textbox id="LineWrap" type="number" size="3" onchange="save();"/>
+                            <label control="LineWrap" value="&options_linewrap2.label;"/>
+                        </hbox>
+                        <hbox>
+                            <label control="EscapeString" value="&options_replaceesc1.label;"/>
+                            <menulist editable="true" id="EscapeString" oncommand="save();" onchange="save();">
+                                <menupopup>
+                                    <menuitem label="^["/>
+                                    <menuitem label="^[^["/>
+                                    <menuitem label="^C^H^H"/>
+                                    <menuitem label="^U"/>
+                                </menupopup>
+                            </menulist>
+                            <label control="EscapeString" value="&options_replaceesc2.label;"/>
+                        </hbox>
+                    </vbox>
+                </tabpanel>
+
+                <tabpanel>
+                    <vbox>
+                        <hbox>
+                            <label control="TermType" value="&options_termtype.label;"/>
+                            <menulist editable="true" id="TermType" oncommand="save();" onchange="save();">
+                                <menupopup>
+                                    <menuitem label="VT100"/>
+                                </menupopup>
+                            </menulist>
+                        </hbox>
+                        <label value="&options_enterkey.label;"/>
+                        <radiogroup id="EnterKey" oncommand="save();">
+                            <hbox>
+                                <radio value="^M" label="CR"/>
+                                <radio value="^J" label="LF"/>
+                                <radio value="^M^J" label="CRLF"/>
+                            </hbox>
+                        </radiogroup>
+                        <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
+                        <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                     </vbox>
                 </tabpanel>
 

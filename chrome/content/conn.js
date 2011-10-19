@@ -208,7 +208,8 @@ Conn.prototype={
                         switch(this.iac_sb[0]) {
                         case TERM_TYPE: {
                             // FIXME: support other terminal types
-                            var rep = IAC + SB + TERM_TYPE + IS + 'VT100' + IAC + SE;
+                            var termType = this.listener.prefs.TermType;
+                            var rep = IAC + SB + TERM_TYPE + IS + termType + IAC + SE;
                             this.send( rep );
                             break;
                             }
@@ -295,6 +296,37 @@ Conn.prototype={
         } 
     },
 
+    showConnTime: function() {
+        var show = this.listener.prefs.ShowConnTimer;
+        if(!document.getElementById('connTimer')) {
+            if(!show)
+                return;
+            var newDiv = document.createElement('div');
+            this.listener.view.input.parentNode.appendChild(newDiv);
+            newDiv.id = 'connTimer';
+            newDiv.style.background = 'white';
+            newDiv.style.position = 'fixed';
+            newDiv.style.bottom = '5px';
+            newDiv.style.right = '5px';
+        } else if(!show) {
+            var connTimerDiv = document.getElementById('connTimer');
+            this.listener.view.input.parentNode.removeChild(connTimerDiv);
+            return;
+        }
+
+        if(!this.ins) {
+            document.getElementById('connTimer').textContent = '0:00:00';
+            return;
+        }
+
+        var connectedTime = Math.floor((Date.now() - this.connectTime)/1000);
+        var s = connectedTime % 60;
+        var m = ((connectedTime - s) / 60) % 60;
+        var h = (connectedTime - s - m * 60) / 3600;
+        var str = h + ':' + ('00'+m).substr(-2) + ':' + ('00'+s).substr(-2);
+        document.getElementById('connTimer').textContent = str;
+    },
+
     // Modified from pcmanx-gtk2
     initialAutoLogin: function() {
         this.listener.prefs.load(true); // Update Login and Passwd
@@ -325,7 +357,8 @@ Conn.prototype={
             return;
 
         var Encoding = this.listener.prefs.Encoding;
-        this.convSend(this.loginStr[this.autoLoginStage - 1] + '\r', Encoding);
+        var EnterKey = UnEscapeStr(this.listener.prefs.EnterKey);
+        this.convSend(this.loginStr[this.autoLoginStage - 1] + EnterKey, Encoding);
 
         if(this.autoLoginStage == 3) {
             if(this.loginStr[3])

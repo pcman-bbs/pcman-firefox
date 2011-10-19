@@ -220,6 +220,9 @@ TermBuf.prototype={
                     // dump(line.uris.length + "uris found\n");
                 }
 
+                if(this.view.selection.hasSelection())
+                    this.view.selection.refreshSel();
+
                 if(this.view.conn.autoLoginStage > 0)
                     this.view.conn.checkAutoLogin(row);
 

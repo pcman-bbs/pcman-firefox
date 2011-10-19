@@ -83,8 +83,13 @@ TermSel.prototype={
         this.view.updateSel();
     },
 
-    selEnd: function(col, row) {
+    selEnd: function(col, row, refresh) {
         this.selUpdate(col, row);
+        if(refresh) {
+            // updateSel() is called but won't work (buf.changed==true)
+            this.view.updateSel(true); // only update Char Attr
+        }
+
         this.isSelecting = false;
         if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
           this.cancelSel(true);
@@ -98,6 +103,9 @@ TermSel.prototype={
         }
 
         this.selTrim();
+
+        if(this.view.conn.listener.prefs.CopyAfterSel)
+            this.view.conn.listener.copy();
     },
 
     selTrim: function() {
@@ -126,6 +134,17 @@ TermSel.prototype={
             else
               this.endCol--;
         }    
+    },
+
+    // Updating selection range just after termbuf changes
+    refreshSel: function() {
+        var prefs = this.view.conn.listener.prefs;
+        if(!prefs.KeepSelAtBufUpd) {
+            this.cancelSel(false);
+            this.view.updateSel(true); // only update Char Attr
+        } else { // Trim the DBCS character again with the updated termbuf
+            this.selEnd(this.realEndCol, this.realEndRow, true);
+        }
     },
 
     cancelSel: function(redraw) {
@@ -216,33 +235,34 @@ TermSel.prototype={
         var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
         var tmp = '';
+        var TrimTail = this.view.conn.listener.prefs.TrimTail;
         if(this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
             tmp = '';
             for(col = this.startCol; col <= endCol; ++col)
                 tmp += line[col].ch;
-            ret += strStrip(tmp);
+            ret += TrimTail ? strStrip(tmp) : tmp;
         }
         else {
             var cols = buf.cols;
             var line = lines[this.startRow];
             for(col = this.startCol; col < cols; ++col)
                 tmp += line[col].ch;
-            ret += strStrip(tmp);
+            ret += TrimTail ? strStrip(tmp) : tmp;
             ret += '\n';
             for(row = this.startRow + 1; row < this.endRow; ++row) {
                 line = lines[row];
                 tmp = '';
                 for(col = 0; col < cols; ++col)
                     tmp += line[col].ch;
-                ret += strStrip(tmp);
+                ret += TrimTail ? strStrip(tmp) : tmp;
                 ret += '\n';
             }
             line = lines[this.endRow];
             tmp = '';
             for(col = 0; col <= endCol; ++col)
                 tmp += line[col].ch;
-            ret += strStrip(tmp);
+            ret += TrimTail ? strStrip(tmp) : tmp;
         }
         var charset = this.view.conn.listener.prefs.Encoding;
         ret = this.view.conv.convertStringToUTF8(ret, charset,  true);
@@ -259,6 +279,7 @@ TermSel.prototype={
         var endCol = this.endCol;
         var ret = '';
         var tmp = '';
+        var TrimTail = this.view.conn.listener.prefs.TrimTail;
         for(row = this.startRow; row <= this.endRow; ++row) {
             var line = lines[row];
             tmp = '';
@@ -269,7 +290,8 @@ TermSel.prototype={
                 tmp = tmp.replace(/^./, ' '); // keep the position of selection
             if(line[endCol-1].isLeadByte)
                 tmp += line[endCol].ch;
-            ret += strStrip(tmp) + (row < this.endRow ? '\n' : '');
+            ret += TrimTail ? strStrip(tmp) : tmp;
+            ret += (row < this.endRow ? '\n' : '');
         }
         var charset = this.view.conn.listener.prefs.Encoding;
         return this.view.conv.convertStringToUTF8(ret, charset, true);
