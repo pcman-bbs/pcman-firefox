@@ -59,8 +59,6 @@ AnsiFile.prototype = {
     },
 
     saveFile: function(data, noColor) {
-        if(noColor)
-            data = data.replace(/\x1b\[[0-9;]*m/g, '');
         var nsIFilePicker = Components.interfaces.nsIFilePicker;
         var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
         fp.init(window, null, nsIFilePicker.modeSave);
@@ -129,14 +127,19 @@ AnsiFile.prototype = {
         var buf = this.listener.buf;
         if(buf.getRowText(buf.rows-1, 0, buf.cols).indexOf("100%") < 0)
             return false;
-        var data = this.downloadedArticle.join('\n');
-        if(this.listener.os == 'WINNT') // handle CRLF
-            data = data.replace(/\n/g, "\r\n");
+        var data = this.downloadedArticle.join('\r\n');
         this.stopDownload(true);
+
+        if(noColor) {
+            data = data.replace(/\x1b\[[0-9;]*m/g, '');
+            if(this.listener.prefs.TrimTail)
+                data = data.replace(/ +\r\n/g, '\r\n');
+            if(this.listener.os != 'WINNT') // handle CRLF
+                data = data.replace(/\r\n/g, '\n');
+        }
 
         var text = this.ansi.convertStringToUTF8(data);
         if(noColor) {
-            text = text.replace(/\x1b\[[0-9;]*m/g, '');
             this.ansi.systemClipboard(text);
         } else {
             this.ansi.ansiClipboard(text);
