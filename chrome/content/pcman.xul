@@ -31,6 +31,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/stringutil.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/alertService.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiColor.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiFile.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {
@@ -105,6 +106,12 @@
           <menupopup id="search_menu" />
         </menu>
         <menuseparator/>
+        <menu label="&menu_fileio.label;">
+          <menupopup>
+            <menuitem label="&menu_loadfile.label;" oncommand="pcman.ansiColor.file.openFile();"/>
+            <menuitem label="&menu_savefile.label;" oncommand="pcman.ansiColor.file.savePage();"/>
+          </menupopup>
+        </menu>
         <menuitem label="&menu_sitepref.label;" oncommand="sitePref();"/>
       </menupopup>
     </popupset>

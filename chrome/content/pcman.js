@@ -152,7 +152,9 @@ PCMan.prototype={
       isCommandEnabled: function(cmd){
         switch (cmd) {
           case "cmd_copy":
+            return pcman.view.selection.hasSelection();
           case "cmd_paste":
+            return true;
           case "cmd_selectAll":
             return true;
           default:

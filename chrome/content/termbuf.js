@@ -507,6 +507,10 @@ TermBuf.prototype={
         else { // at bottom of screen or scroll region
             this.scroll(false, 1);
         }
+
+        var downloadArticle = this.view.conn.listener.ansiColor.file;
+        if(downloadArticle.isDownloading())
+            downloadArticle.getLineFeed();
     },
 
     setScrollRegion : function(top, bottom) {

@@ -1,6 +1,7 @@
 function AnsiColor(listener) {
     this.listener = listener;
     this.buf = listener.buf;
+    this.file = new AnsiFile(this);
 }
 
 AnsiColor.prototype = {
@@ -8,26 +9,17 @@ AnsiColor.prototype = {
         var sel = this.listener.view.selection;
         if(!sel.hasSelection())
             return;
-        // Use UTF8 format to handle CP among bbs tabs with different charsets
-        var text = this.convertStringToUTF8(this.getSelText(true));
-        Application.storage.set("copiedAnsiStr", text);
 
-        //FIXME: If user copy string the same as follows, it won't work
-        this.systemClipboard("\x02 Not Implemented \x03");
+        // Use UTF8 format to handle CP among bbs tabs with different charsets
+        var text = this.convertStringToUTF8(this.getSelText(true), true);
+        this.ansiClipboard(text);
 
         if(this.listener.prefs.ClearCopiedSel)
             sel.cancelSel(true);
     },
 
     paste: function() {
-        //FIXME: better approach to listen the change of the system clipboard
-        // Retrieving string from system clipboard directly is inefficient
-        if(this.systemClipboard() != "\x02 Not Implemented \x03") {
-            // The system clipboard is updated by other processes
-            Application.storage.set("copiedAnsiStr", "");
-            return false; // use normal paste
-        }
-        var text = Application.storage.get("copiedAnsiStr", "");
+        var text = this.ansiClipboard();
         if(!text)
             return false; // use normal paste
 
@@ -39,6 +31,24 @@ AnsiColor.prototype = {
         text = text.replace(/\x1b/g, UnEscapeStr(EscapeString));
         this.listener.conn.send(text);
         return true; // paste successfully, stop normal paste
+    },
+
+    ansiClipboard: function(text) {
+        //FIXME: better approach to listen the change of the system clipboard
+        // If user copy string the same as follows, it won't work
+        var identifyStr = "\x02 Not Implemented \x03";
+        if(text) { // copy string to internal buffer
+            Application.storage.set("copiedAnsiStr", text);
+            this.systemClipboard(identifyStr);
+        } else { // get string from internal buffer
+            // Retrieving string from system clipboard directly is inefficient
+            if(this.systemClipboard() != identifyStr) {
+                // The system clipboard is updated by other processes
+                Application.storage.set("copiedAnsiStr", "");
+                return false; // use normal paste
+            }
+            return Application.storage.get("copiedAnsiStr", "");
+        }
     },
 
     systemClipboard: function(text) {
@@ -64,14 +74,39 @@ AnsiColor.prototype = {
         }
     },
 
-    convertStringToUTF8: function(str) {
+    convertStringToUTF8: function(str, converted, Encoding) {
+        if(!converted) {
+            // It is inefficient, convert str without this as far as possible
+            var tmp = '';
+            var isLeadByte = 0;
+            for(var i=0; i<str.length; ++i) {
+                if(str.charAt(i) == '\x1b') {
+                    if(isLeadByte == 1)
+                        isLeadByte = -1; // SGR within DBCS char starts
+                } else if(str.charAt(i) > '\x7f') {
+                    if(isLeadByte >= 0) // not SGR within DBCS char
+                        isLeadByte = (isLeadByte==0 ? 1 : 0);
+                } else {
+                    if(isLeadByte >= 0) { // not SGR within DBCS char
+                        isLeadByte = 0;
+                    } else if(str.charAt(i) == 'm') {
+                        isLeadByte = 1; // SGR within DBCS char ends
+                        tmp += ';50';
+                    }
+                }
+                tmp += str.charAt(i);
+            }
+            str = tmp.replace(/([^\x00-\x7f])(\x1b\[[0-9;]*;50m)/g, "$2$1");
+        }
         var conv = this.listener.view.conv;
-        var Encoding = this.listener.prefs.Encoding;
+        if(!Encoding)
+            Encoding = this.listener.prefs.Encoding;
         return conv.convertStringToUTF8(str, Encoding, true);
     },
 
-    convertFromUnicode: function(str) {
-        var Encoding = this.listener.prefs.Encoding;
+    convertFromUnicode: function(str, Encoding) {
+        if(!Encoding)
+            Encoding = this.listener.prefs.Encoding;
         if(Encoding.toLowerCase() == 'big5') {
             if(!this.listener.conn.uaoConvLoaded) {
                 Components.utils.import("resource://pcmanfx2/uao.js");
@@ -82,7 +117,7 @@ AnsiColor.prototype = {
             this.listener.conn.oconv.charset = Encoding;
             var text = this.listener.conn.oconv.ConvertFromUnicode(str);
         }
-        return text.replace(/(\x1b\[[0-9;]*)50m([^\x00-\x7f])/g, "$2$1m");
+        return text.replace(/(\x1b\[[0-9;]*);50m([^\x00-\x7f])/g, "$2$1m");
     },
 
     getSelText: function(convertBiColor) {
@@ -166,6 +201,6 @@ AnsiColor.prototype = {
         if(thisBg != (reset ? DeBg : preBg))
             text += '4' + thisBg + ';';
         if(!text) return '';
-        else return ('\x1b[' + text.substr(0,text.length-1) + 'm');
+        else return ('\x1b[' + text.replace(/;$/, 'm'));
     }
 }
