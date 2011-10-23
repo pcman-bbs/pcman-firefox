@@ -5,4 +5,7 @@
 <!ENTITY menu_paste.label "Paste">
 <!ENTITY menu_selAll.label "Select All">
 <!ENTITY menu_search.label "Search">
+<!ENTITY menu_fileio.label "File I/O">
+<!ENTITY menu_loadfile.label "Load File">
+<!ENTITY menu_savefile.label "Save File">
 <!ENTITY menu_sitepref.label "SitePref">

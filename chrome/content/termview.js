@@ -284,6 +284,12 @@ TermView.prototype={
         if ( !conn.ins )
           return;
           
+        var downloadArticle = this.conn.listener.ansiColor.file;
+        if(downloadArticle.isDownloading()) {
+            downloadArticle.stopDownload();
+            return;
+        }
+
         if(e.charCode){
             // Control characters
             if(e.ctrlKey && !e.altKey && !e.shiftKey) {
