@@ -5,6 +5,7 @@
 <!ENTITY options_del.label "Remove">
 <!ENTITY options_general.label "General">
 <!ENTITY options_connection.label "Connect">
+<!ENTITY options_message.label "Messages">
 <!ENTITY options_copypaste.label "CopyPaste">
 <!ENTITY options_advance.label "Advance">
 <!ENTITY options_about.label "About">
@@ -15,9 +16,11 @@
 <!ENTITY options_valigncenter.label "Vertically centerd">
 <!ENTITY options_detectdbcs.label "Detect DBCS words">
 <!ENTITY options_showconntimer.label "Show connection time">
-<!ENTITY options_msgnotify.label "Message notification:">
-<!ENTITY options_beep.label "Beep">
-<!ENTITY options_popup.label "Show popup windows">
+<!ENTITY options_mousebrowsing.label "Mouse browsing">
+<!ENTITY options_disablemousebrowsing.label "Disable">
+<!ENTITY options_simplemousebrowsing.label "Simple">
+<!ENTITY options_generalmousebrowsing.label "General">
+<!ENTITY options_advancemousebrowsing.label "Advance">
 <!ENTITY options_askforclose.label "Ask before closing connecting BBS">
 <!ENTITY options_antiidle1.label "After idling">
 <!ENTITY options_antiidle2.label "seconds sends">
@@ -32,6 +35,12 @@
 <!ENTITY options_passwordprompt.label "Password Prompt:">
 <!ENTITY options_passwd.label "Password:">
 <!ENTITY options_postlogin.label "Post Login String:">
+<!ENTITY options_msgnotify.label "Message notification:">
+<!ENTITY options_beep.label "Beep">
+<!ENTITY options_popup.label "Show popup windows">
+<!ENTITY options_autoreply.label "Auto-reply for incoming messages">
+<!ENTITY options_aotoreplyprompt.label "As receiving messages:">
+<!ENTITY options_aotoreplystring.label "automatically reply:">
 <!ENTITY options_clearcopiedsel.label "Cancel selection after copying">
 <!ENTITY options_copyaftersel.label "Copy text after selection">
 <!ENTITY options_keepselatbufupd.label "Keep selection after text varying">

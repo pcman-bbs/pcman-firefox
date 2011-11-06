@@ -35,6 +35,7 @@
             <tabs>
                 <tab label="&options_general.label;"/>
                 <tab label="&options_connection.label;"/>
+                <tab label="&options_message.label;"/>
                 <tab label="&options_copypaste.label;"/>
                 <tab label="&options_advance.label;"/>
                 <tab label="&options_about.label;"/>
@@ -58,16 +59,24 @@
                             <label control="Rows" value="&options_row.label;"/>
                             <textbox id="Rows" type="number" min="1" max="65535" size="3" onchange="save();"/>
                         </hbox>
-                        <checkbox id="HAlignCenter" label="&options_haligncenter.label;" oncommand="save();"/>
-                        <checkbox id="VAlignCenter" label="&options_valigncenter.label;" oncommand="save();"/>
-                        <checkbox id="DetectDBCS" label="&options_detectdbcs.label;" oncommand="save();"/>
-                        <checkbox id="ShowConnTimer" label="&options_showconntimer.label;" oncommand="save();"/>
+                        <hbox>
+                            <checkbox id="HAlignCenter" label="&options_haligncenter.label;" oncommand="save();"/>
+                            <checkbox id="VAlignCenter" label="&options_valigncenter.label;" oncommand="save();"/>
+                        </hbox>
+                        <hbox>
+                            <checkbox id="DetectDBCS" label="&options_detectdbcs.label;" oncommand="save();"/>
+                            <checkbox id="ShowConnTimer" label="&options_showconntimer.label;" oncommand="save();"/>
+                        </hbox>
                         <groupbox>
-                            <caption label="&options_msgnotify.label;"/>
-                            <hbox>
-                                <checkbox id="Beep" label="&options_beep.label;" oncommand="save();"/>
-                                <checkbox id="Popup" label="&options_popup.label;" oncommand="save();"/>
-                            </hbox>
+                            <caption label="&options_mousebrowsing.label;"/>
+                            <radiogroup id="MouseBrowsing" oncommand="save();">
+                                <hbox>
+                                    <radio value="0" label="&options_disablemousebrowsing.label;"/>
+                                    <radio value="1" label="&options_simplemousebrowsing.label;"/>
+                                    <radio value="2" label="&options_generalmousebrowsing.label;"/>
+                                    <radio value="3" label="&options_advancemousebrowsing.label;"/>
+                                </hbox>
+                            </radiogroup>
                         </groupbox>
                     </vbox>
                 </tabpanel>
@@ -128,6 +137,65 @@
                                             <spacer flex="1"/>
                                             <label control="Passwd" value="&options_passwd.label;"/>
                                             <textbox id="Passwd" type="password" size="15" onchange="save();"/>
+                                        </hbox>
+                                    </vbox>
+                                </hbox>
+                            </vbox>
+                        </groupbox>
+                    </vbox>
+                </tabpanel>
+
+                <tabpanel>
+                    <vbox>
+                        <groupbox>
+                            <caption label="&options_msgnotify.label;"/>
+                            <hbox>
+                                <checkbox id="Beep" label="&options_beep.label;" oncommand="save();"/>
+                                <checkbox id="Popup" label="&options_popup.label;" oncommand="save();"/>
+                            </hbox>
+                        </groupbox>
+                        <groupbox>
+                            <caption label="&options_autoreply.label;"/>
+                            <vbox>
+                                <hbox>
+                                    <vbox>
+                                        <hbox>
+                                            <label value="&options_aotoreplyprompt.label;"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyPrompt0" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyPrompt1" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyPrompt2" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyPrompt3" size="15" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyPrompt4" size="15" onchange="save();"/>
+                                        </hbox>
+                                    </vbox>
+                                    <vbox>
+                                        <hbox>
+                                            <label value="&options_aotoreplystring.label;"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyString0" size="40" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyString1" size="40" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyString2" size="40" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyString3" size="40" onchange="save();"/>
+                                        </hbox>
+                                        <hbox>
+                                            <textbox id="ReplyString4" size="40" onchange="save();"/>
                                         </hbox>
                                     </vbox>
                                 </hbox>

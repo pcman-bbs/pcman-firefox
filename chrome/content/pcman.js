@@ -11,6 +11,7 @@ function PCMan() {
     this.view.setConn(this.conn);
     this.parser=new AnsiParser(this.buf);
     this.ansiColor=new AnsiColor(this);
+    this.robot=new Robot(this);
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
@@ -33,6 +34,8 @@ PCMan.prototype={
         this.connTimer = setTimer( true, function (){
             temp.conn.showConnTime();
         }, 1000 );
+
+        this.robot.initialAutoLogin();
 
         if(this.prefs.AntiIdleTime > 0) {
             let temp = this;
