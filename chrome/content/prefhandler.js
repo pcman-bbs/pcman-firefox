@@ -82,6 +82,10 @@ PrefHandler.prototype={
         this.listener.view.setAlign();
     },
 
+    setMouseBrowsing: function() {
+        this.listener.buf.mouseBrowsing.setPageState();
+    },
+
     setAntiIdleTime: function() {
         this.listener.conn.send();
     },

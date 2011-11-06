@@ -644,17 +644,20 @@ TermView.prototype={
         // handle cursors for hyperlinks
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
-        if (!uris) {
-            this.canvas.style.cursor = "default";
-            return;
-        }
-        for (var i=0;i<uris.length;i++) {
+
+        var length = uris ? uris.length : 0;
+        for (var i=0;i<length;i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 this.canvas.style.cursor = "pointer";
                 return
             }
         }
         this.canvas.style.cursor = "default";
+
+        // handle mouse browsing
+        if(this.selection.hasSelection()) return;
+        if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
+            this.buf.mouseBrowsing.setCursorState(cursor.col, cursor.row);
     },
 
     onMouseUp: function(event) {
@@ -663,6 +666,9 @@ TermView.prototype={
             if(!cursor) return;
             if(this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
+        } else if(event.button == 1) { // middle button
+            if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
+                this.conn.send(this.buf.mouseBrowsing.getCommand('back'));
         }
     },
 
@@ -671,23 +677,44 @@ TermView.prototype={
         if(!cursor) return;
         var col = cursor.col, row = cursor.row;
         var uris = this.buf.lines[row].uris;
-        if (!uris) return;
+        var length = uris ? uris.length : 0;
 
         // Event dispatching order: mousedown -> mouseup -> click
         // For a common click, previous selection always collapses in mouseup
-        if (this.selection.hasSelection()) return;
+        if (this.selection.hasSelection()) {
+            this.buf.mouseBrowsing.selection = true;
+            return;
+        } else if(this.buf.mouseBrowsing.selection) {
+            this.buf.mouseBrowsing.selection = false;
+            var noCmd = true;
+        }
 
-        for (var i=0;i<uris.length;i++) {
+        for (var i=0;i<length;i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 var uri = "";
                 for (var j=uris[i][0];j<uris[i][1];j++)
                     uri = uri + this.buf.lines[row][j].ch;
                 openURI(uri, this.conn.listener.prefs.NewTab);
+                return;
             }
         }
+
+        // handle mouse browsing
+        if(event.button != 0) // left buttun;
+            return;
+        this.buf.mouseBrowsing.setCursorState(cursor.col, cursor.row);
+        if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
+            this.conn.send(noCmd ? '' : this.buf.mouseBrowsing.getCommand());
+        else if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
+            this.conn.send(this.buf.mouseBrowsing.getCommand('enter'));
     },
 
     onDblClick: function(event) {
+        if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
+            return;
+        if(this.conn.listener.prefs.MouseBrowsing > 1 && event.button == 0)
+            return; // General and Advance
+
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
         this.selection.selectWordAt(cursor.col, cursor.row);

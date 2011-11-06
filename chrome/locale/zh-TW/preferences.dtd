@@ -5,6 +5,7 @@
 <!ENTITY options_del.label "移除站台">
 <!ENTITY options_general.label "一般">
 <!ENTITY options_connection.label "連線">
+<!ENTITY options_message.label "訊息">
 <!ENTITY options_copypaste.label "複製貼上">
 <!ENTITY options_advance.label "進階">
 <!ENTITY options_about.label "關於">
@@ -15,9 +16,11 @@
 <!ENTITY options_valigncenter.label "畫面垂直置中">
 <!ENTITY options_detectdbcs.label "自動偵測雙位元組字集文字">
 <!ENTITY options_showconntimer.label "顯示連線時間">
-<!ENTITY options_msgnotify.label "來訊通知：">
-<!ENTITY options_beep.label "發出嗶聲">
-<!ENTITY options_popup.label "彈出通知視窗">
+<!ENTITY options_mousebrowsing.label "滑鼠瀏覽">
+<!ENTITY options_disablemousebrowsing.label "停用">
+<!ENTITY options_simplemousebrowsing.label "簡易">
+<!ENTITY options_generalmousebrowsing.label "一般">
+<!ENTITY options_advancemousebrowsing.label "進階">
 <!ENTITY options_askforclose.label "關閉連線中BBS分頁時先詢問">
 <!ENTITY options_antiidle1.label "閒置">
 <!ENTITY options_antiidle2.label "秒後送出">
@@ -32,6 +35,12 @@
 <!ENTITY options_passwordprompt.label "密碼提示：">
 <!ENTITY options_passwd.label "密碼：">
 <!ENTITY options_postlogin.label "登入後送出：">
+<!ENTITY options_autoreply.label "自動回訊">
+<!ENTITY options_msgnotify.label "來訊通知：">
+<!ENTITY options_beep.label "發出嗶聲">
+<!ENTITY options_popup.label "彈出通知視窗">
+<!ENTITY options_aotoreplyprompt.label "如果收到訊息：">
+<!ENTITY options_aotoreplystring.label "就自動回覆：">
 <!ENTITY options_clearcopiedsel.label "複製完畢自動取消選取">
 <!ENTITY options_copyaftersel.label "選取文字之後放開滑鼠即自動複製">
 <!ENTITY options_keepselatbufupd.label "畫面文字變動後仍然保留選取">

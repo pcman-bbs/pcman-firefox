@@ -64,6 +64,7 @@ TermChar.prototype={
 function TermBuf(cols, rows) {
     this.view=null;
     this.popupMsg=new AlertsService(this);
+    this.mouseBrowsing=new MouseBrowsing(this);
     // numbers of columns and rows
     this.cols=cols;
     this.rows=rows;
@@ -223,13 +224,21 @@ TermBuf.prototype={
                 if(this.view.selection.hasSelection())
                     this.view.selection.refreshSel();
 
-                if(this.view.conn.autoLoginStage > 0)
-                    this.view.conn.checkAutoLogin(row);
+                if(this.view.conn.listener.robot.autoLoginStage > 0)
+                    this.view.conn.listener.robot.checkAutoLogin(row);
+
+                if(this.view.conn.listener.robot.hasAutoReply())
+                    this.view.conn.listener.robot.checkAutoReply(row);
+
+                if(row == 0 && this.view.conn.listener.prefs.MouseBrowsing > 1)
+                    var setPageState = true; // General and Advance
 
                 if(row == rows - 1)
                     this.popupMsg.lineUpdated();
             }
         }
+        if(setPageState)
+            this.mouseBrowsing.setPageState();
     },
 
     clear: function(param) {
@@ -294,11 +303,11 @@ TermBuf.prototype={
     tab: function(num) {
         var mod = this.curX % 4;
         this.curX += 4 - mod;
-        if(num && num > 1) this.curX += 4 * (num-1);
-        if(this.curX >= this.cols) {
+        if(num && num > 1)
+            this.curX += 4 * (num-1);
+        if(this.curX >= this.cols)
             this.curX = this.cols-1;
-            this.posChanged=true;
-        }
+        this.posChanged=true;
     },
 
     backTab: function(num) {

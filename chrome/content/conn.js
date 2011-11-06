@@ -86,7 +86,6 @@ Conn.prototype={
         this.connectTime = Date.now();
 
         this.closeConfirm();
-        this.initialAutoLogin();
     },
 
     close: function() {
@@ -325,48 +324,5 @@ Conn.prototype={
         var h = (connectedTime - s - m * 60) / 3600;
         var str = h + ':' + ('00'+m).substr(-2) + ':' + ('00'+s).substr(-2);
         document.getElementById('connTimer').textContent = str;
-    },
-
-    // Modified from pcmanx-gtk2
-    initialAutoLogin: function() {
-        this.listener.prefs.load(true); // Update Login and Passwd
-        this.loginPrompt = [
-            this.listener.prefs.PreLoginPrompt,
-            this.listener.prefs.LoginPrompt,
-            this.listener.prefs.PasswdPrompt];
-        this.loginStr = [
-            UnEscapeStr(this.listener.prefs.PreLogin),
-            UnEscapeStr(this.listener.prefs.Login),
-            UnEscapeStr(this.listener.prefs.Passwd),
-            UnEscapeStr(this.listener.prefs.PostLogin)];
-        if(this.loginStr[1])
-            this.autoLoginStage = this.loginStr[0] ? 1 : 2;
-        else if(this.loginStr[2]) this.autoLoginStage = 3;
-        else this.autoLoginStage = 0;
-    },
-
-    // Modified from pcmanx-gtk2
-    checkAutoLogin: function(row) {
-        if(this.autoLoginStage > 3 || this.autoLoginStage < 1) {
-            this.autoLoginStage = 0;
-            return;
-        }
-
-        var line = this.listener.buf.getRowText(row, 0, this.listener.buf.cols);
-        if(line.indexOf(this.loginPrompt[this.autoLoginStage - 1]) < 0)
-            return;
-
-        var Encoding = this.listener.prefs.Encoding;
-        var EnterKey = UnEscapeStr(this.listener.prefs.EnterKey);
-        this.convSend(this.loginStr[this.autoLoginStage - 1] + EnterKey, Encoding);
-
-        if(this.autoLoginStage == 3) {
-            if(this.loginStr[3])
-                this.convSend(this.loginStr[3], Encoding);
-            this.autoLoginStage = 0;
-            return;
-        }
-
-        ++this.autoLoginStage;
     }
 }
