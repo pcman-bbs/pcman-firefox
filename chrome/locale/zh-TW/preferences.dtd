@@ -60,3 +60,24 @@
 <!ENTITY options_homepage.label "網站首頁">
 <!ENTITY options_reportbug.label "回報錯誤">
 
+<!ENTITY firegestures_scriptgenerator.label "Firegestures手勢腳本產生器">
+<!ENTITY firegestures_bbsgesture.label "當手勢作用在BBS視窗時：">
+<!ENTITY firegestures_chooseone.label "請選擇一個命令：">
+<!ENTITY firegestures_pageup.label "按鍵：Page Up">
+<!ENTITY firegestures_pagedown.label "按鍵：Page Down">
+<!ENTITY firegestures_end.label "按鍵：End">
+<!ENTITY firegestures_home.label "按鍵：Home">
+<!ENTITY firegestures_left.label "按鍵：←">
+<!ENTITY firegestures_up.label "按鍵：↑">
+<!ENTITY firegestures_right.label "按鍵：→">
+<!ENTITY firegestures_down.label "按鍵：↓">
+<!ENTITY firegestures_copy.label "複製">
+<!ENTITY firegestures_coloredcopy.label "複製(包含ANSI彩色)">
+<!ENTITY firegestures_paste.label "貼上">
+<!ENTITY firegestures_selectall.label "全選">
+<!ENTITY firegestures_loadfile.label "載入檔案">
+<!ENTITY firegestures_savefile.label "另存檔案">
+<!ENTITY firegestures_preference.label "站台設定">
+<!ENTITY firegestures_autoreplystr.label "送出自動回覆字串">
+<!ENTITY firegestures_htmlgesture.label "當手勢作用在一般網頁視窗時：">
+

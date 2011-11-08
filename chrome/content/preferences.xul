@@ -250,6 +250,52 @@
                         </radiogroup>
                         <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
                         <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
+                        <groupbox>
+                            <caption label="&firegestures_scriptgenerator.label;"/>
+                            <vbox>
+                                <hbox>
+                                    <label control="BBSGesture" value="&firegestures_bbsgesture.label;"/>
+                                    <menulist id="BBSGesture" oncommand="createScript();">
+                                        <menupopup>
+                                            <menuitem value="" label="&firegestures_chooseone.label;"/>
+                                            <menuitem value="Page Up" label="&firegestures_pageup.label;"/>
+                                            <menuitem value="Page Down" label="&firegestures_pagedown.label;"/>
+                                            <menuitem value="End" label="&firegestures_end.label;"/>
+                                            <menuitem value="Home" label="&firegestures_home.label;"/>
+                                            <menuitem value="Arrow Left" label="&firegestures_left.label;"/>
+                                            <menuitem value="Arrow Up" label="&firegestures_up.label;"/>
+                                            <menuitem value="Arrow Right" label="&firegestures_right.label;"/>
+                                            <menuitem value="Arrow Down" label="&firegestures_down.label;"/>
+                                            <menuitem value="Copy" label="&firegestures_copy.label;"/>
+                                            <menuitem value="ColoredCopy" label="&firegestures_coloredcopy.label;"/>
+                                            <menuitem value="Paste" label="&firegestures_paste.label;"/>
+                                            <menuitem value="SelectAll" label="&firegestures_selectall.label;"/>
+                                            <menuitem value="LoadFile" label="&firegestures_loadfile.label;"/>
+                                            <menuitem value="SaveFile" label="&firegestures_savefile.label;"/>
+                                            <menuitem value="Preference" label="&firegestures_preference.label;"/>
+                                            <menuitem value="CustomStr0" label="&firegestures_autoreplystr.label; 0"/>
+                                            <menuitem value="CustomStr1" label="&firegestures_autoreplystr.label; 1"/>
+                                            <menuitem value="CustomStr2" label="&firegestures_autoreplystr.label; 2"/>
+                                            <menuitem value="CustomStr3" label="&firegestures_autoreplystr.label; 3"/>
+                                            <menuitem value="CustomStr4" label="&firegestures_autoreplystr.label; 4"/>
+                                        </menupopup>
+                                    </menulist>
+                                </hbox>
+                                <hbox>
+                                    <label control="HTMLGesture" value="&firegestures_htmlgesture.label;"/>
+                                    <textbox id="HTMLGesture" onchange="createScript();"/>
+                                </hbox>
+                                <hbox>
+                                    <html:a
+                                        id="scriptLink"
+                                        href="data:text/javascript,"
+                                        onclick="event.preventDefault();"
+                                        draggable="true"
+                                        ondragstart="setData(event);">
+                                    </html:a>
+                                </hbox>
+                            </vbox>
+                        </groupbox>
                     </vbox>
                 </tabpanel>
 
@@ -280,6 +326,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefdefault.js"/>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/contentpref.js"/>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/preferences.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/FireGesturesScript.js"/>
 
     </prefpane>
 </prefwindow>

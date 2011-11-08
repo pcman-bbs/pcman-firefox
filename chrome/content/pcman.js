@@ -12,6 +12,8 @@ function PCMan() {
     this.parser=new AnsiParser(this.buf);
     this.ansiColor=new AnsiColor(this);
     this.robot=new Robot(this);
+    if(FireGesturesTrail)
+        this.gestures = new FireGesturesTrail(this);
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
@@ -19,6 +21,14 @@ function PCMan() {
 
     this.prefs.observe(true);
     this.view.setAlign();
+
+    var _this = this;
+    this.robot.eventListener = function(event) {
+        _this.robot.execExtCommand(event.getData("command"));
+        if(_this.gestures)
+            _this.gestures.cancelAll();
+    }
+    document.addEventListener("FireGesturesCommand", this.robot.eventListener, false);
 }
 
 PCMan.prototype={
@@ -54,6 +64,9 @@ PCMan.prototype={
         this.view.removeEventListener();
         this.view.input.controllers.removeController(this.textboxControllers);
         this.prefs.observe(false);
+        if(this.gestures)
+            this.gestures.removeEventListener();
+        document.removeEventListener("FireGesturesCommand", this.robot.eventListener, false);
 
         this.connTimer.cancel();
 

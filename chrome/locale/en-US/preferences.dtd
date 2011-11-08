@@ -60,3 +60,24 @@
 <!ENTITY options_homepage.label "Homepage">
 <!ENTITY options_reportbug.label "Report Bugs">
 
+<!ENTITY firegestures_scriptgenerator.label "Firegestures script generator">
+<!ENTITY firegestures_bbsgesture.label "For gestures in BBS windows: ">
+<!ENTITY firegestures_chooseone.label "Please choose one action: ">
+<!ENTITY firegestures_pageup.label "Key:Page Up">
+<!ENTITY firegestures_pagedown.label "Key:Page Down">
+<!ENTITY firegestures_end.label "Key:End">
+<!ENTITY firegestures_home.label "Key:Home">
+<!ENTITY firegestures_left.label "Key:Arrow Left">
+<!ENTITY firegestures_up.label "Key:Arrow Up">
+<!ENTITY firegestures_right.label "Key:Arrow Right">
+<!ENTITY firegestures_down.label "Key:Arrow Down">
+<!ENTITY firegestures_copy.label "Copy">
+<!ENTITY firegestures_coloredcopy.label "Copy with ANSI color">
+<!ENTITY firegestures_paste.label "Paste">
+<!ENTITY firegestures_selectall.label "Select All">
+<!ENTITY firegestures_loadfile.label "Load File">
+<!ENTITY firegestures_savefile.label "Save File">
+<!ENTITY firegestures_preference.label "Preference">
+<!ENTITY firegestures_autoreplystr.label "Send auto-reply string">
+<!ENTITY firegestures_htmlgesture.label "For gestures in general HTTP windows: ">
+
