@@ -34,6 +34,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiFile.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/mouseBrowsing.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/robot.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/FireGesturesTrail.js" />
     <script type="application/x-javascript">
     var pcman=null;
     function setup() {

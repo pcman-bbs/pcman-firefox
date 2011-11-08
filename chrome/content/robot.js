@@ -91,5 +91,74 @@ Robot.prototype={
         }
 
         ++this.autoLoginStage;
+    },
+
+    execExtCommand: function(command) {
+        var conn = this.listener.conn;
+
+        switch(command){
+        case "Page Up":
+            conn.send('\x1b[5~');
+            break;
+        case "Page Down":
+            conn.send('\x1b[6~');
+            break;
+        case "End":
+            conn.send('\x1b[4~');
+            break;
+        case "Home":
+            conn.send('\x1b[1~');
+            break;
+        case "Arrow Left":
+            if(this.listener.view.detectDBCS(true))
+                conn.send('\x1b[D\x1b[D');
+            else
+                conn.send('\x1b[D');
+            break;
+        case "Arrow Up":
+            conn.send('\x1b[A');
+            break;
+        case "Arrow Right":
+            if(this.listener.view.detectDBCS(false))
+                conn.send('\x1b[C\x1b[C');
+            else
+                conn.send('\x1b[C');
+            break;
+        case "Arrow Down":
+            conn.send('\x1b[B');
+            break;
+        case "Copy":
+            this.listener.copy();
+            break;
+        case "ColoredCopy":
+            this.ansiColor.copy();
+            break;
+        case "Paste":
+            this.listener.paste();
+            break;
+        case "SelectAll":
+            this.listener.selAll();
+            break;
+        case "LoadFile":
+            this.listener.ansiColor.file.openFile();
+            break;
+        case "SaveFile":
+            this.listener.ansiColor.file.savePage();
+            break;
+        case "Preference":
+            sitePref();
+            break;
+        default:
+            if(command.indexOf('CustomStr') == 0) {
+                var id = command.substr(9);
+                var str = this.listener.prefs['ReplyString' + id];
+                var Encoding = this.listener.prefs.Encoding;
+                if(str)
+                    conn.convSend(UnEscapeStr(str), Encoding);
+            } else {
+                //FIXME: arbitrary string is not supported
+            }
+            break;
+        }
     }
 }
