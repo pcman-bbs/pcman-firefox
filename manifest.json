@@ -1,0 +1,38 @@
+{
+  "name": "__MSG_appName__",
+  "version": "0.0.3",
+
+  "description": "__MSG_appDesc__",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png"
+  },
+  "default_locale": "en_US",
+
+  "browser_action": {
+    "default_icon": "icon16.png",
+    "default_popup": "popup.htm"
+  },
+
+  "background_page": "background.htm",
+  "homepage_url": "http://code.google.com/p/pcmanfx/",
+  "key": "pcmanfx2",
+  "minimum_chrome_version": "15.0",
+  "omnibox": { "keyword": "telnet" },
+  "options_page": "options.htm",
+
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite",
+    "contextMenus",
+    "notifications",
+    "plugins",
+    "tabs",
+    "tts",
+    "unlimitedStorage"
+  ],
+
+  //"update_url": "http://path/to/updateInfo.xml",
+
+  "plugins": []
+}

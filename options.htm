@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<!-- Modified from http://torqueo.net/files/html5-tabs/ -->
+<!-- Sub-tabs are additionally supported -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <style type="text/css">
+        .tabs {
+            height: 360px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            display: block;
+        }
+        .tabs section {
+            float: left;
+            z-index: 1;
+        }
+        .tabs section header {
+            margin: 0 1px 0 0;
+            padding: 3px 10px;
+            font: bold 14px sans-serif;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+        }
+
+        .tabs section.active header { background: #eee; cursor: default; }
+        .tabs section.inactive header { background: #d9d9d9; cursor: pointer; }
+
+        .tabs section div.content {
+            position: absolute;
+            left: 0;
+            z-index: 2;
+            width: 700px;
+            height: 100%;
+            background: #eee;
+            padding: 0 10px;
+            font: 14px sans-serif;
+        }
+
+        .tabs section.active div.content { display: block; }
+        .tabs section.inactive div.content { display: none; }
+
+        aside {
+            float: left;
+        }
+        aside select {
+            width: 150px;
+        }
+
+        input[type="number"] {
+            width: 40px;
+        }
+
+        .table {
+            display: table;
+        }
+        .table-caption {
+            display: table-caption;
+            text-align: center;
+        }
+        .table-row {
+            display: table-row;
+        }
+        .table-cell {
+            display: table-cell;
+            text-align: right;
+        }
+        .table-cell-th {
+            display: table-cell;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript" src="browserutilsGC.js"></script>
+    <script type="text/javascript" src="prefdefault.js"></script>
+    <script type="text/javascript" src="localStoragePref.js"></script>
+    <script type="text/javascript" src="preferences.js"></script>
+</head>
+
+<body onload="initial();">
+    <h1>PCMan Options</h1>
+    <p>Please set your preferences here.</p>
+
+    <aside>
+        <fieldset>
+            <legend><label id="options_sitesetting"></label></legend>
+            <div>
+                <select id="siteList" onchange="siteChanged();" size="17">
+                    <option id="options_default" selected="true"></option>
+                </select>
+            </div>
+            <div>
+                <button id="addSite" onclick="addSite();" disabled="true"/>
+                    <label id="options_add"></label>
+                </button>
+                <button id="delSite" onclick="delSite();" disabled="true"/>
+                    <label id="options_del"></label>
+                </button>
+            </div>
+        </fieldset>
+    </aside>
+    <!-- HTML5 TABS CODE -->
+    <article class="tabs">
+        <section class="active">
+            <header id="options_general"></header>
+            <div class="content">
+                <div>
+                    <label for="Encoding" id="options_codepage"></label>
+                    <input id="Encoding" list="datalist_Encoding"/>
+                    <select id="datalist_Encoding">
+                        <option>big5</option>
+                        <option>gb2312</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="Cols" id="options_column"></label>
+                    <input id="Cols" type="number" min="1" max="65535"/>
+                    <label for="Rows" id="options_row"></label>
+                    <input id="Rows" type="number" min="1" max="65535"/>
+                </div>
+                <div>
+                    <input id="HAlignCenter" type="checkbox"/>
+                    <label for="HAlignCenter" id="options_haligncenter"></label>
+                    <input id="VAlignCenter" type="checkbox"/>
+                    <label for="VAlignCenter" id="options_valigncenter"></label>
+                </div>
+                <div>
+                    <input id="DetectDBCS" type="checkbox"/>
+                    <label for="DetectDBCS" id="options_detectdbcs"></label>
+                    <input id="ShowConnTimer" type="checkbox"/>
+                    <label for="ShowConnTimer" id="options_showconntimer"></label>
+                </div>
+                <div>
+                    <label for="MouseBrowsing" id="options_mousebrowsing"></label>
+                    <select id="MouseBrowsing">
+                        <option id="options_disablemousebrowsing" value="0"></option>
+                        <option id="options_simplemousebrowsing" value="1"></option>
+                        <option id="options_generalmousebrowsing" value="2"></option>
+                        <option id="options_advancemousebrowsing" value="3"></option>
+                    </select>
+                </div>
+            </div>
+        </section>
+        <section>
+            <header id="options_connection"></header>
+            <div class="content">
+                <div>
+                    <input id="AskForClose" type="checkbox"/>
+                    <label for="AskForClose" id="options_askforclose"></label>
+                </div>
+                <div>
+                    <label for="AntiIdleTime" id="options_antiidle1"></label>
+                    <input id="AntiIdleTime" type="number"/>
+                    <label for="AntiIdleStr" id="options_antiidle2"></label>
+                    <input id="AntiIdleStr"/>
+                    <label for="AntiIdleTime" id="options_antiidle3"></label>
+                </div>
+                <div>
+                    <label for="ReconnectTime" id="options_reconnect1"></label>
+                    <input id="ReconnectTime" type="number"/>
+                    <label for="ReconnectTime" id="options_reconnect2"></label>
+                </div>
+                <fieldset>
+                    <legend><label id="options_autologin"></label></legend>
+                    <div class="table">
+                        <div class="table-caption">
+                            <label id="options_autologincaution"></label>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <label for="PreLoginPrompt" id="options_preloginprompt"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="PreLoginPrompt"/>
+                            </div>
+                            <div class="table-cell">
+                                <label for="PreLogin" id="options_prelogin"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="PreLogin"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <label for="LoginPrompt" id="options_loginprompt"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="LoginPrompt"/>
+                            </div>
+                            <div class="table-cell">
+                                <label for="Login" id="options_login"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="Login"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <label for="PasswdPrompt" id="options_passwordprompt"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="PasswdPrompt"/>
+                            </div>
+                            <div class="table-cell">
+                                <label for="Passwd" id="options_passwd"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="Passwd" type="password"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <label for="PostLogin" id="options_postlogin"></label>
+                            </div>
+                            <div class="table-cell">
+                                <input id="PostLogin"/>
+                            </div>
+                            <div class="table-cell">
+                            </div>
+                            <div class="table-cell">
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+        <section>
+            <header id="options_message"></header>
+            <div class="content">
+                <fieldset>
+                    <legend><label id="options_msgnotify"></label></legend>
+                    <div>
+                        <input id="Beep" type="checkbox"/>
+                        <label for="Beep" id="options_beep"></label>
+                        <input id="Popup" type="checkbox"/>
+                        <label for="Popup" id="options_popup"></label>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend><label id="options_autoreply"></label></legend>
+                    <div class="table">
+                        <div class="table-row">
+                            <div class="table-cell-th">
+                                <label id="options_aotoreplyprompt"></label>
+                            </div>
+                            <div class="table-cell-th">
+                                <label id="options_aotoreplystring"></label>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <input id="ReplyPrompt0"/>
+                            </div>
+                            <div class="table-cell">
+                                <input id="ReplyString0"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <input id="ReplyPrompt1"/>
+                            </div>
+                            <div class="table-cell">
+                                <input id="ReplyString1"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <input id="ReplyPrompt2"/>
+                            </div>
+                            <div class="table-cell">
+                                <input id="ReplyString2"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <input id="ReplyPrompt3"/>
+                            </div>
+                            <div class="table-cell">
+                                <input id="ReplyString3"/>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">
+                                <input id="ReplyPrompt4"/>
+                            </div>
+                            <div class="table-cell">
+                                <input id="ReplyString4"/>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+        <section>
+            <header id="options_copypaste"></header>
+            <div class="content">
+                <div>
+                    <input id="ClearCopiedSel" type="checkbox"/>
+                    <label for="ClearCopiedSel" id="options_clearcopiedsel"></label>
+                </div>
+                <div>
+                    <input id="CopyAfterSel" type="checkbox"/>
+                    <label for="CopyAfterSel" id="options_copyaftersel"></label>
+                </div>
+                <div>
+                    <input id="KeepSelAtBufUpd" type="checkbox"/>
+                    <label for="KeepSelAtBufUpd" id="options_keepselatbufupd"></label>
+                </div>
+                <div>
+                    <input id="TrimTail" type="checkbox"/>
+                    <label for="TrimTail" id="options_trimtail"></label>
+                </div>
+                <div>
+                    <label for="LineWrap" id="options_linewrap1"></label>
+                    <input id="LineWrap" type="number"/>
+                    <label for="LineWrap" id="options_linewrap2"></label>
+                </div>
+                <div>
+                    <label for="EscapeString" id="options_replaceesc1"></label>
+                    <input id="EscapeString" list="datalist_EscapeString"/>
+                    <select id="datalist_EscapeString">
+                        <option>^[</option>
+                        <option>^[^[</option>
+                        <option>^C^H^H</option>
+                        <option>^U</option>
+                    </select>
+                    <label for="EscapeString" id="options_replaceesc2"></label>
+                </div>
+            </div>
+        </section>
+        <section>
+            <header id="options_advance"></header>
+            <div class="content">
+                <div>
+                    <label for="TermType" id="options_termtype"></label>
+                    <input id="TermType" list="datalist_TermType"/>
+                    <select id="datalist_TermType">
+                        <option>VT100</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="EnterKey" id="options_enterkey"></label>
+                    <select id="EnterKey">
+                        <option value="^M">CR</option>
+                        <option value="^J">LF</option>
+                        <option value="^M^J">CRLF</option>
+                    </select>
+                </div>
+                <div>
+                    <input id="LineFeed" type="checkbox"/>
+                    <label for="LineFeed" id="options_linefeed"></label>
+                </div>
+                <div>
+                    <input id="NewTab" type="checkbox"/>
+                    <label for="NewTab" id="options_newtab"></label>
+                </div>
+            </div>
+        </section>
+        <section>
+            <header id="options_about"></header>
+            <div class="content">
+                <div>
+                    <img src="icon16.png"/>
+                    <span id="appName"></span>
+                    <span id="version"></span>
+                </div>
+                <div>
+                    <label id="appDesc"></label>
+                </div>
+                <p> </p>
+                <div>
+                    <label id="options_creator"></label>
+                </div>
+                <div>
+                    <label>u881831 &lt;u881831@hotmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <label>And the committers of the pcmanfx project: </label>
+                </div>
+                <div>
+                    <label>bootleq &lt;bootleq@gmail.com&gt;</label>
+                </div>
+                <div>
+                    <label>Kang Hao Lu &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</label>
+                </div>
+                <div>
+                    <label>Littlebtc &lt;http://blog.littleb.tc/&gt;</label>
+                </div>
+                <div>
+                    <label>Hemiola SUN &lt;scy.hemi@gmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <label>The flash socket is written by</label>
+                </div>
+                <div>
+                    <label>Ett Chung &lt;ettoolong@hotmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <button onclick="openURI(msg('options_downloadurl'), true)"/>
+                        <label id="options_download"></label>
+                    </button>
+                    <button onclick="openURI('http://code.google.com/p/pcmanfx/', true)"/>
+                        <label id="options_homepage"></label>
+                    </button>
+                    <button onclick="openURI('http://code.google.com/p/pcmanfx/issues/list', true)"/>
+                        <label id="options_reportbug"></label>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </article>
+    <!-- /HTML5 TABS CODE -->
+
+    <input type="submit" onclick="save(true);"/>
+
+    <script type="text/javascript">
+        // All the content within label and option with id will be overridden
+        function getMsg() {
+            var labels = document.getElementsByTagName("label");
+            for(var i=0; i<labels.length; ++i) {
+                if(labels[i].id && labels[i].id.charAt(0) != "_")
+                    labels[i].textContent = msg(labels[i].id);
+            }
+            // label cannot be inserted in <option></option>
+            var options = document.getElementsByTagName("option");
+            for(var j=0; j<options.length; ++j) {
+                if(options[j].id && options[j].id.charAt(0) != "_")
+                    options[j].textContent = msg(options[j].id);
+            }
+            // label within <header></header> make the change of tabs buggy
+            var headers = document.getElementsByTagName("header");
+            for(var k=0; k<headers.length; ++k) {
+                if(headers[k].id && headers[k].id.charAt(0) != "_")
+                    headers[k].textContent = msg(headers[k].id);
+            }
+            document.title = msg("options_pcmanoptions");
+            document.getElementById('appName').textContent = getDetails().name;
+            document.getElementById('version').textContent = getDetails().version;
+        }
+
+        // Google Chrome doesn't support native HTML5 datalist yet
+        // It is an extremely simple implement of datalist
+        // here we must replace <datalist> by <select>
+        // Only visible elements works as this function is called
+        // the <select> element must be placed right after the <input>
+        // each datalist can only correspond to one input
+        function setDatalist() {
+            var inputs = document.getElementsByTagName('input');
+            for(var i=0; i<inputs.length; ++i) {
+                var list = inputs[i].getAttribute('list');
+                if(!list)
+                    continue;
+                var datalist = document.getElementById(list);
+                if(!datalist.inserted) {
+                    var defaultOption = document.createElement("option");
+                    datalist.insertBefore(defaultOption, datalist.options[0]);
+                    datalist.inserted = true;
+                }
+                datalist.options[0].textContent = "";
+                // In GC it works only when the text is found in options
+                datalist.value = inputs[i].value;
+                // Setting value is failed due to the text is not found
+                if(datalist.value != inputs[i].value) {
+                    datalist.options[0].textContent = inputs[i].value;
+                    datalist.selectedIndex = 0;
+                }
+                inputs[i].style.position = "absolute";
+                // only visible element has clientWidth
+                if(datalist.clientWidth)
+                    inputs[i].style.width = (datalist.clientWidth-20) + "px";
+                datalist.listener = inputs[i];
+                inputs[i].list = datalist;
+                inputs[i].oninput = function(event) {
+                    event.target.list.options[0].textContent = "";
+                    event.target.list.value = event.target.value;
+                    if(event.target.list.value != event.target.value) {
+                        event.target.list.options[0].textContent = event.target.value;
+                        event.target.list.selectedIndex = 0;
+                    }
+                }
+                datalist.onchange = function(event) {
+                    event.target.options[0].textContent = "";
+                    event.target.listener.value = event.target.value;
+                }
+            }
+        }
+
+        function iniTabs() {
+            var tabheaders = document.getElementsByTagName('header');
+            for(var i=0; i<tabheaders.length; ++i) {
+                if(!tabheaders[i].parentNode.className)
+                    tabheaders[i].parentNode.className = 'inactive';
+                tabheaders[i].onclick = function(event) {
+                    var tab = event.target.parentNode;
+                    for(var j=0; j<tab.parentNode.childNodes.length; ++j)
+                        tab.parentNode.childNodes[j].className = 'inactive';
+                    tab.className = 'active';
+                };
+            }
+        }
+
+        function initial() {
+            getMsg();
+
+            load();
+
+            setDatalist();
+            iniTabs();
+        }
+    </script>
+</body>
+</html>
+

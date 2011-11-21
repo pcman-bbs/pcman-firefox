@@ -1,0 +1,43 @@
+#topwin {
+  -moz-appearance: none;
+  background-color:#000;
+  overflow:hidden;
+  border:none;
+  padding:0;
+  margin:0;
+}
+#canvas {
+  background-color:#000;
+  border:none;
+  padding:0;
+  margin:0;
+}
+#box3 {
+  position:fixed;
+  top:-100px;
+  background:#fff;
+  border:none;
+  padding:0;
+  margin:0;
+}
+#input_proxy {
+  -moz-appearance:none;
+  position:fixed;
+  opacity:.9;
+  background-color:-moz-field;
+  color:-moz-fieldtext;
+  border:none;
+  padding:0;
+  margin:0;
+}
+
+#selection {
+  position:fixed;
+  display:none;
+  opacity:.6;
+  background-color:Highlight;
+  color:HighlightText;
+  border:none;
+  padding:0;
+  margin:0;
+}

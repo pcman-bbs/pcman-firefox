@@ -1,0 +1,229 @@
+{
+  "appName": {
+    "message": "PCMan Google Chrome Extension",
+    "description": "The title of the application, displayed in the web store."
+  },
+  "appDesc": {
+    "message": "A GNU/GPL telnet client extension specifically designed for BBS browsing.",
+    "description":"The description of the application, displayed in the web store."
+  },
+  "menu_copy": {
+    "message": "Copy"
+  },
+  "menu_coloredCopy": {
+    "message": "Copy with ANSI color"
+  },
+  "menu_paste": {
+    "message": "Paste"
+  },
+  "menu_selAll": {
+    "message": "Select All"
+  },
+  "menu_search": {
+    "message": "Search"
+  },
+  "menu_fileio": {
+    "message": "File I/O"
+  },
+  "menu_loadfile": {
+    "message": "Load File"
+  },
+  "menu_savefile": {
+    "message": "Save File"
+  },
+  "menu_sitepref": {
+    "message": "SitePref"
+  },
+  "save_without_color": {
+    "message": "Download article without ANSI color?"
+  },
+  "download_stopped": {
+    "message": "Downloading article terminated!"
+  },
+  "options_pcmanoptions": {
+    "message": "PCMan Options"
+  },
+  "options_sitesetting": {
+    "message": "Site settings"
+  },
+  "options_default": {
+    "message": "Default"
+  },
+  "options_add": {
+    "message": "Create"
+  },
+  "options_del": {
+    "message": "Remove"
+  },
+  "options_general": {
+    "message": "General"
+  },
+  "options_connection": {
+    "message": "Connect"
+  },
+  "options_message": {
+    "message": "Messages"
+  },
+  "options_copypaste": {
+    "message": "CopyPaste"
+  },
+  "options_advance": {
+    "message": "Advance"
+  },
+  "options_about": {
+    "message": "About"
+  },
+  "options_codepage": {
+    "message": "Codepage:"
+  },
+  "options_column": {
+    "message": "Column:"
+  },
+  "options_row": {
+    "message": "Row:"
+  },
+  "options_haligncenter": {
+    "message": "Horizontally centerd"
+  },
+  "options_valigncenter": {
+    "message": "Vertically centerd"
+  },
+  "options_detectdbcs": {
+    "message": "Detect DBCS words"
+  },
+  "options_showconntimer": {
+    "message": "Show connection time"
+  },
+  "options_mousebrowsing": {
+    "message": "Mouse browsing"
+  },
+  "options_disablemousebrowsing": {
+    "message": "Disable"
+  },
+  "options_simplemousebrowsing": {
+    "message": "Simple"
+  },
+  "options_generalmousebrowsing": {
+    "message": "General"
+  },
+  "options_advancemousebrowsing": {
+    "message": "Advance"
+  },
+  "options_askforclose": {
+    "message": "Ask before closing connecting BBS"
+  },
+  "options_antiidle1": {
+    "message": "After idling"
+  },
+  "options_antiidle2": {
+    "message": "seconds sends"
+  },
+  "options_antiidle3": {
+    "message": " - 0 sec: disabled"
+  },
+  "options_reconnect1": {
+    "message": "Auto-reconnect if connection failed within"
+  },
+  "options_reconnect2": {
+    "message": "seconds. - 0 sec: disabled"
+  },
+  "options_autologin": {
+    "message": "Auto Login"
+  },
+  "options_preloginprompt": {
+    "message": "Prelogin Prompt:"
+  },
+  "options_prelogin": {
+    "message": "Prelogin String:"
+  },
+  "options_loginprompt": {
+    "message": "Login Prompt:"
+  },
+  "options_login": {
+    "message": "User Name:"
+  },
+  "options_passwordprompt": {
+    "message": "Password Prompt:"
+  },
+  "options_passwd": {
+    "message": "Password:"
+  },
+  "options_postlogin": {
+    "message": "Post Login String:"
+  },
+  "options_autologincaution": {
+    "message": "WARNING: Your password will be stored in plain text without any encryption. There is no guarantee that others won't get your password. Use this at your own risk."
+  },
+  "options_msgnotify": {
+    "message": "Message notification:"
+  },
+  "options_beep": {
+    "message": "Beep"
+  },
+  "options_popup": {
+    "message": "Show popup windows"
+  },
+  "options_autoreply": {
+    "message": "Auto-reply for incoming messages"
+  },
+  "options_aotoreplyprompt": {
+    "message": "As receiving messages:"
+  },
+  "options_aotoreplystring": {
+    "message": "automatically reply:"
+  },
+  "options_clearcopiedsel": {
+    "message": "Cancel selection after copying"
+  },
+  "options_copyaftersel": {
+    "message": "Copy text after selection"
+  },
+  "options_keepselatbufupd": {
+    "message": "Keep selection after text varying"
+  },
+  "options_trimtail": {
+    "message": "Trim spaces at the tail of copied text"
+  },
+  "options_linewrap1": {
+    "message": "Wrap line for copied texts longer than"
+  },
+  "options_linewrap2": {
+    "message": "- 0: disabled"
+  },
+  "options_replaceesc1": {
+    "message": "As pasting replace ESC as:"
+  },
+  "options_replaceesc2": {
+    "message": "Most BBS use ^U or ^C^H^H"
+  },
+  "options_termtype": {
+    "message": "Terminal type:"
+  },
+  "options_enterkey": {
+    "message": "When pressing ENTER send:"
+  },
+  "options_linefeed": {
+    "message": "Line feeds if text is longer than screen"
+  },
+  "options_newtab": {
+    "message": "Go to the new tab after clicking links in BBS"
+  },
+  "options_addondescription": {
+    "message": "A GNU/GPL telnet client extension specifically designed for BBS browsing."
+  },
+  "options_creator": {
+    "message": "Author: Hong Jen Yee"
+  },
+  "options_download": {
+    "message": "Download"
+  },
+  "options_downloadurl": {
+    "message": "https://addons.mozilla.org/en-US/firefox/addon/pcman-bbs-extension/"
+  },
+  "options_homepage": {
+    "message": "Homepage"
+  },
+  "options_reportbug": {
+    "message": "Report Bugs"
+  }
+}

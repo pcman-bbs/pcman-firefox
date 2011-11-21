@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC
+"-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="zh-TW">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <!-- <link rel="icon" href="icon16.png"/> -->
+    <link rel="stylesheet" type="text/css" href="pcman.css" />
+    <script type="text/javascript" src="FX_MS_diff.b2u.js"></script>
+    <script type="text/javascript" src="FX_MS_diff.u2b.js"></script>
+    <script type="text/javascript" src="flashUtils.js"></script>
+    <script type="text/javascript" src="browserutilsGC.js"></script>
+    <script type="text/javascript" src="prefdefault.js"></script>
+    <script type="text/javascript" src="localStoragePref.js"></script>
+    <script type="text/javascript" src="prefhandler.js"></script>
+    <script type="text/javascript" src="conn.js"></script>
+    <script type="text/javascript" src="drawutils.js"></script>
+    <script type="text/javascript" src="termview.js"></script>
+    <script type="text/javascript" src="termsel.js"></script>
+    <script type="text/javascript" src="termbuf.js"></script>
+    <script type="text/javascript" src="ansiparser.js"></script>
+    <script type="text/javascript" src="pcman.js"></script>
+    <!-- <script type="text/javascript" src="searchmenu.js"></script> -->
+    <script type="text/javascript" src="stringutil.js"></script>
+    <script type="text/javascript" src="alertService.js"></script>
+    <script type="text/javascript" src="ansiColor.js"></script>
+    <script type="text/javascript" src="ansiFile.js"></script>
+    <script type="text/javascript" src="mouseBrowsing.js"></script>
+    <script type="text/javascript" src="robot.js"></script>
+    <!-- <script type="text/javascript" src="FireGesturesTrail.js"></script> -->
+    <script type="text/javascript">
+    window.onload = setup;
+    window.onunload = finalize;
+    window.onresize = resize;
+    window.onmousedown = set_focus;
+    window.onmouseup = set_focus;
+
+    // A dirty hack to show context menu only in bbs page
+    window.onfocus = function(event) {
+        pcmanMenuItems(true); // create
+    };
+    window.onblur = function(event) {
+        pcmanMenuItems(false); // remove
+    };
+
+    var pcman=null;
+    function setup() {
+//        var url=document.location.host;
+        document.location.telnetHost = getBGVar('url');
+        pcman=new PCMan();
+        pcman.connect(document.location.telnetHost);
+        // Fetch title from bookmarks. XXX: Places API can be slow!
+//        var browserutils = new BrowserUtils();
+//        document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
+        document.title = document.location.telnetHost;
+        document.getElementById('input_proxy').focus();
+        document.addEventListener('focus', set_focus, false);
+        resize();
+        pcmanMenuItems(true); // create
+    }
+
+    function set_focus(e) { document.getElementById('input_proxy').focus(); }
+
+    function finalize() {
+        pcman.close();
+        pcman=null;
+        document.removeEventListener('focus', set_focus, false);
+//        createSearchMenu(document.getElementById('search_menu'), true);
+        pcmanMenuItems(false); // remove
+    }
+
+    function resize(){
+        document.getElementById('topwin').style.height = window.innerHeight + 'px';
+        pcman.view.onResize();
+        pcman.view.setAlign();
+    }
+/*
+    function prepare_popup(event) {
+        var search_menu = document.getElementById('search_menu');
+        createSearchMenu(search_menu);
+    }
+*/
+    function sitePref() {
+//        window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", document.location.href);
+        openURI('options.htm?url=' + document.location.telnetHost, true);
+    }
+
+    function eventHandler(event) {
+        switch (event.type) {
+        case 'mousedown':
+            return pcman.view.onMouseDown(event);
+        case 'mousemove':
+            return pcman.view.onMouseMove(event);
+        case 'mouseup':
+            return pcman.view.onMouseUp(event);
+        case 'click':
+            return pcman.view.onClick(event);
+        case 'dblclick':
+            return pcman.view.onDblClick(event);
+        default:
+        }
+    }
+
+    function pcmanMenuItems(create) {
+        createMenu(''); // remove previous items
+
+        if(!create)
+            return;
+
+        // create the contentMenu item
+        var popup_copy = createMenu(msg("menu_copy"), function() {
+            pcman.copy();
+        });
+        var popup_coloredCopy = createMenu(msg("menu_coloredCopy"), function() {
+            pcman.ansiColor.copy();
+        });
+        var popup_paste = createMenu(msg("menu_paste"), function() {
+            pcman.paste();
+        });
+        var popup_selAll = createMenu(msg("menu_selAll"), function() {
+            pcman.selAll();
+        });
+        var popup_search = createMenu(msg("menu_search"));
+        var popup_fileio = createMenu(msg("menu_fileio"));
+        var popup_loadfile = createMenu(msg("menu_loadfile"), function() {
+            pcman.ansiColor.file.openFile();
+        }, popup_fileio);
+        var popup_savefile = createMenu(msg("menu_savefile"), function() {
+            pcman.ansiColor.file.savePage();
+        }, popup_fileio);
+        var popup_sitepref = createMenu(msg("menu_sitepref"), sitePref);
+    }
+    </script>
+  </head>
+
+  <body id="topwin">
+    <div id="box1" align="center"
+        onmousedown="eventHandler(event);"
+        onmousemove="eventHandler(event);"
+        onmouseup="eventHandler(event);"
+        onclick="eventHandler(event);"
+        ondblclick="eventHandler(event);">
+      <canvas id="canvas" width="800" height="480"></canvas>
+      <div id="box3" align="center">
+        <textarea id="input_proxy" rows="1" cols="10"></textarea>
+      </div>
+      <div id="flashcontent" style="width:1px; height:1px; left:-10000px; top:-10000px;position: absolute;overflow: hidden;"></div>
+    </div>
+  </body>
+</html>
