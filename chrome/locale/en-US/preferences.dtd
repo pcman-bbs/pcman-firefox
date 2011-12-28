@@ -43,6 +43,7 @@
 <!ENTITY options_aotoreplystring.label "automatically reply:">
 <!ENTITY options_clearcopiedsel.label "Cancel selection after copying">
 <!ENTITY options_copyaftersel.label "Copy text after selection">
+<!ENTITY options_pasteasmidclick.label "Paste primary clipboard for middle click">
 <!ENTITY options_keepselatbufupd.label "Keep selection after text varying">
 <!ENTITY options_trimtail.label "Trim spaces at the tail of copied text">
 <!ENTITY options_linewrap1.label "Wrap line for copied texts longer than">

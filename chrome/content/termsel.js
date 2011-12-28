@@ -97,13 +97,15 @@ TermSel.prototype={
         }
 
         if(this.blockMode) {
-          if(this.startCol == this.endCol)
-            this.cancelSel(true);
-          return;
+            if(this.startCol == this.endCol) {
+                this.cancelSel(true);
+                return;
+            }
         }
 
         this.selTrim();
 
+        this.view.conn.listener.copy(true); // selection clipboard
         if(this.view.conn.listener.prefs.CopyAfterSel)
             this.view.conn.listener.copy();
     },
@@ -111,12 +113,39 @@ TermSel.prototype={
     selTrim: function() {
         var buf = this.view.buf;
 
+        if(this.blockMode) {
+            for(var row=this.startRow; row<=this.endRow; ++row) {
+                var line = buf.lines[row];
+                var startCol = this.startCol;
+                if(startCol > 0) {
+                    if(line[startCol-1].isLeadByte) {
+                        line[startCol].isSelected = false;
+                        startCol++;
+                    }
+                }
+                var endCol = this.endCol;
+                if(endCol > 0) {
+                    if(line[endCol-1].isLeadByte) {
+                        line[endCol].isSelected = true;
+                        endCol++;
+                    }
+                }
+                if(startCol < endCol) // has visible selection region
+                    var hasSelection = true;
+            }
+            if(!hasSelection)
+                this.cancelSel(true);
+            return;
+        }
+
         // ensure we don't select half of a DBCS character
         var col = this.startCol;
         var line = buf.lines[this.startRow];
         if(col < buf.cols && col > 0) {
-            if(!line[col].isLeadByte && line[col-1].isLeadByte)
+            if(!line[col].isLeadByte && line[col-1].isLeadByte) {
+                line[col].isSelected = false;
                 this.startCol++;
+            }
         }
         
         if ( this.startCol == this.endCol && this.startRow == this.endRow ) {

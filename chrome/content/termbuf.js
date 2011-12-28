@@ -221,8 +221,8 @@ TermBuf.prototype={
                     // dump(line.uris.length + "uris found\n");
                 }
 
-                if(this.view.selection.hasSelection())
-                    this.view.selection.refreshSel();
+                if(!this.view.conn.isConnected)
+                    continue;
 
                 if(this.view.conn.listener.robot.autoLoginStage > 0)
                     this.view.conn.listener.robot.checkAutoLogin(row);
@@ -239,6 +239,9 @@ TermBuf.prototype={
         }
         if(setPageState)
             this.mouseBrowsing.setPageState();
+
+        if(this.view.selection.hasSelection())
+            this.view.selection.refreshSel();
     },
 
     clear: function(param) {
@@ -517,7 +520,7 @@ TermBuf.prototype={
             this.scroll(false, 1);
         }
 
-        var downloadArticle = this.view.conn.listener.ansiColor.file;
+        var downloadArticle = this.view.conn.listener.robot.downloadArticle;
         if(downloadArticle.isDownloading())
             downloadArticle.getLineFeed();
     },

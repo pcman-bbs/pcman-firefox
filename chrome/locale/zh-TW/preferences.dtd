@@ -43,6 +43,7 @@
 <!ENTITY options_aotoreplystring.label "就自動回覆：">
 <!ENTITY options_clearcopiedsel.label "複製完畢自動取消選取">
 <!ENTITY options_copyaftersel.label "選取文字之後放開滑鼠即自動複製">
+<!ENTITY options_pasteasmidclick.label "按下滑鼠中鍵則貼上主剪貼簿內容">
 <!ENTITY options_keepselatbufupd.label "畫面文字變動後仍然保留選取">
 <!ENTITY options_trimtail.label "複製時刪除行尾空白">
 <!ENTITY options_linewrap1.label "貼上文字超過">
