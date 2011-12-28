@@ -208,6 +208,7 @@
                     <vbox>
                         <checkbox id="ClearCopiedSel" label="&options_clearcopiedsel.label;" oncommand="save();"/>
                         <checkbox id="CopyAfterSel" label="&options_copyaftersel.label;" oncommand="save();"/>
+                        <checkbox id="PasteAsMidClick" label="&options_pasteasmidclick.label;" oncommand="save();"/>
                         <checkbox id="KeepSelAtBufUpd" label="&options_keepselatbufupd.label;" oncommand="save();"/>
                         <checkbox id="TrimTail" label="&options_trimtail.label;" oncommand="save();"/>
                         <hbox>
@@ -240,14 +241,16 @@
                                 </menupopup>
                             </menulist>
                         </hbox>
-                        <label value="&options_enterkey.label;"/>
-                        <radiogroup id="EnterKey" oncommand="save();">
-                            <hbox>
-                                <radio value="^M" label="CR"/>
-                                <radio value="^J" label="LF"/>
-                                <radio value="^M^J" label="CRLF"/>
-                            </hbox>
-                        </radiogroup>
+                        <hbox>
+                            <label value="&options_enterkey.label;"/>
+                            <radiogroup id="EnterKey" oncommand="save();">
+                                <hbox>
+                                    <radio value="^M" label="CR"/>
+                                    <radio value="^J" label="LF"/>
+                                    <radio value="^M^J" label="CRLF"/>
+                                </hbox>
+                            </radiogroup>
+                        </hbox>
                         <checkbox id="LineFeed" label="&options_linefeed.label;" oncommand="save();"/>
                         <checkbox id="NewTab" label="&options_newtab.label;" oncommand="save();"/>
                         <groupbox>
@@ -291,7 +294,8 @@
                                         href="data:text/javascript,"
                                         onclick="event.preventDefault();"
                                         draggable="true"
-                                        ondragstart="setData(event);">
+                                        ondragstart="setData(event);"
+                                        style="display: block;">
                                     </html:a>
                                 </hbox>
                             </vbox>

@@ -20,9 +20,14 @@ function createScript() {
     var BBSGesture = document.getElementById('BBSGesture').value;
     var HTMLGesture = document.getElementById('HTMLGesture').value;
 
-    var bbsStr = document.getElementById('BBSGesture').selectedItem.label;
-    //var httpstr = document.getElementById('HTMLGesture').selectedItem.label;
-    var httpStr = HTMLGesture;
+    if(document.getElementById('BBSGesture').selectedItem)
+        var bbsStr = document.getElementById('BBSGesture').selectedItem.label;
+    else
+        var bbsStr = BBSGesture;
+    if(document.getElementById('HTMLGesture').selectedItem)
+        var httpStr = document.getElementById('HTMLGesture').selectedItem.label;
+    else
+        var httpStr = HTMLGesture;
 
     // Set the text within the link
 

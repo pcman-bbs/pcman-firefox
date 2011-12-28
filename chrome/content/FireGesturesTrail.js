@@ -70,12 +70,14 @@ FireGesturesTrail.prototype={
     },
 
     removeEventListener: function() {
-        var listener = this.eventListener;
+        if(!this.eventListener) return;
 
+        var listener = this.eventListener;
         document.removeEventListener('mousedown', listener.mouse_down, false);
         document.removeEventListener('mousemove', listener.mouse_move, false);
         document.removeEventListener('mouseup', listener.mouse_up, false);
         document.getElementById('topwin').removeEventListener('contextmenu', listener.mouse_menu, false);
+        delete this.eventListener;
     },
 
     mousedown: function(event) {

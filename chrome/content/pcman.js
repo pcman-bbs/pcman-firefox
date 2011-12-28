@@ -94,13 +94,23 @@ PCMan.prototype={
         this.updateTabIcon('disconnect');
     },
 
-    copy: function(){
+    copy: function(selection){
+        if(selection && this.os == 'WINNT')
+            return; // Windows doesn't support selection clipboard
+
         var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                     .getService(Components.interfaces.nsIClipboardHelper);
         if(this.view.selection.hasSelection()) {
             var text = this.view.selection.getText();
             if(this.os == 'WINNT') // handle CRLF
                 text = text.replace(/\n/g, "\r\n");
+
+            var selClipID = Components.interfaces.nsIClipboard.kSelectionClipboard;
+            if(selection) {
+                clipboardHelper.copyStringToClipboard(text, selClipID);
+                return;
+            }
+
             clipboardHelper.copyString( text );
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
@@ -110,9 +120,12 @@ PCMan.prototype={
         }
     },
 
-    paste: function() {
+    paste: function(selection) {
+        if(selection && this.os == 'WINNT')
+            return; // Windows doesn't support selection clipboard
+
         if(this.conn) {
-            if(this.ansiColor.paste())
+            if(!selection && this.ansiColor.paste())
                 return;
 
             // From: https://developer.mozilla.org/en/Using_the_Clipboard
@@ -125,7 +138,10 @@ PCMan.prototype={
             if (!trans)
                 return false;
             trans.addDataFlavor("text/unicode");
-            clip.getData(trans, clip.kGlobalClipboard);
+            if(selection)
+                clip.getData(trans, clip.kSelectionClipboard);
+            else
+                clip.getData(trans, clip.kGlobalClipboard);
             var data={};
             var len={};
             trans.getTransferData("text/unicode", data, len);
