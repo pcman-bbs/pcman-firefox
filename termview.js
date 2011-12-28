@@ -306,7 +306,7 @@ TermView.prototype={
         if ( !conn.ins )
           return;
           
-        var downloadArticle = this.conn.listener.ansiColor.file;
+        var downloadArticle = this.conn.listener.robot.downloadArticle;
         if(downloadArticle.isDownloading()) {
             downloadArticle.stopDownload();
             return;
@@ -715,14 +715,16 @@ TermView.prototype={
         for (var i=0;i<length;i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 this.canvas.style.cursor = "pointer";
+                this.buf.mouseBrowsing.setHighlight(-1);
                 return
             }
         }
         this.canvas.style.cursor = "default";
 
         // handle mouse browsing
-        if(this.selection.hasSelection()) return;
-        if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
+        if(this.selection.hasSelection())
+            this.buf.mouseBrowsing.setHighlight(-1);
+        else if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
             this.buf.mouseBrowsing.setCursorState(cursor.col, cursor.row);
     },
 
@@ -735,6 +737,22 @@ TermView.prototype={
         } else if(event.button == 1) { // middle button
             if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
                 this.conn.send(this.buf.mouseBrowsing.getCommand('back'));
+            else if(this.conn.listener.prefs.PasteAsMidClick)
+                this.conn.listener.paste();
+            else
+                this.conn.listener.paste(true); // selection clipboard
+
+            // a dirty hack for pasting url by middle click
+            // its behavior is up to users (paste or go to new url)
+            if(!this.conn.beforeunload) {
+                var beforeunload = function(e) {
+                    e.preventDefault();
+                };
+                addEventListener('beforeunload', beforeunload, false);
+                setTimer(false, function() {
+                    removeEventListener('beforeunload', beforeunload, false);
+                }, 100);
+            }
         }
     },
 

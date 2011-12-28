@@ -32,6 +32,7 @@ var PrefDefaults = {
     'ReplyString4': '',
     'ClearCopiedSel': true,
     'CopyAfterSel': false,
+    'PasteAsMidClick': false,
     'KeepSelAtBufUpd': false,
     'TrimTail': true,
     'LineWrap': 78,

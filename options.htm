@@ -5,8 +5,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title></title>
     <style type="text/css">
+        .main { /* <body> has no fixed size */
+            height: 400px;
+            width: 800px;
+        }
+        /*  If you need a sidebar within tabs,
+            use another container to restrict sub-tab's width  */
         .tabs {
-            height: 360px;
+            height: 100%;
             overflow: hidden;
             position: relative;
             z-index: 1;
@@ -21,7 +27,10 @@
             padding: 3px 10px;
             font: bold 14px sans-serif;
             border-radius: 5px 5px 0 0;
-            cursor: pointer;
+            border-top: 1px solid #808080;
+            border-left: 1px solid #808080;
+            border-right: 1px solid #808080;
+            border-bottom: 0px  solid #d9d9d9;
         }
 
         .tabs section.active header { background: #eee; cursor: default; }
@@ -31,11 +40,12 @@
             position: absolute;
             left: 0;
             z-index: 2;
-            width: 700px;
-            height: 100%;
+            width: 95%;
+            height: 85%;
             background: #eee;
-            padding: 0 10px;
+            padding: 5px 10px;
             font: 14px sans-serif;
+            border: 1px solid #808080;
         }
 
         .tabs section.active div.content { display: block; }
@@ -78,14 +88,11 @@
 </head>
 
 <body onload="initial();">
-    <h1>PCMan Options</h1>
-    <p>Please set your preferences here.</p>
-
     <aside>
         <fieldset>
             <legend><label id="options_sitesetting"></label></legend>
             <div>
-                <select id="siteList" onchange="siteChanged();" size="17">
+                <select id="siteList" onchange="siteChanged();" size="18">
                     <option id="options_default" selected="true"></option>
                 </select>
             </div>
@@ -100,6 +107,7 @@
         </fieldset>
     </aside>
     <!-- HTML5 TABS CODE -->
+    <div class="main"><!-- required only if no container with fixed size -->
     <article class="tabs">
         <section class="active">
             <header id="options_general"></header>
@@ -303,6 +311,10 @@
                     <label for="CopyAfterSel" id="options_copyaftersel"></label>
                 </div>
                 <div>
+                    <input id="PasteAsMidClick" type="checkbox"/>
+                    <label for="PasteAsMidClick" id="options_pasteasmidclick"></label>
+                </div>
+                <div>
                     <input id="KeepSelAtBufUpd" type="checkbox"/>
                     <label for="KeepSelAtBufUpd" id="options_keepselatbufupd"></label>
                 </div>
@@ -412,6 +424,7 @@
             </div>
         </section>
     </article>
+    </div>
     <!-- /HTML5 TABS CODE -->
 
     <input type="submit" onclick="save(true);"/>

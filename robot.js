@@ -2,6 +2,8 @@ function Robot(listener) {
     this.listener = listener;
 
     this.replyCount = [];
+
+    this.downloadArticle = new DownloadArticle(listener);
 }
 
 Robot.prototype={
@@ -160,5 +162,111 @@ Robot.prototype={
             }
             break;
         }
+    }
+}
+
+function DownloadArticle(listener) {
+    this.listener = listener;
+    this.ansi = listener.ansiColor;
+    this.timer = null;
+    this.interval = 100; // in mini second
+    this.isLineFeed = false;
+    this.article = [];
+    this.callback = null;
+}
+
+DownloadArticle.prototype={
+    finishCallback: function(callback) {
+        if(this.isDownloading())
+            this.stopDownload();
+        this.callback = callback;
+    },
+
+    // Modified from pcmanx-gtk2
+    startDownload: function(noColor) {
+        if(this.isDownloading())
+            this.stopDownload();
+        for(var row = 0; row < this.listener.buf.rows-1; ++row) {
+            var text = this.ansi.getText(row, 0, this.listener.buf.cols, false);
+            this.article.push(text);
+        }
+        if(this.checkFinish(noColor))
+            return;
+        this.listener.conn.send('\x1b[B');
+        var _this = this;
+        this.timer = setTimer(true, function() {
+            if(!_this.checkNewLine())
+                return;
+            if(!_this.checkFinish(noColor))
+                _this.listener.conn.send('\x1b[B');
+        }, this.interval);
+    },
+
+    // Modified from pcmanx-gtk2
+    checkNewLine: function() {
+        var buf = this.listener.buf;
+        if(!this.isLineFeed || buf.row < buf.rows-1 || buf.col < 40)
+            return false; // not fully received
+
+        var text = this.ansi.getText(buf.rows-2, 0, buf.cols, false);
+
+        // Hack for the double-line separator of PTT
+        // Not always works, such as that repeated lines may not be detected
+        // disabling double-line separator is recommended
+        var downloaded = this.article[this.article.length-1];
+        var lastline = this.ansi.getText(buf.rows-3, 0, buf.cols, false);
+        if(downloaded != lastline) {
+            var lastlastline = this.ansi.getText(buf.rows-4, 0, buf.cols, false);
+            if(downloaded == lastlastline)
+                this.article.push(lastline);
+        }
+
+        this.article.push(text);
+        this.isLineFeed = false;
+        return true;
+    },
+
+    // Modified from pcmanx-gtk2
+    checkFinish: function(noColor) {
+        var buf = this.listener.buf;
+        if(buf.getRowText(buf.rows-1, 0, buf.cols).indexOf("100%") < 0)
+            return false;
+        var data = this.article.join('\r\n');
+        this.stopDownload(true);
+
+        if(noColor) {
+            data = data.replace(/\x1b\[[0-9;]*m/g, '');
+            if(this.listener.prefs.TrimTail)
+                data = data.replace(/ +\r\n/g, '\r\n');
+            if(this.listener.os.indexOf('win') != 0) // handle CRLF
+                data = data.replace(/\r\n/g, '\n');
+        }
+
+        this.callback(data);
+
+        return true;
+    },
+
+    stopDownload: function(normal) {
+        if(!this.isDownloading())
+            return;
+
+        if(!normal) {
+            var stringBundle = this.listener.stringBundle;
+            alert(stringBundle.getString("download_stopped"));
+        }
+
+        this.timer.cancel();
+        this.timer = null;
+        this.isLineFeed = false;
+        this.article = [];
+    },
+
+    isDownloading: function() {
+        return (this.timer != null);
+    },
+
+    getLineFeed: function() {
+        this.isLineFeed = true;
     }
 }

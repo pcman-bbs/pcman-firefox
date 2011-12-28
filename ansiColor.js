@@ -160,17 +160,19 @@ AnsiColor.prototype = {
     getText: function(row, colStart, colEnd, reset, convertBiColor) {
         var text = this.buf.lines[row];
         if(colStart > 0) {
-            if(!text[colStart].isLeadByte && text[colStart-1].isLeadByte)
-                colStart--;
+            if(text[colStart-1].isLeadByte)
+                colStart++;
         } else {
             colStart = 0;
         }
-        if(colEnd < this.buf.cols) {
-            if(text[colEnd].isLeadByte)
+        if(colEnd > 0) {
+            if(text[colEnd-1].isLeadByte)
                 colEnd++;
         } else {
             colEnd = this.buf.cols;
         }
+        if(colStart >= colEnd)
+            return '';
 
         var output = this.ansiCmp(this.buf.newChar, text[colStart], reset);
         for(var col=colStart; col<colEnd; ++col) {
@@ -192,22 +194,18 @@ AnsiColor.prototype = {
         if((preChar.bright && !thisChar.bright) ||
            (preChar.underLine && !thisChar.underLine) ||
            (preChar.blink && !thisChar.blink) ||
-           (preChar.invert && !thisChar.invert)) reset = true;
+           (preChar.invert && !thisChar.invert) ||
+           (preChar.fg != 7 && thisChar.fg == 7) ||
+           (preChar.bg != 0 && thisChar.bg == 0)) reset = true;
         if(reset) text = ';';
         if((reset || !preChar.bright) && thisChar.bright) text += '1;';
         if((reset || !preChar.underLine) && thisChar.underLine) text += '4;';
         if((reset || !preChar.blink) && thisChar.blink) text += '5;';
         if((reset || !preChar.invert) && thisChar.invert) text += '7;';
-        var DeFg = this.buf.newChar.fg;
-        var DeBg = this.buf.newChar.bg;
-        var thisFg = (thisChar.fg == -1) ? DeFg : thisChar.fg;
-        var preFg = (preChar.fg == -1) ? DeFg : preChar.fg;
-        var thisBg = (thisChar.bg == -1) ? DeBg : thisChar.bg;
-        var preBg = (preChar.bg == -1) ? DeBg : preChar.bg;
-        if(thisFg != (reset ? DeFg : preFg))
-            text += '3' + thisFg + ';';
-        if(thisBg != (reset ? DeBg : preBg))
-            text += '4' + thisBg + ';';
+        if(thisChar.fg != (reset ? 7 : preChar.fg))
+            text += '3' + thisChar.fg + ';';
+        if(thisChar.bg != (reset ? 0 : preChar.bg))
+            text += '4' + thisChar.bg + ';';
         if(!text) return '';
         else return ('\x1b[' + text.replace(/;$/, 'm'));
     }

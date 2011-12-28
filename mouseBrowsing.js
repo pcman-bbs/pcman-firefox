@@ -83,14 +83,32 @@ MouseBrowsing.prototype={
     },
 
     setHighlight: function(row) {
+        if(this.buf.view.conn.listener.prefs.MouseBrowsing != 3 ||
+        this.buf.view.selection.hasSelection())
+            row = -1;
+
         if(row == this.nowHighlight)
             return;
 
         //FIXME: Drawing highlight is not implemented now
+/*
+        if(this.nowHighlight >= 0) {
+            var line = this.buf.lines[this.nowHighlight];
+            for(var i=0; i<this.buf.cols; ++i)
+                line[i].needUpdate = true;
+        }
+        if(row >= 0) {
+            var line = this.buf.lines[row];
+            for(var i=0; i<this.buf.cols; ++i)
+                line[i].needUpdate = true;
+        }
+*/
         this.nowHighlight = row;
 
-        if(row == -1)
-            this.cursorState = 'normal';
+/*
+        if(!this.buf.changed)
+            this.buf.view.redraw(false);
+*/
     },
 
     setPageState: function() {
@@ -119,11 +137,14 @@ MouseBrowsing.prototype={
             this.pageState = 'normal';
         }
 
-        this.setHighlight(-1);
-        this.setCursorState();
+        if(!this.buf.view.selection.hasSelection())
+            this.setCursorState();
     },
 
     setCursorState: function(col, row) {
+        if(this.buf.view.selection.hasSelection())
+            return;
+
         if(row > -1 || col > -1) {
             this.mouseX = col;
             this.mouseY = row;
@@ -137,8 +158,7 @@ MouseBrowsing.prototype={
 
         var extended = (this.buf.view.conn.listener.prefs.MouseBrowsing == 3);
 
-        if(this.nowHighlight != row)
-            this.setHighlight(-1);
+        var hasHighlight = false;
 
         switch(this.pageState) {
         case 'list':
@@ -159,11 +179,11 @@ MouseBrowsing.prototype={
             } else if(row<=rows-2) {
                 if(col<=6) {
                     this.cursorState = 'back';
-                    this.setHighlight(-1);
                 } else if(col<=cols-17) {
                     if(!this.isLineEmpty(row)) { //list item
                         this.cursorState = 'enter_list';
                         this.setHighlight(row);
+                        hasHighlight = true;
                     } else {
                         this.cursorState = 'normal';
                     }
@@ -172,7 +192,6 @@ MouseBrowsing.prototype={
                         this.cursorState = 'pageup';
                     else
                         this.cursorState = 'pagedown';
-                    this.setHighlight(-1);
                 }
             } else /*if(row==rows-1)*/ {
                 if(col<=1)
@@ -191,11 +210,11 @@ MouseBrowsing.prototype={
             } else if(row<=rows-2) {
                 if(col<=6) {
                     this.cursorState = 'back';
-                    this.setHighlight(-1);
                 } else if(col<=cols-17) {
                     if(!this.isLineEmpty(row)) { //list item
                         this.cursorState = 'enter_list';
                         this.setHighlight(row);
+                        hasHighlight = true;
                     } else {
                         this.cursorState = 'normal';
                     }
@@ -204,7 +223,6 @@ MouseBrowsing.prototype={
                         this.cursorState = 'pageup';
                     else
                         this.cursorState = 'pagedown';
-                    this.setHighlight(-1);
                 }
             } else /*if(row==rows-1)*/ {
                 this.cursorState = 'end';
@@ -263,6 +281,9 @@ MouseBrowsing.prototype={
         default:
             this.cursorState = 'normal';
         }
+
+        if(!hasHighlight)
+            this.setHighlight(-1);
 
         if(this.buf.view.conn.listener.prefs.MouseBrowsing > 1)
             this.buf.view.canvas.style.cursor = this.getCursorStyle();

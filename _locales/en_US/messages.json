@@ -178,6 +178,9 @@
   "options_copyaftersel": {
     "message": "Copy text after selection"
   },
+  "options_pasteasmidclick": {
+    "message": "Paste primary clipboard for middle click"
+  },
   "options_keepselatbufupd": {
     "message": "Keep selection after text varying"
   },

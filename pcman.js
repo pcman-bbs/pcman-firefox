@@ -103,7 +103,10 @@ PCMan.prototype={
         this.updateTabIcon('disconnect');
     },
 
-    copy: function(){
+    copy: function(selection){
+        if(selection/* && this.os == 'WINNT'*/)
+            return; // Windows doesn't support selection clipboard
+
 //        var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
 //                                    .getService(Components.interfaces.nsIClipboardHelper);
         if(this.view.selection.hasSelection()) {
@@ -111,6 +114,13 @@ PCMan.prototype={
 /*
             if(this.os == 'WINNT') // handle CRLF
                 text = text.replace(/\n/g, "\r\n");
+
+            var selClipID = Components.interfaces.nsIClipboard.kSelectionClipboard;
+            if(selection) {
+                clipboardHelper.copyStringToClipboard(text, selClipID);
+                return;
+            }
+
             clipboardHelper.copyString( text );
 */
 
@@ -124,8 +134,11 @@ PCMan.prototype={
         }
     },
 
-    paste: function() {
-        if(this.ansiColor.paste())
+    paste: function(selection) {
+        if(selection/* && this.os == 'WINNT'*/)
+            return; // Windows doesn't support selection clipboard
+
+        if(!selection && this.ansiColor.paste())
             return;
 
         var text = systemClipboard();
@@ -145,7 +158,7 @@ PCMan.prototype={
         this.conn.convSend(text, charset);
 /*
         if(this.conn) {
-            if(this.ansiColor.paste())
+            if(!selection && this.ansiColor.paste())
                 return;
 
             // From: https://developer.mozilla.org/en/Using_the_Clipboard
@@ -158,7 +171,10 @@ PCMan.prototype={
             if (!trans)
                 return false;
             trans.addDataFlavor("text/unicode");
-            clip.getData(trans, clip.kGlobalClipboard);
+            if(selection)
+                clip.getData(trans, clip.kSelectionClipboard);
+            else
+                clip.getData(trans, clip.kGlobalClipboard);
             var data={};
             var len={};
             trans.getTransferData("text/unicode", data, len);

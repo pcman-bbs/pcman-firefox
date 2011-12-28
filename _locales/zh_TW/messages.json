@@ -178,6 +178,9 @@
   "options_copyaftersel": {
     "message": "選取文字之後放開滑鼠即自動複製"
   },
+  "options_pasteasmidclick": {
+    "message": "按下滑鼠中鍵則貼上主剪貼簿內容"
+  },
   "options_keepselatbufupd": {
     "message": "畫面文字變動後仍然保留選取"
   },
