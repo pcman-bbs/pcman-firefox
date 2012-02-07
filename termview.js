@@ -55,6 +55,7 @@ function TermView(canvas) {
     var composition_start ={
         view: this,
         handleEvent: function(e) {
+            this.view.isComposition = true; // Fix for FX 12+
             this.view.onCompositionStart(e);
         }
     };
@@ -64,6 +65,14 @@ function TermView(canvas) {
         view: this,
         handleEvent: function(e) {
             this.view.onCompositionEnd(e);
+            delete this.view.isComposition; // Fix for FX 12+
+/*
+            // For compatibility of FX 11 and before
+            if(e.target.value) {
+                this.view.onTextInput(e.target.value);
+                e.target.value='';
+            }
+*/
         }
     };
     this.input.addEventListener('compositionend', composition_end, false);
@@ -81,7 +90,7 @@ function TermView(canvas) {
     var text_input={
         view: this,
         handleEvent: function(e) {
-            if(this.view.isComposition)
+            if(this.view.isComposition) // Fix for FX 12+
                 return;
             if(e.target.value) {
                 this.view.onTextInput(e.target.value);
@@ -538,14 +547,10 @@ TermView.prototype={
         var top = (this.buf.curY + 1) * this.chh;
         this.input.style.top = (this.canvas.offsetTop + ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top )) + 'px';
         this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
-
-        this.isComposition = true;
     },
 
     onCompositionEnd: function(e) {
       this.input.style.top = '-100px';
-
-      delete this.isComposition;
     },
 
     onBlink: function(){
@@ -685,6 +690,24 @@ TermView.prototype={
         return {col: col, row: row};
     },
 
+    checkURI: function(cursor, fullURI) {
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+
+        var length = uris ? uris.length : 0;
+        for (var i=0;i<length;i++) {
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                if(!fullURI)
+                    return true;
+                var uri = "";
+                for (var j=uris[i][0];j<uris[i][1];j++)
+                    uri = uri + this.buf.lines[row][j].ch;
+                return uri;
+            }
+        }
+        return false;
+    },
+
     onMouseDown: function(event) {
         if(event.button == 0) { // left button
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
@@ -712,12 +735,10 @@ TermView.prototype={
         var uris = this.buf.lines[row].uris;
 
         var length = uris ? uris.length : 0;
-        for (var i=0;i<length;i++) {
-            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-                this.canvas.style.cursor = "pointer";
-                this.buf.mouseBrowsing.setHighlight(-1);
-                return
-            }
+        if(this.checkURI(cursor)) {
+            this.canvas.style.cursor = "pointer";
+            this.buf.mouseBrowsing.setHighlight(-1);
+            return;
         }
         this.canvas.style.cursor = "default";
 
@@ -729,13 +750,15 @@ TermView.prototype={
     },
 
     onMouseUp: function(event) {
+        var cursor = this.mouseToColRow(event.pageX, event.pageY);
+        if(!cursor) return;
         if(event.button == 0) { // left button
-            var cursor = this.mouseToColRow(event.pageX, event.pageY);
-            if(!cursor) return;
             if(this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
         } else if(event.button == 1) { // middle button
-            if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
+            if(this.checkURI(cursor))
+                {} // don't trigger MouseBrowsing or Paste
+            else if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
                 this.conn.send(this.buf.mouseBrowsing.getCommand('back'));
             else if(this.conn.listener.prefs.PasteAsMidClick)
                 this.conn.listener.paste();
@@ -759,9 +782,6 @@ TermView.prototype={
     onClick: function(event) {
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
-        var col = cursor.col, row = cursor.row;
-        var uris = this.buf.lines[row].uris;
-        var length = uris ? uris.length : 0;
 
         // Event dispatching order: mousedown -> mouseup -> click
         // For a common click, previous selection always collapses in mouseup
@@ -773,14 +793,15 @@ TermView.prototype={
             var noCmd = true;
         }
 
-        for (var i=0;i<length;i++) {
-            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-                var uri = "";
-                for (var j=uris[i][0];j<uris[i][1];j++)
-                    uri = uri + this.buf.lines[row][j].ch;
+        var uri = this.checkURI(cursor, true);
+        if(uri) {
+            if(event.button == 0) // left button
                 openURI(uri, this.conn.listener.prefs.NewTab);
-                return;
-            }
+            else if(event.button == 1) // middle button
+                openURI(uri, false);
+            else if(event.button == 2) // right button
+                //FIXME: add "Save As", "Copy Link" and so on to context menu
+            return;
         }
 
         // handle mouse browsing

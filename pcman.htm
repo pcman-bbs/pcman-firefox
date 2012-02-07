@@ -82,6 +82,15 @@
         createSearchMenu(search_menu);
     }
 */
+    function searchText() {
+        if(!pcman || !pcman.view.selection.hasSelection())
+            return;
+        var text = pcman.view.selection.getText();
+        //Fixme: get search patterns from the preferences of GC
+        var searchPattern = "http://www.google.com/search?q=%s";
+        openURI(searchPattern.replace(/%s/g, encodeURIComponent(text)), true);
+    }
+
     function sitePref() {
 //        window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", document.location.href);
         openURI('options.htm?url=' + document.location.telnetHost, true);
@@ -122,7 +131,7 @@
         var popup_selAll = createMenu(msg("menu_selAll"), function() {
             pcman.selAll();
         });
-        var popup_search = createMenu(msg("menu_search"));
+        var popup_search = createMenu(msg("menu_search"), searchText);
         var popup_fileio = createMenu(msg("menu_fileio"));
         var popup_loadfile = createMenu(msg("menu_loadfile"), function() {
             pcman.ansiColor.file.openFile();

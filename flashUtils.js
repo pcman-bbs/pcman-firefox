@@ -14,15 +14,6 @@ function flashUtils(conn) {
     this.outs.setFlash(this);
     this.conv.setFlash(this);
     this.oconv.setFlash(this);
-
-    if(!localStorage['pcman']) {
-        var href = document.location.protocol + '//' + document.location.host;
-        dump('Please set this as trusted location in Flash global setting:\n' +
-            href + '\n' +
-            'The setting is also accessable in this page:\n' +
-            'http://www.macromedia.com/support/documentation/tw/flashplayer/help/settings_manager04a.html#119065'
-        );
-    }
 }
 
 flashUtils.prototype = {
@@ -32,6 +23,20 @@ flashUtils.prototype = {
             document.getElementById("flashcontent").innerHTML = "";
             this.socket = null;
         }
+
+        var href = document.location.protocol + '//' + document.location.host;
+        this.conn.listener.onData(this.conn,
+            'Please set this url as trusted location in Flash global setting:\r\n' +
+            '\x1b[1;34;47m' + href + '\x1b[m\r\n' +
+            'The setting is also accessable in this page:\r\n' +
+            '\x1b[1;34mhttp://www.macromedia.com/support/documentation/tw/flashplayer/help/settings_manager04a.html#119065\x1b[m\r\n' +
+            'Shortened url:\r\n' +
+            '\x1b[1;34mhttp://goo.gl/w31tL\x1b[m\r\n' +
+            '\r\n' +
+            'BTW, please set the monospace font in GC settings first\r\n' +
+            '\r\n' +
+            '\x1b[1mIf the url is set, Flash will connect immediately.\x1b[m\r\n'
+        );
 
         var policyFilePath = '';
         var policy = policyFilePath ? ('&PolicyFile='+policyFilePath) : '';
@@ -106,6 +111,8 @@ flashUtils.prototype = {
     },
 
     soc_connect: function() {
+        this.conn.listener.buf.clear(2);
+        this.conn.listener.buf.attr.resetAttr();
         this.conn.onStartRequest(null, null);
         this.isConnected = true;
     },
@@ -116,7 +123,10 @@ flashUtils.prototype = {
 
     soc_securityerror: function(errMsg){
         //FIXME: it takes 9 seconds to show this message
-        alert("Security Error!\nPress CTRL+ALT+J for detail.");
+        this.conn.listener.onData(this.conn,
+            "\x1b[1;31mThe url is not set,\x1b[m\r\n" +
+            "\x1b[1;5;31myou MUST set it before running this extension.\x1b[m\r\n"
+        );
         dump("socket securityerror!\n" + errMsg);
     },
 
@@ -126,8 +136,6 @@ flashUtils.prototype = {
     },
 
     soc_recieve: function(byteArray) {
-        if(!localStorage['pcman'])
-            localStorage['pcman'] = true; // security setting is passed
         this.ins.writeBuffer(byteArray);
         this.conn.onDataAvailable(null, null, this.ins, 0, this.ins.buffer.length);
     },
