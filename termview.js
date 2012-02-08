@@ -800,7 +800,7 @@ TermView.prototype={
             else if(event.button == 1) // middle button
                 openURI(uri, false);
             else if(event.button == 2) // right button
-                //FIXME: add "Save As", "Copy Link" and so on to context menu
+                {} //FIXME: add "Save As", "Copy Link" and so on to context menu
             return;
         }
 
