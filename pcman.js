@@ -12,9 +12,9 @@ function PCMan() {
     this.parser=new AnsiParser(this.buf);
     this.ansiColor=new AnsiColor(this);
     this.robot=new Robot(this);
-/*
     if(FireGesturesTrail)
         this.gestures = new FireGesturesTrail(this);
+/*
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]

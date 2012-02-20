@@ -34,6 +34,7 @@ flashUtils.prototype = {
             '\x1b[1;34mhttp://goo.gl/w31tL\x1b[m\r\n' +
             '\r\n' +
             'BTW, please set the monospace font in GC settings first\r\n' +
+            'To open the context menu, double click the right mouse button\r\n' +
             '\r\n' +
             '\x1b[1mIf the url is set, Flash will connect immediately.\x1b[m\r\n'
         );
@@ -124,7 +125,7 @@ flashUtils.prototype = {
     soc_securityerror: function(errMsg){
         //FIXME: it takes 9 seconds to show this message
         this.conn.listener.onData(this.conn,
-            "\x1b[1;31mThe url is not set,\x1b[m\r\n" +
+            "\x1b[1;31mThe url may be not set,\x1b[m\r\n" +
             "\x1b[1;5;31myou MUST set it before running this extension.\x1b[m\r\n"
         );
         dump("socket securityerror!\n" + errMsg);
