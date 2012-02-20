@@ -62,7 +62,7 @@ FireGesturesTrail.prototype={
         listener.mouse_menu ={
             view: this,
             handleEvent: function(e) {
-                if(this.view.ismouseRightBtnDown)
+                if(this.view.hideMenu)
                     e.preventDefault();
             }
         };
@@ -81,8 +81,8 @@ FireGesturesTrail.prototype={
     },
 
     mousedown: function(event) {
-        if(event.button == 2)
-            this.ismouseRightBtnDown=true;
+        if(this.triggerButton == event.button)
+            this.hideMenu=true;
 
         // Get the recent changes of the prefs of FireGestures
         this.checkFireGesturesPrefs();
@@ -97,9 +97,6 @@ FireGesturesTrail.prototype={
     },
 
     mousemove: function(event) {
-        if(this.ismouseRightBtnDown)
-            this.ismouseRightBtnDrag = true;
-
         if(!this.drawTrail || !this.isDrawing)
             return;
 
@@ -110,12 +107,9 @@ FireGesturesTrail.prototype={
     },
 
     mouseup: function(event) {
-        if(event.button == 2) {
-            this.ismouseRightBtnDown=false;
-            if(!this.ismouseRightBtnDrag)
-                this.showContentMenu(event);
-            this.ismouseRightBtnDrag=false;
-        }
+        if(!this.hasTrail && event.button == this.triggerButton)
+            this.showContentMenu(event);
+        this.hasTrail = false; // for terminated trail
 
         if(!this.drawTrail || !this.isDrawing)
             return;
@@ -124,15 +118,14 @@ FireGesturesTrail.prototype={
     },
 
     cancelAll: function() {
-        if(this.drawTrail && this.isDrawing)
+        if(this.drawTrail && this.isDrawing) {
             this.endTrail();
+            this.hasTrail = true; // stop content-menu popup
+        }
 
         if(this.mouseGesturesTimeout)
             this.mouseGesturesTimeout.cancel();
         this.mouseGesturesTimeout = null;
-
-        if(this.ismouseRightBtnDown)
-            this.ismouseRightBtnDrag = true; // stop content-menu popup
     },
 
     setGestureTimeout: function() {
@@ -143,12 +136,14 @@ FireGesturesTrail.prototype={
         var func = function() {
             _this.mouseGesturesTimeout = null;
             _this.endTrail();
+            _this.hasTrail = true; // stop content-menu popup
         }
         this.mouseGesturesTimeout = setTimer(false, func, this.mouseGesturesTime);
     },
 
     showContentMenu: function(event) {
-        // if this.view.ismouseRightBtnDown==true, this function won't work
+        this.hideMenu = false;
+
         var e = event;
         var evt = e.view.document.createEvent("MouseEvents");
         evt.initMouseEvent(
@@ -174,6 +169,9 @@ FireGesturesTrail.prototype={
     extendTrail: function(event) {
         if(!this.isDrawing)
             return;
+
+        if(this.trailDots.length >= 1)
+            this.hasTrail = true;
 
         var lenX = this.mouseX - event.pageX;
         var lenY = this.mouseY - event.pageY;
@@ -208,5 +206,6 @@ FireGesturesTrail.prototype={
         this.mouseX = -1;
         this.mouseY = -1;
         this.isDrawing = false;
+        this.hasTrail = false;
     }
 }
