@@ -93,8 +93,10 @@ TermSel.prototype={
         var col = this.startCol;
         var line = buf.lines[this.startRow];
         if(col < buf.cols && col > 0) {
-            if(!line[col].isLeadByte && line[col-1].isLeadByte)
+            if(!line[col].isLeadByte && line[col-1].isLeadByte) {
+                line[col].isSelected = false;
                 this.startCol++;
+            }
         }
         
         if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
@@ -105,9 +107,10 @@ TermSel.prototype={
         // fit the real selection on the screen
         var col = this.endCol;
         var line = buf.lines[this.endRow];
+        if(col == buf.cols) col--;
         if(!line[col].isSelected) {
             if (!line[col].isLeadByte && line[col-1].isLeadByte)
-              this.endCol++
+              line[col].isSelected = true;
             else
               this.endCol--;
         }    

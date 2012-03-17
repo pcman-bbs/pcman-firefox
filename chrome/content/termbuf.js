@@ -94,7 +94,7 @@ TermBuf.prototype={
     // From: http://snippets.dzone.com/posts/show/452
     //uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/ig,
     // Modified by Hemiola
-    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(?+=&%@!~\-\/])*/ig,
+    uriRegEx : /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(\)?+=&%@!~\-\/])*/ig,
 
     setView: function(view) {
         this.view = view;
@@ -282,11 +282,11 @@ TermBuf.prototype={
     tab: function(num) {
         var mod = this.curX % 4;
         this.curX += 4 - mod;
-        if(num && num > 1) this.curX += 4 * (num-1);
-        if(this.curX >= this.cols) {
+        if(num && num > 1)
+            this.curX += 4 * (num-1);
+        if(this.curX >= this.cols)
             this.curX = this.cols-1;
-            this.posChanged=true;
-        }
+        this.posChanged=true;
     },
 
     backTab: function(num) {
@@ -422,8 +422,10 @@ TermBuf.prototype={
                 var bottom = this.bottom;
                 for(var row = this.top; row <= bottom; ++row) {
                     var line = lines[row];
-                    for(var col=0; col < cols;++col)
+                    for(var col=0; col < cols;++col) {
                         line[col].copyFrom(this.newChar);
+                        line[col].needUpdate=true;
+                    }
                 }
             }
         }
