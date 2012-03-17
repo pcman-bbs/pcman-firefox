@@ -6,7 +6,7 @@ function createMenuItem(label, image) {
     var item = document.createElementNS(XUL_NS, "menuitem"); // create a new XUL menuitem
     item.setAttribute("label", label);
     if(image) {
-        item.setAttribute('class', 'menuitem-iconic');
+        item.setAttribute('class', 'menuitem-iconic menuitem-with-favicon');
         item.setAttribute('image', image);
     }
     return item;
@@ -22,17 +22,21 @@ function onSearchItemCommand(event, name) {
     var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
                             .getService(Components.interfaces.nsIBrowserSearchService);
     if(searchService) {
-        var engine = searchService.getEngineByName(name);
+        //var engine = searchService.getEngineByName(name);
+        var engine = event.target.engine;
         var submission = engine.getSubmission(text, null);
         if(submission)
             openURI(submission.uri.spec, false, submission.postData);
     }
 }
 
-function createSearchMenu(menu) {
+function createSearchMenu(menu, clear) {
     while(menu.hasChildNodes()){
+        menu.firstChild.removeEventListener('command', onSearchItemCommand, false);
         menu.removeChild(menu.firstChild);
     }
+
+    if(clear) return;
 
     var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
                             .getService(Components.interfaces.nsIBrowserSearchService);
@@ -50,7 +54,8 @@ function createSearchMenu(menu) {
             };
             item.engine = engine;
             item.setAttribute("engine", engine);
-            item.setAttribute('oncommand', "onSearchItemCommand(event, '" + engine.name + "');");
+            //item.setAttribute('oncommand', "onSearchItemCommand(event, '" + engine.name + "');");
+            item.addEventListener('command', onSearchItemCommand, false);
 //            item.addEventListener('command', oncommand, false);
             menu.appendChild(item);
         }
