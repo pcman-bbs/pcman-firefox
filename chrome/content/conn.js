@@ -44,6 +44,8 @@ function Conn(listener) {
     this.host = null;
     this.port = 23;
 
+    this.connectCount = 0;
+
     this.listener=listener;
 
     this.state=STATE_DATA;
@@ -84,6 +86,7 @@ Conn.prototype={
         this.ipump = pump;
         
         this.connectTime = Date.now();
+        this.connectCount++;
     },
 
     close: function() {
@@ -100,12 +103,25 @@ Conn.prototype={
         if(this.listener.abnormalClose)
             return;
 
+        if(this.connectCount >= 100) {
+            this.connectFailed = true; //FIXME: show something on UI?
+            return;
+        }
+
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
         if ( time - this.connectTime < 15000 ) {
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
-            this.connect();
+            var connectDelay = 0;
+            if(!connectDelay) {
+                this.connect();
+            } else {
+                var _this = this;
+                setTimer(false, function() {
+                    _this.connect();
+                }, connectDelay * 1000);
+            }
         }
     },
 
