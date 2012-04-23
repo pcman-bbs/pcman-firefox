@@ -114,11 +114,16 @@ Conn.prototype={
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
             var connectDelay = 0;
+            if(this.reconnectTimer) {
+                this.reconnectTimer.cancel(); // wait for this reconnection
+                delete this.reconnectTimer;
+            }
             if(!connectDelay) {
                 this.connect();
             } else {
                 var _this = this;
-                setTimer(false, function() {
+                this.reconnectTimer = setTimer(false, function() {
+                    delete _this.reconnectTimer;
                     _this.connect();
                 }, connectDelay * 1000);
             }
