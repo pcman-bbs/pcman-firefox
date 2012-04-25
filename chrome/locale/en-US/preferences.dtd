@@ -27,6 +27,9 @@
 <!ENTITY options_antiidle3.label " - 0 sec: disabled">
 <!ENTITY options_reconnect1.label "Auto-reconnect if connection failed within">
 <!ENTITY options_reconnect2.label "seconds. - 0 sec: disabled">
+<!ENTITY options_reconnect3.label "Reconnect delay">
+<!ENTITY options_reconnect4.label "seconds. Stop after">
+<!ENTITY options_reconnect5.label "failures. - 0: never stop">
 <!ENTITY options_autologin.label "Auto Login">
 <!ENTITY options_preloginprompt.label "Prelogin Prompt:">
 <!ENTITY options_prelogin.label "Prelogin String:">

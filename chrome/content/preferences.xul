@@ -96,6 +96,13 @@
                             <textbox id="ReconnectTime" type="number" size="3" onchange="save();"/>
                             <label control="ReconnectTime" value="&options_reconnect2.label;"/>
                         </hbox>
+                        <hbox>
+                            <label control="ReconnectDelay" value="&options_reconnect3.label;"/>
+                            <textbox id="ReconnectDelay" type="number" size="3" onchange="save();"/>
+                            <label control="ReconnectDelay" value="&options_reconnect4.label;"/>
+                            <textbox id="ReconnectCount" type="number" size="3" onchange="save();"/>
+                            <label control="ReconnectCount" value="&options_reconnect5.label;"/>
+                        </hbox>
                         <groupbox>
                             <caption label="&options_autologin.label;"/>
                             <vbox>
