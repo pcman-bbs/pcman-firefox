@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.3.3",
+  "version": "0.0.3.145",
 
   "description": "__MSG_appDesc__",
   "icons": {
@@ -17,7 +17,7 @@
   "background_page": "background.htm",
   "homepage_url": "http://code.google.com/p/pcmanfx/",
   "key": "pcmanfx2",
-  "minimum_chrome_version": "17.0",
+  "minimum_chrome_version": "18.0",
   "omnibox": { "keyword": "telnet" },
   "options_page": "options.htm",
 

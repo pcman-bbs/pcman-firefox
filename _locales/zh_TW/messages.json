@@ -127,6 +127,15 @@
   "options_reconnect2": {
     "message": "秒內斷線則自動重連（0 秒＝關閉不用）"
   },
+  "options_reconnect3": {
+    "message": "重連間隔"
+  },
+  "options_reconnect4": {
+    "message": "秒，"
+  },
+  "options_reconnect5": {
+    "message": "次連線失敗後停止（0 ＝永不停止）"
+  },
   "options_autologin": {
     "message": "自動登入"
   },

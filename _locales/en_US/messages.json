@@ -127,6 +127,15 @@
   "options_reconnect2": {
     "message": "seconds. - 0 sec: disabled"
   },
+  "options_reconnect3": {
+    "message": "Reconnect delay"
+  },
+  "options_reconnect4": {
+    "message": "seconds. Stop after"
+  },
+  "options_reconnect5": {
+    "message": "failures. - 0: never stop"
+  },
   "options_autologin": {
     "message": "Auto Login"
   },
