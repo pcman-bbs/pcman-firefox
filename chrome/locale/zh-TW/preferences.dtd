@@ -27,6 +27,9 @@
 <!ENTITY options_antiidle3.label "（0 秒＝關閉不用）">
 <!ENTITY options_reconnect1.label "在">
 <!ENTITY options_reconnect2.label "秒內斷線則自動重連（0 秒＝關閉不用）">
+<!ENTITY options_reconnect3.label "重連間隔">
+<!ENTITY options_reconnect4.label "秒，">
+<!ENTITY options_reconnect5.label "次連線失敗後停止（0 ＝永不停止）">
 <!ENTITY options_autologin.label "自動登入">
 <!ENTITY options_preloginprompt.label "登入前的提示：">
 <!ENTITY options_prelogin.label "登入前送出：">

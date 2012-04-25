@@ -13,6 +13,8 @@ var PrefDefaults = {
     'AntiIdleTime': 180,
     'AntiIdleStr': '^[[A^[[B',
     'ReconnectTime': 15,
+    'ReconnectDelay': 0,
+    'ReconnectCount': 100,
     'PreLoginPrompt': '',
     'PreLogin': '',
     'LoginPrompt': '',
