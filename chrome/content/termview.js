@@ -38,6 +38,7 @@ function TermView(canvas) {
     var composition_start ={
         view: this,
         handleEvent: function(e) {
+            this.view.isComposition = true; // Fix for FX 12+
             this.view.onCompositionStart(e);
         }
     };
@@ -47,6 +48,13 @@ function TermView(canvas) {
         view: this,
         handleEvent: function(e) {
             this.view.onCompositionEnd(e);
+            delete this.view.isComposition; // Fix for FX 12+
+
+            // For compatibility of FX 11 and before
+            if(e.target.value) {
+                this.view.onTextInput(e.target.value);
+                e.target.value='';
+            }
         }
     };
     this.input.addEventListener('compositionend', composition_end, false);
@@ -62,6 +70,8 @@ function TermView(canvas) {
     var text_input={
         view: this,
         handleEvent: function(e) {
+            if(this.view.isComposition) // Fix for FX 12+
+                return;
             if(e.target.value) {
                 this.view.onTextInput(e.target.value);
             }
