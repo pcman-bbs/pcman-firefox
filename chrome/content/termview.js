@@ -14,6 +14,36 @@ function setTimer(repeat, func, timelimit) {
     return timer;
 }
 
+// Get the typed words and then clear out the input proxy
+function InputHandler(view) {
+    this.view = view;
+    this.isComposition = false; // Fix for FX 12+
+}
+
+InputHandler.prototype = {
+    compositionStart: function(e) {
+        this.isComposition = true; // Fix for FX 12+
+        this.view.onCompositionStart(e); // Show the input proxy
+    },
+
+    compositionEnd: function(e) {
+        this.view.onCompositionEnd(e); // Hide the input proxy
+        this.isComposition = false; // Fix for FX 12+
+
+        // For compatibility of FX 10 and before
+        this.textInput(e);
+    },
+
+    textInput: function(e) {
+        if(this.isComposition) // Fix for FX 12+
+            return;
+        if(e.target.value) {
+            this.view.onTextInput(e.target.value);
+        }
+        e.target.value='';
+    }
+}
+
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -21,6 +51,9 @@ function TermView(canvas) {
 
     // text selection
     this.selection = new TermSel(this);
+
+    // Process the input events
+    this.inputHandler = new InputHandler(this);
 
     // Cursor
     this.cursorX=0;
@@ -38,8 +71,7 @@ function TermView(canvas) {
     var composition_start ={
         view: this,
         handleEvent: function(e) {
-            this.view.isComposition = true; // Fix for FX 12+
-            this.view.onCompositionStart(e);
+            this.view.inputHandler.compositionStart(e);
         }
     };
     this.input.addEventListener('compositionstart', composition_start, false);
@@ -47,14 +79,7 @@ function TermView(canvas) {
     var composition_end ={
         view: this,
         handleEvent: function(e) {
-            this.view.onCompositionEnd(e);
-            delete this.view.isComposition; // Fix for FX 12+
-
-            // For compatibility of FX 11 and before
-            if(e.target.value) {
-                this.view.onTextInput(e.target.value);
-                e.target.value='';
-            }
+            this.view.inputHandler.compositionEnd(e);
         }
     };
     this.input.addEventListener('compositionend', composition_end, false);
@@ -70,12 +95,7 @@ function TermView(canvas) {
     var text_input={
         view: this,
         handleEvent: function(e) {
-            if(this.view.isComposition) // Fix for FX 12+
-                return;
-            if(e.target.value) {
-                this.view.onTextInput(e.target.value);
-            }
-            e.target.value='';
+            this.view.inputHandler.textInput(e);
         }
     };
     this.input.addEventListener('input', text_input, false);
