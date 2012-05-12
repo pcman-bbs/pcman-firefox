@@ -14,36 +14,6 @@ function setTimer(repeat, func, timelimit) {
     return timer;
 }
 
-// Get the typed words and then clear out the input proxy
-function InputHandler(view) {
-    this.view = view;
-    this.isComposition = false; // Fix for FX 12+
-}
-
-InputHandler.prototype = {
-    compositionStart: function(e) {
-        this.isComposition = true; // Fix for FX 12+
-        this.view.onCompositionStart(e); // Show the input proxy
-    },
-
-    compositionEnd: function(e) {
-        this.view.onCompositionEnd(e); // Hide the input proxy
-        this.isComposition = false; // Fix for FX 12+
-
-        // For compatibility of FX 10 and before
-        this.textInput(e);
-    },
-
-    textInput: function(e) {
-        if(this.isComposition) // Fix for FX 12+
-            return;
-        if(e.target.value) {
-            this.view.onTextInput(e.target.value);
-        }
-        e.target.value='';
-    }
-}
-
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -52,59 +22,20 @@ function TermView(canvas) {
     // text selection
     this.selection = new TermSel(this);
 
-    // Process the input events
-    this.inputHandler = new InputHandler(this);
-
     // Cursor
     this.cursorX=0;
     this.cursorY=0;
     this.cursorVisible=true; // false to hide the cursor
     this.cursorShow=false; // blinking state of cursor
 
+    // Process the input events
     this.input = document.getElementById('input_proxy');
+    this.inputHandler = new InputHandler(this);
 
     // initialize
     var ctx = this.ctx;
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
-
-    var composition_start ={
-        view: this,
-        handleEvent: function(e) {
-            this.view.inputHandler.compositionStart(e);
-        }
-    };
-    this.input.addEventListener('compositionstart', composition_start, false);
-
-    var composition_end ={
-        view: this,
-        handleEvent: function(e) {
-            this.view.inputHandler.compositionEnd(e);
-        }
-    };
-    this.input.addEventListener('compositionend', composition_end, false);
-
-    var key_press={
-        view: this,
-        handleEvent: function(e) {
-            this.view.onkeyPress(e);
-        }
-    };
-    addEventListener('keypress', key_press, false);
-
-    var text_input={
-        view: this,
-        handleEvent: function(e) {
-            this.view.inputHandler.textInput(e);
-        }
-    };
-    this.input.addEventListener('input', text_input, false);
-
-    this.eventListener = {};
-    this.eventListener.composition_start = composition_start;
-    this.eventListener.composition_end = composition_end;
-    this.eventListener.key_press = key_press;
-    this.eventListener.text_input = text_input;
 
     var _this=this;
     this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
@@ -696,17 +627,6 @@ TermView.prototype={
     },
 
     removeEventListener: function() {
-        if(!this.eventListener) return;
-        var input = this.input;
-        var composition_start = this.eventListener.composition_start;
-        var composition_end = this.eventListener.composition_end;
-        var key_press = this.eventListener.key_press;
-        var text_input = this.eventListener.text_input;
-        input.removeEventListener('compositionstart', composition_start, false);
-        input.removeEventListener('compositionend', composition_end, false);
-        removeEventListener('keypress', key_press, false);
-        input.removeEventListener('input', text_input, false);
-        this.onCompositionEnd();
-        delete this.eventListener;
+        this.inputHandler.unload();
     }
 }
