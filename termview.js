@@ -45,66 +45,14 @@ function TermView(canvas) {
     this.cursorVisible=true; // false to hide the cursor
     this.cursorShow=false; // blinking state of cursor
 
+    // Process the input events
     this.input = document.getElementById('input_proxy');
+    this.inputHandler = new InputHandler(this);
 
     // initialize
     var ctx = this.ctx;
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
-
-    var composition_start ={
-        view: this,
-        handleEvent: function(e) {
-            this.view.isComposition = true; // Fix for FX 12+
-            this.view.onCompositionStart(e);
-        }
-    };
-    this.input.addEventListener('compositionstart', composition_start, false);
-
-    var composition_end ={
-        view: this,
-        handleEvent: function(e) {
-            this.view.onCompositionEnd(e);
-            delete this.view.isComposition; // Fix for FX 12+
-/*
-            // For compatibility of FX 11 and before
-            if(e.target.value) {
-                this.view.onTextInput(e.target.value);
-                e.target.value='';
-            }
-*/
-        }
-    };
-    this.input.addEventListener('compositionend', composition_end, false);
-
-    var key_press={
-        view: this,
-        handleEvent: function(e) {
-            if(e.keyCode > 15 && e.keyCode < 19) return; // Shift Ctrl Alt
-            this.view.onkeyPress(e);
-        }
-    };
-//    addEventListener('keypress', key_press, false);
-    addEventListener('keydown', key_press, false);
-
-    var text_input={
-        view: this,
-        handleEvent: function(e) {
-            if(this.view.isComposition) // Fix for FX 12+
-                return;
-            if(e.target.value) {
-                this.view.onTextInput(e.target.value);
-            }
-            e.target.value='';
-        }
-    };
-    this.input.addEventListener('input', text_input, false);
-
-    this.eventListener = {};
-    this.eventListener.composition_start = composition_start;
-    this.eventListener.composition_end = composition_end;
-    this.eventListener.key_press = key_press;
-    this.eventListener.text_input = text_input;
 
     var _this=this;
     this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
@@ -321,7 +269,10 @@ TermView.prototype={
             return;
         }
 
-        if(e.charCode){
+        // Don't handle Shift Ctrl Alt keys for speed
+        if(e.keyCode > 15 && e.keyCode < 19) return;
+
+/*        if(e.charCode){
             // Control characters
             if(e.ctrlKey && !e.altKey && !e.shiftKey) {
                 // Ctrl + @, NUL, is not handled here
@@ -339,7 +290,7 @@ TermView.prototype={
                 }
             }
         }
-        else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
+        else */if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch(e.keyCode){
             case 8:
                 if(this.detectDBCS(true))
@@ -400,31 +351,35 @@ TermView.prototype={
                     conn.send('\x1b[3~');
                 break;
             }
-            return;
-        // The follows code works only for keydown
         } else if(e.ctrlKey && !e.altKey && !e.shiftKey) {
-            if(e.keyCode >= 65 && e.keyCode <= 90) // A-Z key
-                var charCode = e.keyCode - 64;
-            else if(e.keyCode >= 219 && e.keyCode <= 221) // [ \ ]
-                var charCode = e.keyCode - 192;
+            if(e.keyCode >= 65 && e.keyCode <= 90) { // A-Z key
+                conn.send( String.fromCharCode(e.keyCode - 64) );
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            } else if(e.keyCode >= 219 && e.keyCode <= 221) { // [ \ ]
+                conn.send( String.fromCharCode(e.keyCode - 192) );
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
         } else if(e.ctrlKey && !e.altKey && e.shiftKey) {
             switch(e.keyCode) {
             case 50: // @
-                var charCode = 0;
+                conn.send( String.fromCharCode(0) );
                 break;
             case 54: // ^
-                var charCode = 30;
+                conn.send( String.fromCharCode(30) );
                 break;
             case 109: // _
-                var charCode = 31;
+                conn.send( String.fromCharCode(31) );
                 break;
             case 191: // ?
-                var charCode = 127;
+                conn.send( String.fromCharCode(127) );
                 break;
+            default:
+                return; // don't stopPropagation
             }
-        }
-        if(charCode) {
-            conn.send( String.fromCharCode(charCode) );
             e.preventDefault();
             e.stopPropagation();
         }
@@ -850,17 +805,6 @@ TermView.prototype={
     },
 
     removeEventListener: function() {
-        if(!this.eventListener) return;
-        var input = this.input;
-        var composition_start = this.eventListener.composition_start;
-        var composition_end = this.eventListener.composition_end;
-        var key_press = this.eventListener.key_press;
-        var text_input = this.eventListener.text_input;
-        input.removeEventListener('compositionstart', composition_start, false);
-        input.removeEventListener('compositionend', composition_end, false);
-        removeEventListener('keypress', key_press, false);
-        input.removeEventListener('input', text_input, false);
-        this.onCompositionEnd();
-        delete this.eventListener;
+        this.inputHandler.unload();
     }
 }
