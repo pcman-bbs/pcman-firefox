@@ -1,11 +1,11 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>pcmanfx2@pcman.org</em:id>
-    <em:version>0.2.6.145</em:version>
+    <em:version>0.2.6.149</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into,
@@ -27,6 +27,7 @@
     <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
     <em:developer>呂康豪 (Kang Hao Lu) &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
     <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
+    <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
     <em:homepageURL>http://code.google.com/p/pcmanfx/</em:homepageURL>
 
     <em:localized>
@@ -38,6 +39,7 @@
             <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
             <em:developer>呂康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
             <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
+	    <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
         </Description>
     </em:localized>
 
@@ -50,6 +52,7 @@
             <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
             <em:developer>吕康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
             <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
+	    <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
         </Description>
     </em:localized>
 
