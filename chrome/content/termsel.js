@@ -105,9 +105,9 @@ TermSel.prototype={
         }        
         
         // fit the real selection on the screen
+        if(this.endCol == buf.cols) this.endCol--;
         var col = this.endCol;
         var line = buf.lines[this.endRow];
-        if(col == buf.cols) col--;
         if(!line[col].isSelected) {
             if (!line[col].isLeadByte && line[col-1].isLeadByte)
               line[col].isSelected = true;
