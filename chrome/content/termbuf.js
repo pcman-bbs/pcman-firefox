@@ -573,7 +573,7 @@ TermBuf.prototype={
           if(col >=1 && line[col-1].isLeadByte) { // second byte of DBCS char
             var prevC = line[col-1];
             var b5 = prevC.ch + c.ch;
-            return conv.convertStringToUTF8(b5, charset,  true);
+            return conv.convertStringToUTF8(b5, charset, true, true);
           }
           else
             return c.ch;
