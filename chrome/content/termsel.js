@@ -154,9 +154,9 @@ TermSel.prototype={
         }        
         
         // fit the real selection on the screen
+        if(this.endCol == buf.cols) this.endCol--;
         var col = this.endCol;
         var line = buf.lines[this.endRow];
-        if(col == buf.cols) col--;
         if(!line[col].isSelected) {
             if (!line[col].isLeadByte && line[col-1].isLeadByte)
               line[col].isSelected = true;
@@ -294,7 +294,7 @@ TermSel.prototype={
             ret += TrimTail ? strStrip(tmp) : tmp;
         }
         var charset = this.view.conn.listener.prefs.Encoding;
-        ret = this.view.conv.convertStringToUTF8(ret, charset,  true);
+        ret = this.view.conv.convertStringToUTF8(ret, charset, true, true);
         return ret;
     },
 
@@ -323,7 +323,7 @@ TermSel.prototype={
             ret += (row < this.endRow ? '\n' : '');
         }
         var charset = this.view.conn.listener.prefs.Encoding;
-        return this.view.conv.convertStringToUTF8(ret, charset, true);
+        return this.view.conv.convertStringToUTF8(ret, charset, true, true);
     }
 }
 

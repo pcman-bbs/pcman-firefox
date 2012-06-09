@@ -101,7 +101,7 @@ AnsiColor.prototype = {
         var conv = this.listener.view.conv;
         if(!Encoding)
             Encoding = this.listener.prefs.Encoding;
-        return conv.convertStringToUTF8(str, Encoding, true);
+        return conv.convertStringToUTF8(str, Encoding, true, true);
     },
 
     convertFromUnicode: function(str, Encoding) {
