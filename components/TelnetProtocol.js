@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var EXPORTED_SYMBOLS = ['Protocol'];
+
 // Test protocol related
 const kSCHEME = "telnet";
 // Mozilla defined
