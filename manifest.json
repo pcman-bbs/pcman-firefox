@@ -1,6 +1,7 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.3.151",
+  "version": "0.0.3.154",
+  "manifest_version": 2,
 
   "description": "__MSG_appDesc__",
   "icons": {
@@ -14,10 +15,10 @@
     "default_popup": "popup.htm"
   },
 
-  "background_page": "background.htm",
+  "background": { "page": "background.htm" },
   "homepage_url": "http://code.google.com/p/pcmanfx/",
   "key": "pcmanfx2",
-  "minimum_chrome_version": "19.0",
+  "minimum_chrome_version": "18.0",
   "omnibox": { "keyword": "telnet" },
   "options_page": "options.htm",
 
@@ -26,7 +27,7 @@
     "clipboardWrite",
     "contextMenus",
     "notifications",
-    "plugins",
+    //"plugins",
     "tabs",
     "tts",
     "unlimitedStorage"
