@@ -1,13 +1,13 @@
 ﻿var pcman=null;
 function setup() {
 //    var url=document.location.host;
-    document.location.telnetHost = getBGVar('url');
+//    document.location.hash = '#' + getBGVar('url');
     pcman=new PCMan();
-    pcman.connect(document.location.telnetHost);
+    pcman.connect(document.location.hash.substr(1));
     // Fetch title from bookmarks. XXX: Places API can be slow!
 //    var browserutils = new BrowserUtils();
 //    document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
-    document.title = document.location.telnetHost;
+    document.title = document.location.hash.substr(1);
     document.getElementById('input_proxy').focus();
     document.addEventListener('focus', set_focus, false);
     resize();
@@ -46,7 +46,7 @@ function searchText() {
 
 function sitePref() {
 //    window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", document.location.href);
-    openURI('options.htm?url=' + document.location.telnetHost, true);
+    openURI('options.htm?url=' + document.location.hash.substr(1), true);
 }
 
 function eventHandler(event) {

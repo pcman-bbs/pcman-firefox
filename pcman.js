@@ -253,7 +253,7 @@ PCMan.prototype={
     },
 
     updateTabIcon: function(aStatus) {
-      document.title = document.location.telnetHost + ' - ' + aStatus;
+      document.title = document.location.hash.substr(1) + ' - ' + aStatus;
 /*
       var icon = 'chrome://pcmanfx2/skin/tab-connecting.png';
       switch (aStatus) {

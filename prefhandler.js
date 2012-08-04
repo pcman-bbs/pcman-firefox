@@ -35,7 +35,7 @@ PrefHandler.prototype={
 
     load: function(onlyLogin) {
         var options = new PCManOptions();
-        var group = options.getGroup(document.location.telnetHost);
+        var group = options.getGroup(document.location.hash.substr(1));
         var settings = onlyLogin ? options.useLoginMgr : options.setupDefault;
         for(var key in settings) {
             this[key] = options.getVal(group, key, options.setupDefault[key]);
@@ -46,7 +46,7 @@ PrefHandler.prototype={
 
     onPrefChange: function() {
         var options = new PCManOptions();
-        var group = options.getGroup(document.location.telnetHost);
+        var group = options.getGroup(document.location.hash.substr(1));
         for(var key in options.setupDefault) {
             var newVal = options.getVal(group, key, this[key]);
             if(typeof(options.setupDefault[key]) == 'number')

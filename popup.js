@@ -1,6 +1,6 @@
 function click(event) {
     setBGVar('url', event.target.id);
-    openURI("pcman.htm", true);
+    openURI("pcman.htm#" + event.target.id, true);
     window.close();
 }
 

@@ -55,7 +55,7 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
     chrome.tabs.getSelected(null, function(tab) {
         chrome.tabs.update(
             tab.id,
-            {url: "pcman.htm"},
+            {url: "pcman.htm#" + url},
             function(tab) {
             }
         );
@@ -71,7 +71,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
         url = 'ptt.cc';
 
     chrome.tabs.create({
-        url: "pcman.htm",
+        url: "pcman.htm#" + url,
         selected: true
     }, function(tab) {
     });

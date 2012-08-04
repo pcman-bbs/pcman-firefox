@@ -321,7 +321,7 @@ Conn.prototype={
             //window.onbeforeunload = function() { return document.title; } // Warning in AMO
             this.beforeunload = function(e) {
                 e.preventDefault();
-                return document.location.telnetHost;
+                return document.location.hash.substr(1);
             };
             window.addEventListener('beforeunload', this.beforeunload, false);
         } else {
