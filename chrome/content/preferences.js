@@ -24,60 +24,68 @@ function loadObject() {
     for(var key in options.setupDefault) {
         var value = options.setupDefault[key];
         var element = document.getElementById(key);
+        if(!element)
+            continue;
         if(typeof(options.setupDefault[key]) == 'boolean')
             element.checked = options.getVal(recentGroup, key, value);
         else
             element.value = options.getVal(recentGroup, key, value);
     }
+    document.getElementById('delSite').disabled = false;
 }
 
 // Update values in the prefwindow to the object
 function saveObject() {
     for(var key in options.setupDefault) {
         var element = document.getElementById(key);
+        if(!element)
+            continue;
         if(typeof(options.setupDefault[key]) == 'boolean')
             options.setVal(recentGroup, key, element.checked);
-        else
+        else {
             options.setVal(recentGroup, key, element.value);
+        }
     }
 }
 
-// Initialize the prefwindow (fill bookmark titles in siteList)
-function load() {
-    options = new PCManOptions();
-    groupNames = options.getGroupNames();
-    recentGroup = options.defaultGroup;
-    loadObject();
-
-    var href = window.arguments ? window.arguments[0] : null;
-    callingGroup = options.getGroup(href, true);
-    if(!options.hasGroup(callingGroup))
-        document.getElementById('addSite').disabled = false;
-
+// Update the siteList with the bookmark titles
+function updateSiteList() {
     var siteList = document.getElementById('siteList');
+
+    updattingSiteList = true; // disable siteChanged()
+    while(siteList.itemCount > 0)
+        siteList.removeItemAt(0);
+
+    var groupNames = options.getGroupNames();
     // Fetch title from bookmarks. XXX: Places API can be slow!
     var browserutils = new BrowserUtils();
-    for(var i=1; i<groupNames.length; ++i) {
-        // Exclude groupNames[0], the default group
+    for(var i=0; i<groupNames.length; ++i) {
         var title = browserutils.findBookmarkTitle('telnet://'+groupNames[i]);
         if(!title) title = groupNames[i]; // Not a url
         siteList.appendItem(title);
-        if(groupNames[i] == callingGroup) // siteChanged() will be fired automatically
-            siteList.selectedIndex = siteList.itemCount-1;
     }
+    siteList.selectedIndex = recentGroup;
+    updattingSiteList = false; // enable siteChanged()
+
+    document.getElementById('addSite').disabled = false;
+}
+
+// Initialize the prefwindow
+function load() {
+    href = window.arguments ? window.arguments[0] : null;
+    options = new PCManOptions();
+    recentGroup = options.findGroup(href);
+    loadObject();
+    updattingSiteList = false;
+    updateSiteList();
 }
 
 // Change the content of prefwindow to that of another group
 function siteChanged() {
+    if(updattingSiteList) // stop unnecessary action
+        return;
     saveObject();
-    var siteIndex = document.getElementById('siteList').selectedIndex;
-    if(siteIndex == 0) {
-        recentGroup = options.defaultGroup;
-        document.getElementById('delSite').disabled = true;
-    } else {
-        recentGroup = groupNames[siteIndex];
-        document.getElementById('delSite').disabled = false;
-    }
+    recentGroup = document.getElementById('siteList').selectedIndex;
     loadObject();
 }
 
@@ -90,34 +98,33 @@ function save(force) {
 }
 
 // Create a new site pref
-function addSite(href) {
-    document.getElementById('addSite').disabled = true;
-    var newGroup = options.getGroup(href, true);
-    if(newGroup == options.defaultGroup)
-        newGroup = callingGroup;
-    if(newGroup == options.defaultGroup)
+function addSite() {
+    var newHref = {value: href};
+    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                            .getService(Components.interfaces.nsIPromptService);
+    var result = prompts.prompt(null,
+        document.getElementById("addSite").getAttribute("label"),
+        document.getElementById("siteAddress").getAttribute("label"),
+        newHref, null, {value: true});
+    if(!result || !newHref.value) // cancel is pressed or empty string
         return;
-    options.resetGroup(newGroup); // Create prefs and set initial value
-    groupNames.push(newGroup);
-    var siteList = document.getElementById('siteList');
-    // Fetch title from bookmarks. XXX: Places API can be slow!
-    var browserutils = new BrowserUtils();
-    var title = browserutils.findBookmarkTitle('telnet://'+newGroup);
-    if(!title) title = newGroup; // Not a url
-    siteList.appendItem(title);
-    siteList.selectedIndex = siteList.itemCount-1;
+    var group = options.findGroup(newHref.value);
+    if(options.findGroup(newHref.value) > 0) // the site pref is existed
+        return;
+    // Create prefs and set initial value
+    saveObject();
+    options.copyGroup(null, null, newHref.value);
+    recentGroup = options.findGroup(newHref.value);
+    loadObject();
+    updateSiteList();
     save();
 }
 
 // Delete an existed site pref
 function delSite() {
-    if(recentGroup == options.defaultGroup) return;
-    var removeGroup = recentGroup;
-    var siteList = document.getElementById('siteList');
-    var siteIndex = siteList.selectedIndex;
-    siteList.selectedIndex = 0;
-    siteList.removeItemAt(siteIndex);
-    groupNames.splice(siteIndex,1);
-    options.removeGroup(removeGroup);
+    options.removeGroup(recentGroup);
+    recentGroup = 0;
+    loadObject();
+    updateSiteList();
     save();
 }

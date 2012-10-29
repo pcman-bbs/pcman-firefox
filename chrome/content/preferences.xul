@@ -25,6 +25,7 @@
                 <hbox>
                     <spacer flex="1"/>
                     <button id="addSite" label="&options_add.label;" oncommand="addSite();" disabled="true"/>
+                    <label id="siteAddress" label="&options_address.label;" hidden="true"/>
                     <button id="delSite" label="&options_del.label;" oncommand="delSite();" disabled="true"/>
                 </hbox>
             </groupbox>

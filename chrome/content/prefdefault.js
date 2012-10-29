@@ -1,4 +1,7 @@
+// Properties below will bind to the element in the prefWindow with the same id
+// Don't use 'Name' as the name of the new preference
 var PrefDefaults = {
+    'Name': 'default',
     'Encoding': (window.navigator.language == 'zh-CN' ? 'gb2312' : 'big5'),
     'Cols': 80,
     'Rows': 24,
@@ -44,8 +47,6 @@ var PrefDefaults = {
     'LineFeed': true,
     'NewTab': false
 }
-
-var PrefDefault = 'Encoding';
 
 // the value of an element corresponds to the property of nsILoginInfo
 var PrefLoginMgr = {
