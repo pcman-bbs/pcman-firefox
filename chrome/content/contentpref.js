@@ -1,8 +1,6 @@
 // handle some direct access to preference
 
 function PCManOptions() {
-    this.defaultGroup = 'default';
-    this.specifiedKey = PrefDefault;
     this.setupDefault = PrefDefaults;
     this.useLoginMgr = PrefLoginMgr;
     this.isFX3 = this.getVersion();
@@ -21,171 +19,275 @@ PCManOptions.prototype = {
         return Boolean(app.extensions);
     },
 
-    // Create objects storing all pref values in every group
-    // and load the values from the database
     load: function() {
-        this.prefService = Components.classes["@mozilla.org/content-pref/service;1"]
-                           .getService(Components.interfaces.nsIContentPrefService);
-        this.prefs = {};
-        this.prefs.groups = {};
-        var groups = this.getGroupNames();
-        for(var i = groups.length - 1; i >= 0; --i) {
-            var group = groups[i];
-            this.prefs.groups[group] = {};
-            var uri = this.getURI(group);
+        this.groups = [];
+        this.prefService(false); // read preferences
+        // repair the default group
+        if(!this.groups[0]) {
+            this.copyGroup(0, null, '_override_');
+        } else if(this.groups[0].Name != this.setupDefault.Name) {
+            this.groups.unshift({});
+            this.copyGroup(0, null, '_override_');
+        }
+        for(var i=this.groups.length-1; i>=0; --i) {
+            // remove the empty group
+            if(!this.groups[i]) {
+                this.removeGroup(i);
+                continue;
+            }
+            // repair the references
             for(var key in this.setupDefault) {
-                if(this.useLoginMgr[key])
-                    continue;
-                if(this.prefService.hasPref(uri, key)) {
-                    var value = this.prefService.getPref(uri, key);
-                } else {
-                    var value = this.setupDefault[key];
-                    this.prefService.setPref(uri, key, value);
-                }
-                this.prefs.groups[group][key] = value;
+                if(typeof(this.groups[i][key]) == "undefined")
+                    this.setVal(i, key, this.setupDefault[key]);
             }
-            this.getLoginMsg(group);
         }
+        this.setLoginInfo(true);
     },
 
-    // save data into database
     save: function() {
-        var groups = this.getGroupNames();
-        for(var grp in this.prefs.groups) {
-            if(groups.join(', ').indexOf(grp) < 0)
-                groups.push(grp); // just added groups
+        this.setLoginInfo(false);
+        this.prefService(true); // write preferences
+        this.setLoginInfo(true);
+    },
+
+    getGroupNames: function() {
+        var groups = [];
+        for(var i=0; i<this.groups.length; ++i)
+            groups[i] = this.getVal(i, 'Name', this.setupDefault.Name);
+        return groups;
+    },
+
+    // Determine the group index by the url
+    findGroup: function(url) {
+        if(!url) return 0;
+        url = url.replace(/.*:\/\/([^\/]*).*/, '$1'); // Trim the protocol
+        // search from the newest group
+        for(var i=this.groups.length-1; i>=0; --i) {
+            if(url == this.getVal(i, 'Name', null))
+                return i;
         }
-        for(var i = groups.length - 1; i >= 0; --i) {
-            var group = groups[i];
-            if(this.hasGroup(group)) { // check if the group was removed or not
-                var uri = this.getURI(group);
-                for(var key in this.setupDefault) {
-                    if(this.useLoginMgr[key])
-                        continue;
-                    var value = this.prefs.groups[group][key];
-                    this.prefService.setPref(uri, key, value);
-                }
-                this.setLoginMsg(group);
-            } else { // to be removed groups
-                var uri = this.getURI(group);
-                if(!uri) continue; // Exclude the default group
-                for(var key in this.setupDefault) {
-                    if(this.useLoginMgr[key])
-                        continue;
-                    this.prefService.removePref(uri, key);
-                }
-                this.delLoginMsg(group);
-            }
+        return 0; // Not found
+    },
+
+    getVal: function(group, key, value) {
+        if(this.groups[group] && typeof(this.groups[group][key])!='undefined') {
+            if(typeof(this.setupDefault[key]) == 'number')
+                return parseInt(this.groups[group][key]);
+            else
+                return this.groups[group][key];
+        } else {
+            return value;
         }
     },
 
-    // List all groups in the database (rather than these in this object!)
-    getGroupNames: function(specifiedKey) {
-        var groups = [];
-        groups.push(this.defaultGroup);
-        if(!specifiedKey)
-            specifiedKey = this.specifiedKey;
-        var groupedPrefs = this.prefService.getPrefsByName(specifiedKey);
+    setVal: function(group, key, value) {
+        if(!this.groups[group])
+            this.groups[group] = {};
+        this.groups[group][key] = value;
+    },
+
+    // Copy fromGroup to toGroup
+    // Copy from setupDefault if fromGroup is null.
+    // Add a new group if toGroup is null.
+    // The name of the copied group can be set simultaneously
+    // If the name is set as '_override_', use the name of fromGroup
+    copyGroup: function(toGroup, fromGroup, name) {
+        name = name.replace(/.*:\/\/([^\/]*).*/, '$1'); // Trim the protocol
+        if(toGroup == null)
+            toGroup = this.groups.length;
+        if(fromGroup == null)
+            var data = this.setupDefault;
+        else
+            var data = this.groups[fromGroup];
+        for(var key in data) {
+            if(key != 'Name' || name == '_override_')
+                this.setVal(toGroup, key, data[key]);
+            else if(name)
+                this.setVal(toGroup, key, name); // key == 'Name'
+        }
+    },
+
+    // Remove the group
+    // For the default group, reset to the setupDefault 
+    removeGroup: function(group) {
+        if(group == 0)
+            return this.copyGroup(0, null, '_override_');
+        this.groups.splice(group,1);
+    },
+
+    // Read or write the content preferences
+
+    prefService: function(isWrite) {
+        var prefService = Components.classes["@mozilla.org/content-pref/service;1"]
+                           .getService(Components.interfaces.nsIContentPrefService);
+        var _this = this;
+        var getURI = function(group) { // Only used in this function
+            if(group == _this.setupDefault.Name)
+                return null;
+            try {
+                var uri = Components.classes['@mozilla.org/network/io-service;1']
+                          .getService(Components.interfaces.nsIIOService)
+                          .newURI('telnet://'+group, null, null);
+                return _this.isFX3 ? uri : uri.hostPort;
+            } catch (e) { // incorrect group
+                return null;
+            }
+        };
+        var groupURIs = [null];
+        var groupedPrefs = prefService.getPrefsByName('Name');
         var enumerator = groupedPrefs.enumerator;
         while(enumerator.hasMoreElements()) {
             var property = enumerator.getNext()
                           .QueryInterface(Components.interfaces.nsIProperty);
-            var group = property.name;
-            if(group && this.getURI(group))
-                groups.push(group);
+            var groupName = property.name;
+            if(groupName && getURI(groupName))
+                groupURIs.push(getURI(groupName));
         }
-        return groups;
-    },
-
-    hasGroup: function(group) {
-        return this.prefs.groups[group] ? true : false;
-    },
-
-    // Determine the group name (displayed name) by url
-    // and optionally return default for not created site
-    getGroup: function(url, realName) {
-        if(!url) return this.defaultGroup;
-        try {
-            var uri = Components.classes['@mozilla.org/network/io-service;1']
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI(url, null, null);
-            var group = this.isFX3 ? uri.host : uri.hostPort;
-            if(!realName && !this.hasGroup(group)) // Not created, use default
-                group = this.defaultGroup;
-        } catch (e) { // incorrect url
-            var group = this.defaultGroup;
+        if(!isWrite) { // read
+            for(var i=0; i<groupURIs.length; ++i) {
+                for(var key in this.setupDefault) {
+                    if(!prefService.hasPref(groupURIs[i], key))
+                        continue;
+                    this.setVal(i, key, prefService.getPref(groupURIs[i], key));
+                }
+            }
+            return;
         }
-        return group;
-    },
-
-    // Get the key for the database from the group name
-    getURI: function(group) {
-        if(group == this.defaultGroup)
-            return null;
-        try {
-            var uri = Components.classes['@mozilla.org/network/io-service;1']
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI('telnet://'+group, null, null);
-            return this.isFX3 ? uri : uri.hostPort;
-        } catch (e) { // incorrect group
-            return null;
+        // write
+        for(var i=0; i<this.groups.length; ++i) {
+            if(groupURIs.join(', ').indexOf(this.groups[i].Name) < 0)
+                groupURIs.push(getURI(this.groups[i].Name)); // new groups
+        }
+        for(var i=0; i<groupURIs.length; ++i) {
+            for(var key in this.setupDefault) {
+                var groupName = groupURIs[i];
+                if(this.isFX3 && groupName)
+                    groupName = groupName.hostPort;
+                var newVal = null;
+                if(!groupName || this.findGroup(groupName)>0)
+                    newVal = this.getVal(this.findGroup(groupName), key);
+                if(prefService.hasPref(groupURIs[i], key)) {
+                    var orgVal = prefService.getPref(groupURIs[i], key);
+                    if(newVal == orgVal) // not changed
+                        continue;
+                    if(newVal == null)
+                        prefService.removePref(groupURIs[i], key);
+                    else
+                        prefService.setPref(groupURIs[i], key, newVal);
+                } else {
+                    if(newVal != null)
+                        prefService.setPref(groupURIs[i], key, newVal);
+                }
+            }
         }
     },
 
-    getVal: function(group, key, value) {
-        if(this.prefs.groups[group] && typeof(this.prefs.groups[group][key]) != 'undefined')
-            return this.prefs.groups[group][key];
-        else
-            return value;
+    // Observer for the changes of the prefs
+
+    addObserver: function(url, prefHandler) {
+        var prefService = Components.classes["@mozilla.org/content-pref/service;1"]
+                           .getService(Components.interfaces.nsIContentPrefService);
+
+        // reduce the call of sync
+        var _this = this;
+        var queueUpdate = function() {
+            if(_this.queueTimeout)
+                return;
+            _this.queueTimeout = setTimer(false, function() {
+                if(_this.queueTimeout) {
+                    _this.queueTimeout.cancel();
+                    delete _this.queueTimeout;
+                }
+                _this.sync(url, prefHandler);
+            }, 100);
+        };
+
+        prefHandler.handler = {
+            view: this,
+            onContentPrefSet: function(group, name, value) {
+                queueUpdate();
+            },
+            onContentPrefRemoved: function(group, name) {
+                queueUpdate();
+            }
+        }
+        for(var key in this.setupDefault)
+            prefService.addObserver(key, prefHandler.handler);
+        // the observer for the username and the password doesn't work here.
+        // is it necessary observe the changes immediately?
+        // https://developer.mozilla.org/en/Observer_Notifications#Login_Manager
     },
 
-    setVal: function(group, key, value) {
-        if(!this.prefs.groups[group])
-            this.prefs.groups[group] = {};
-        this.prefs.groups[group][key] = value;
+    removeObserver: function(prefHandler) {
+        var prefService = Components.classes["@mozilla.org/content-pref/service;1"]
+                           .getService(Components.interfaces.nsIContentPrefService);
+        for(var key in this.setupDefault)
+            prefService.removeObserver(key, prefHandler.handler);
     },
 
-    // Reset an existed group or create a new group
-    resetGroup: function(group) {
+    sync: function(url, prefHandler) {
+        var initial = (typeof(prefHandler.Name) == 'undefined');
+        if(!initial)
+            this.load(); // read new prefs from the database
+        var group = this.findGroup(url);
         for(var key in this.setupDefault) {
-            var value = this.setupDefault[key];
-            this.setVal(group, key, value);
+            var newVal = this.getVal(group, key, this.setupDefault[key]);
+            if(newVal != prefHandler[key]) { // setting is changed
+                prefHandler[key] = newVal;
+                if(!initial && prefHandler.observer[key]) {
+                    prefHandler.observer.handler = prefHandler.observer[key];
+                    prefHandler.observer.handler(); // wrap 'this'
+                }
+            }
         }
-    },
-
-    removeGroup: function(group) {
-        if(group == this.defaultGroup)
-            return this.resetGroup(this.defaultGroup);
-        delete this.prefs.groups[group];
     },
 
     // Processing the Login information
     // https://developer.mozilla.org/En/Using_nsILoginManager
 
-    getLoginMsg: function(group) {
-        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+    setLoginInfo: function(show) {
+        if(show) {
+            this.logins = this.getGroupNames();
+            for(var i=0; i<this.groups.length; ++i)
+                this.getLoginMsg(this.getVal(i, 'Name', this.setupDefault.Name));
+        } else { // hide
+            for(var i=0; i<this.logins.length; ++i)
+                this.delLoginMsg(this.logins[i]);
+            delete this.logins;
+            for(var i=0; i<this.groups.length; ++i) {
+                this.setLoginMsg(this.getVal(i, 'Name', this.setupDefault.Name));
+                for(var key in this.useLoginMgr)
+                    this.setVal(i, key, this.setupDefault[key]);
+            }
+        }
+    },
+
+    getLoginMsg: function(groupName) {
+        var url = (groupName == this.setupDefault.Name) ? 'chrome://pcmanfx2' : 'telnet://' + groupName;
+        var group = this.findGroup(groupName);
         try {
             var logins = Components.classes["@mozilla.org/login-manager;1"]
                                    .getService(Components.interfaces.nsILoginManager)
                                    .findLogins({}, url, 'chrome://pcmanfx2', null);
 
             for(var key in this.useLoginMgr) {
-                this.prefs.groups[group][key] = logins.length ?
+                this.setVal(group, key, logins.length ?
                     logins[0][this.useLoginMgr[key]] :
-                    this.setupDefault[key];
+                    this.setupDefault[key]);
             }
         } catch(e) {
             for(var key in this.useLoginMgr)
-                this.prefs.groups[group][key] = this.setupDefault[key];
+                this.setVal(group, key, this.setupDefault[key]);
         }
     },
 
-    setLoginMsg: function(group) {
-        this.delLoginMsg(group);
-        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+    setLoginMsg: function(groupName) {
+        this.delLoginMsg(groupName);
+        var url = (groupName == this.setupDefault.Name) ? 'chrome://pcmanfx2' : 'telnet://' + groupName;
+        var group = this.findGroup(groupName);
         var userPass = {}
         for(var key in this.useLoginMgr)
-            userPass[this.useLoginMgr[key]] = this.prefs.groups[group][key];
+            userPass[this.useLoginMgr[key]] = this.getVal(group, key, this.setupDefault[key]);
         try {
             var myLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                          Components.interfaces.nsILoginInfo,
@@ -199,8 +301,8 @@ PCManOptions.prototype = {
         } catch(e) {}
     },
 
-    delLoginMsg: function(group) {
-        var url = (group == this.defaultGroup) ? 'chrome://pcmanfx2' : 'telnet://' + group;
+    delLoginMsg: function(groupName) {
+        var url = (groupName == this.setupDefault.Name) ? 'chrome://pcmanfx2' : 'telnet://' + groupName;
         try {
             var loginManager = Components.classes["@mozilla.org/login-manager;1"]
                                          .getService(Components.interfaces.nsILoginManager);

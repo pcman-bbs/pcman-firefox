@@ -2,6 +2,7 @@
 <!ENTITY options_sitesetting.label "個別站台設定">
 <!ENTITY options_default.label "預設站台">
 <!ENTITY options_add.label "新增站台">
+<!ENTITY options_address.label "站台位址：">
 <!ENTITY options_del.label "移除站台">
 <!ENTITY options_general.label "一般">
 <!ENTITY options_connection.label "連線">

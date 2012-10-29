@@ -2,6 +2,7 @@
 <!ENTITY options_sitesetting.label "Site settings">
 <!ENTITY options_default.label "Default">
 <!ENTITY options_add.label "Create">
+<!ENTITY options_address.label "Site Address:">
 <!ENTITY options_del.label "Remove">
 <!ENTITY options_general.label "General">
 <!ENTITY options_connection.label "Connect">
