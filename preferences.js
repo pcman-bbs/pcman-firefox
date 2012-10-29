@@ -69,13 +69,13 @@ function updateSiteList() {
     }
 
     updattingSiteList = true; // disable siteChanged()
-    while(siteList.itemCount > 0)
-        siteList.removeItemAt(0);
+    while(siteList.itemCount > 1)
+        siteList.removeItemAt(1);
 
     var groupNames = options.getGroupNames();
     // Fetch title from bookmarks. XXX: Places API can be slow!
 //    var browserutils = new BrowserUtils();
-    for(var i=0; i<groupNames.length; ++i) {
+    for(var i=1; i<groupNames.length; ++i) { // Exclude the default group
 //        var title = browserutils.findBookmarkTitle('telnet://'+groupNames[i]);
 //        if(!title) title = groupNames[i]; // Not a url
         var title = groupNames[i];
