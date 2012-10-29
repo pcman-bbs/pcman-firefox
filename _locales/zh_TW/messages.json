@@ -52,6 +52,9 @@
   "options_add": {
     "message": "新增站台"
   },
+  "options_address": {
+    "message": "站台位址："
+  },
   "options_del": {
     "message": "移除站台"
   },

@@ -1,128 +1,139 @@
 // handle some direct access to preference
 
 function PCManOptions() {
-    this.defaultGroup = 'default';
-    this.specifiedKey = PrefDefault;
     this.setupDefault = PrefDefaults;
-    this.useLoginMgr = PrefLoginMgr;
     this.prefsKey = "PCManOptions";
-
-    this.prefService.setOptions(this);
     this.load();
 }
 
 PCManOptions.prototype = {
-    prefService: {
-        setOptions: function(options) {
-            this.options = options;
-        },
-
-        addObserver: function(key, observer) {
-            if(key != this.options.specifiedKey)
-                return null; // only one observer is required in this case
-            var prefsKey = this.options.prefsKey;
-            observer.handler = {
-                view: observer,
-                handleEvent: function(event) {
-                    if(event.key == prefsKey)
-                        this.view.onContentPrefSet(null, null, null);
-                    else if(event.key == null) // all localStoage is removed
-                        this.view.onContentPrefRemoved(null, null);
-                }
-            }
-            addEventListener("storage", observer.handler, false);
-        },
-
-        removeObserver: function(key, observer) {
-            if(key != this.options.specifiedKey)
-                return; // only one observer is required in this case
-            removeEventListener("storage", observer.handler, false);
-        }
-    },
-
-    // Create objects storing all pref values in every group
-    // and load the values from the database
     load: function() {
-        this.prefs = {};
-        if(!localStorage[this.prefsKey])
-            this.prefs.groups = {};
-        else
-            this.prefs.groups = JSON.parse(localStorage[this.prefsKey]);
-
-        if(!this.prefs.groups[this.defaultGroup])
-            this.prefs.groups[this.defaultGroup] = {};
-
-        for(var group in this.prefs.groups) {
+        this.groups = [];
+        if(localStorage[this.prefsKey])
+            this.groups = JSON.parse(localStorage[this.prefsKey]);
+        // repair the default group
+        if(!this.groups[0]) {
+            this.copyGroup(0, null, '_override_');
+        } else if(this.groups[0].Name != this.setupDefault.Name) {
+            this.groups.unshift({});
+            this.copyGroup(0, null, '_override_');
+        }
+        for(var i=this.groups.length-1; i>=0; --i) {
+            // remove the empty group
+            if(!this.groups[i]) {
+                this.removeGroup(i);
+                continue;
+            }
+            // repair the references
             for(var key in this.setupDefault) {
-                if(typeof(this.prefs.groups[group][key]) == "undefined")
-                    this.prefs.groups[group][key] = this.setupDefault[key];
+                if(typeof(this.groups[i][key]) == "undefined")
+                    this.setVal(i, key, this.setupDefault[key]);
             }
         }
     },
 
-    // save data into database
     save: function() {
-        localStorage[this.prefsKey] = JSON.stringify(this.prefs.groups);
+        localStorage[this.prefsKey] = JSON.stringify(this.groups);
     },
 
-    // List all groups in the database (rather than these in this object!)
-    getGroupNames: function(specifiedKey) {
+    getGroupNames: function() {
         var groups = [];
-        groups.push(this.defaultGroup);
-        if(localStorage[this.prefsKey]) {
-            var prefs = JSON.parse(localStorage[this.prefsKey]);
-            for(var group in prefs) {
-                if(group != this.defaultGroup)
-                    groups.push(group);
-            }
-        }
+        for(var i=0; i<this.groups.length; ++i)
+            groups[i] = this.getVal(i, 'Name', this.setupDefault.Name);
         return groups;
     },
 
-    hasGroup: function(group) {
-        return this.prefs.groups[group] ? true : false;
-    },
-
-    // Determine the group name (displayed name) by url
-    // and optionally return default for not created site
-    getGroup: function(url, realName) {
-        if(!url) return this.defaultGroup;
-        var group = url;
-        if(!realName && !this.hasGroup(group)) // Not created, use default
-            group = this.defaultGroup;
-        return group;
-    },
-
-    // Get the key for the database from the group name
-    getURI: function(group) {
-        return group;
+    // Determine the group index by the url
+    findGroup: function(url) {
+        if(!url) return 0;
+        url = url.replace(/.*:\/\/([^\/]*).*/, '$1'); // Trim the protocol
+        // search from the newest group
+        for(var i=this.groups.length-1; i>=0; --i) {
+            if(url == this.getVal(i, 'Name', null))
+                return i;
+        }
+        return 0; // Not found
     },
 
     getVal: function(group, key, value) {
-        if(this.prefs.groups[group] && typeof(this.prefs.groups[group][key]) != 'undefined')
-            return this.prefs.groups[group][key];
-        else
+        if(this.groups[group] && typeof(this.groups[group][key])!='undefined') {
+            if(typeof(this.setupDefault[key]) == 'number')
+                return parseInt(this.groups[group][key]);
+            else
+                return this.groups[group][key];
+        } else {
             return value;
-    },
-
-    setVal: function(group, key, value) {
-        if(!this.prefs.groups[group])
-            this.prefs.groups[group] = {};
-        this.prefs.groups[group][key] = value;
-    },
-
-    // Reset an existed group or create a new group
-    resetGroup: function(group) {
-        for(var key in this.setupDefault) {
-            var value = this.setupDefault[key];
-            this.setVal(group, key, value);
         }
     },
 
+    setVal: function(group, key, value) {
+        if(!this.groups[group])
+            this.groups[group] = {};
+        this.groups[group][key] = value;
+    },
+
+    // Copy fromGroup to toGroup
+    // Copy from setupDefault if fromGroup is null.
+    // Add a new group if toGroup is null.
+    // The name of the copied group can be set simultaneously
+    // If the name is set as '_override_', use the name of fromGroup
+    copyGroup: function(toGroup, fromGroup, name) {
+        name = name.replace(/.*:\/\/([^\/]*).*/, '$1'); // Trim the protocol
+        if(toGroup == null)
+            toGroup = this.groups.length;
+        if(fromGroup == null)
+            var data = this.setupDefault;
+        else
+            var data = this.groups[fromGroup];
+        for(var key in data) {
+            if(key != 'Name' || name == '_override_')
+                this.setVal(toGroup, key, data[key]);
+            else if(name)
+                this.setVal(toGroup, key, name); // key == 'Name'
+        }
+    },
+
+    // Remove the group
+    // For the default group, reset to the setupDefault 
     removeGroup: function(group) {
-        if(group == this.defaultGroup)
-            return this.resetGroup(this.defaultGroup);
-        delete this.prefs.groups[group];
+        if(group == 0)
+            return this.copyGroup(0, null, '_override_');
+        this.groups.splice(group,1);
+    },
+
+    // Observer for the changes of the prefs
+
+    addObserver: function(url, prefHandler) {
+        prefHandler.handler = {
+            view: this,
+            handleEvent: function(event) {
+                // null for all localStoage is removed
+                if(event.key == this.view.prefsKey || event.key == null)
+                    this.view.sync(url, prefHandler);
+            }
+        }
+        addEventListener("storage", prefHandler.handler, false);
+    },
+
+    removeObserver: function(prefHandler) {
+        removeEventListener("storage", prefHandler.handler, false);
+    },
+
+    sync: function(url, prefHandler) {
+        var initial = (typeof(prefHandler.Name) == 'undefined');
+        if(!initial)
+            this.load(); // read new prefs from the database
+        var group = this.findGroup(url);
+        for(var key in this.setupDefault) {
+            var newVal = this.getVal(group, key, this.setupDefault[key]);
+            if(newVal != prefHandler[key]) { // setting is changed
+                prefHandler[key] = newVal;
+                if(!initial && prefHandler.observer[key]) {
+                    prefHandler.observer.handler = prefHandler.observer[key];
+                    prefHandler.observer.handler(); // wrap 'this'
+                }
+            }
+        }
     }
 }
 

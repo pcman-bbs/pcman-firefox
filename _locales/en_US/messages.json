@@ -52,6 +52,9 @@
   "options_add": {
     "message": "Create"
   },
+  "options_address": {
+    "message": "Site Address:"
+  },
   "options_del": {
     "message": "Remove"
   },
