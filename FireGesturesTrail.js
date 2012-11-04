@@ -222,8 +222,10 @@ FireGesturesTrail.prototype={
         newDiv.style.zIndex = 10;
         newDiv.style.top = event.pageY + 'px';
         newDiv.style.left = event.pageX + 'px';
+        newDiv.style.transform = 'rotate(' + arg + 'rad)';
         //newDiv.style.MozTransform = 'rotate(' + arg + 'rad)';
         newDiv.style.WebkitTransform = 'rotate(' + arg + 'rad)';
+        newDiv.style.transformOrigin = '0px 0px';
         //newDiv.style.MozTransformOrigin = '0px 0px';
         newDiv.style.WebkitTransformOrigin = '0px 0px';
         document.getElementById('input_proxy').parentNode.appendChild(newDiv);
