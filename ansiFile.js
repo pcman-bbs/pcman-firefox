@@ -116,22 +116,17 @@ AnsiFile.prototype = {
             foStream.close();
 */
         window.URL = window.URL || window.webkitURL;
-        window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder ||
-                             window.MozBlobBuilder;
 
-        var ab = new ArrayBuffer(data.length);
-        var ia = new Uint8Array(ab);
+        var ia = new Uint8Array(data.length);
         for(var i=0; i<data.length; ++i) {
             ia[i] = data.charCodeAt(i);
         }
-
-        var bb = new BlobBuilder();
-        bb.append(ab);
+        var bb = new Blob([ia], {"type": "application/octet-stream"});
 
         var a = document.createElement('a');
         a.id = 'download';
         a.download = noColor ? 'newtext.txt' : 'newansi.ans'; // GC only
-        a.href = window.URL.createObjectURL(bb.getBlob('application/octet-stream'));
+        a.href = window.URL.createObjectURL(bb);
         a.textContent = ' ';
         document.getElementById('input_proxy').parentNode.appendChild(a);
 
