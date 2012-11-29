@@ -61,6 +61,7 @@ function TermView(canvas) {
 TermView.prototype={
 //    conv: Components.classes["@mozilla.org/intl/utf8converterservice;1"]
 //                                                .getService(Components.interfaces.nsIUTF8ConverterService),
+    conv: getBGVar('conv'),
 
     setBuf: function(buf) {
         this.buf=buf;
@@ -68,7 +69,6 @@ TermView.prototype={
 
     setConn: function(conn) {
         this.conn=conn;
-        this.conv = conn.flash.conv;
     },
 
     /* update the canvas to reflect the change in TermBuf */

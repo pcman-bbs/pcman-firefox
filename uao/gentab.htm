@@ -1,0 +1,93 @@
+<!--
+generate binary version of U2B and B2U table
+Author of the original python version: Hong Jen Yee <pcman.tw@gmail.com>
+Modified by u881831 <u881831@hotmail.com>
+License: GNU GPL V2 or higher
+
+Reference: http://moztw.org/docs/big5/
+Supported input:
+http://moztw.org/docs/big5/table/uao250-u2b.txt
+http://moztw.org/docs/big5/table/uao250-b2u.txt
+-->
+<html>
+<head>
+<title>Binary UAO Table generator</title>
+</head>
+<body>
+<form id="input">
+<label for="u2b">Please select u2b.txt:</label><input type="file" id="u2b">
+<br />
+<label for="b2u">Please select b2u.txt:</label><input type="file" id="b2u">
+</form>
+<a id="output"></a>
+<script>
+document.getElementById('u2b').onchange = function(event) {
+    if(this.files.length > 0)
+        load(this.files[0], u2b);
+}
+
+document.getElementById('b2u').onchange = function(event) {
+    if(this.files.length > 0)
+        load(this.files[0], b2u);
+}
+
+function u2b(data) {
+    var result = '';
+    var lineBreak = (data.indexOf('\r\n') >= 0) ? '\r\n' : '\n';
+    var line = data.split(lineBreak);
+    for(var i=0; i<line.length; ++i) {
+        if(line[i].length == 0 || line[i][0] == '#')
+            continue;
+        var parts = line[i].split(' ');
+        var codes = [parts[0].substr(0,4), '0x'+parts[0].substr(4)];
+        result += String.fromCharCode(codes[0], codes[1]);
+    }
+    save(result, 'u2b.tab');
+}
+
+function b2u(data) {
+    var result = '';
+    var lineBreak = (data.indexOf('\r\n') >= 0) ? '\r\n' : '\n';
+    var line = data.split(lineBreak);
+    var idx = 0x8001;
+    for(var i=0; i<line.length; ++i) {
+        if(line[i].length == 0 || line[i][0] == '#')
+            continue;
+        var parts = line[i].split(' ');
+        while(idx < parts[0]) {
+            result += String.fromCharCode(0xFF,0xFD);
+            idx++;
+        }
+        var codes = [parts[1].substr(0,4), '0x'+parts[1].substr(4)];
+        result += String.fromCharCode(codes[0], codes[1]);
+        idx++;
+    }
+    save(result, 'b2u.tab');
+}
+
+function load(file, callback) {
+    var reader = new FileReader();
+    reader.onloadend = function(event) {
+        if((reader.readyState == FileReader.DONE) && reader.result)
+            callback(reader.result);
+    }
+    reader.readAsBinaryString(file);
+}
+
+function save(data, filename) {
+        window.URL = window.URL || window.webkitURL;
+
+        var ia = new Uint8Array(data.length);
+        for(var i=0; i<data.length; ++i) {
+            ia[i] = data.charCodeAt(i);
+        }
+        var bb = new Blob([ia], {"type": "application/octet-stream"});
+
+        var a = document.getElementById('output');
+        a.download = filename; // GC only
+        a.href = window.URL.createObjectURL(bb);
+        a.click();
+}
+</script>
+</body>
+</html>

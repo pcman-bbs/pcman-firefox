@@ -12,8 +12,6 @@ function flashUtils(conn) {
 
     this.ins.setFlash(this);
     this.outs.setFlash(this);
-    this.conv.setFlash(this);
-    this.oconv.setFlash(this);
 }
 
 flashUtils.prototype = {
@@ -139,91 +137,5 @@ flashUtils.prototype = {
     soc_recieve: function(byteArray) {
         this.ins.writeBuffer(byteArray);
         this.conn.onDataAvailable(null, null, this.ins, 0, this.ins.buffer.length);
-    },
-
-    // charset converter
-
-    conv: {
-        setFlash: function(flash) {
-            this.flash = flash;
-        },
-
-        convertStringToUTF8: function(data, charset, skipCheck) {
-            if(charset != 'big5' && !window['a2u_'+charset])
-                window['a2u_'+charset] = {}
-
-            var str = '';
-            for(var i=0; i<data.length; ++i) {
-                var ch = data.charAt(i);
-                if(ch < '\x80' || i == data.length-1) {
-                    str += ch;
-                    continue;
-                }
-
-                var b0 = ch.charCodeAt(0);
-                var b0str = b0.toString(16);
-                ++i;
-                ch = data.charAt(i);
-                var b1 = ch.charCodeAt(0);
-                var b1str = b1.toString(16);
-
-                if(charset == 'big5' && uao_b2u['x'+b0str+b1str]) {
-                    str += uao_b2u['x'+b0str+b1str];
-                } else if(charset != 'big5' && window['a2u_'+charset]['x'+b0str+b1str]) {
-                    str += window['a2u_'+charset]['x'+b0str+b1str];
-                } else {
-                    var result = this.flash.socket.convToUTF8(b0, b1, charset);
-                    if(charset == 'big5')
-                        uao_b2u['x'+b0str+b1str] = result;
-                    else
-                        window['a2u_'+charset]['x'+b0str+b1str] = result;
-                    str += result;
-                }
-            }
-            return str;
-        }
-    },
-
-    oconv: {
-        setFlash: function(flash) {
-            this.flash = flash;
-        },
-
-        charset: '',
-        ConvertFromUnicode: function(str) {
-            var charset = this.charset;
-
-            if(charset != 'big5' && !window['u2a_'+charset])
-                window['u2a_'+charset] = {}
-
-            var data = '';
-            for(var i=0; i<str.length; ++i) {
-                var ch = str.charAt(i);
-                if(ch < '\x80') {
-                    data += ch;
-                    continue;
-                }
-
-                var charCodeStr = ch.charCodeAt(0).toString(16);
-                charCodeStr = 'x' + ('000' + charCodeStr).substr(-4);
-
-                if(charset == 'big5' && uao_u2b[charCodeStr]) {
-                    data += uao_u2b[charCodeStr];
-                } else if(charset != 'big5' && window['u2a_'+charset][charCodeStr]) {
-                    data += window['u2a_'+charset][charCodeStr];
-                } else {
-                    var byteArray = this.flash.socket.convFromUTF8(ch, charset);
-                    var result = byteArray.map(function(x) {
-                        return String.fromCharCode((x+256)%256);
-                    }).join('');
-                    if(charset == 'big5')
-                        uao_u2b[charCodeStr] = result;
-                    else
-                        window['u2a_'+charset][charCodeStr] = result;
-                    data += result;
-                }
-            }
-            return data;
-        }
     }
 }

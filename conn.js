@@ -52,7 +52,7 @@ function Conn(listener) {
     this.iac_sb='';
 
     this.flash = new flashUtils(this);
-    this.oconv = this.flash.oconv;
+    this.oconv = getBGVar('oconv');
 }
 
 Conn.prototype={
@@ -310,6 +310,12 @@ Conn.prototype={
         }
         if(s)
             this.send(s);
+        else if(unicode_str) { // not cached, wait for asysc lookup
+            var _this = this;
+            setTimer(false, function() {
+                _this.convSend(unicode_str, charset);
+            }, 100);
+        }
     },
     
     sendIdleString : function () {

@@ -24,6 +24,15 @@ AnsiColor.prototype = {
             return false; // use normal paste
 
         text = this.convertFromUnicode(text);
+
+        if(!text) { // not cached, wait for asysc lookup
+            var _this = this;
+            setTimer(false, function() {
+                _this.paste();
+            }, 100);
+            return true; // stop normal paste
+        }
+
         text = text.replace(/\r\n/g, '\r');
         text = text.replace(/\n/g, '\r');
         text = text.replace(/\r/g, UnEscapeStr(this.listener.prefs.EnterKey));
