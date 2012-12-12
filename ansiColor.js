@@ -47,17 +47,20 @@ AnsiColor.prototype = {
         // If user copy string the same as follows, it won't work
         var identifyStr = "\x02 Not Implemented \x03";
         if(text) { // copy string to internal buffer
-            sessionStorage.setItem("copiedAnsiStr", text);
+            //sessionStorage.setItem("copiedAnsiStr", text);
+            setBGVar("copiedAnsiStr", text);
             this.systemClipboard(identifyStr);
         } else { // get string from internal buffer
             // Retrieving string from system clipboard directly is inefficient
             if(this.systemClipboard() != identifyStr) {
                 // The system clipboard is updated by other processes
-                sessionStorage.removeItem("copiedAnsiStr");
+                //sessionStorage.removeItem("copiedAnsiStr");
+                setBGVar("copiedAnsiStr");
                 //sessionStorage.clear(); // clear all key
                 return false; // use normal paste
             }
-            return sessionStorage.getItem("copiedAnsiStr");
+            //return sessionStorage.getItem("copiedAnsiStr");
+            return getBGVar("copiedAnsiStr");
         }
     },
 

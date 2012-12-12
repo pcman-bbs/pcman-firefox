@@ -86,6 +86,7 @@ function drawClippedChar(ctx, unichar, style, x, y, maxw, clipx, clipy, clipw, c
     ctx.fillStyle=style;
     // if this character is a CJK ideographic character (填色方塊)
     if(!tryDrawIdeograph(ctx, unichar, x, y, maxw, cliph)) // FIXME: use cliph instead of expected height is not very good.
-        ctx.fillText(unichar, x, y, maxw);
+        ctx.fillText(unichar, x, y + cliph/2, maxw);
+        //ctx.fillText(unichar, x, y, maxw);
     ctx.restore();
 }

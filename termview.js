@@ -405,7 +405,8 @@ TermView.prototype={
         this.chh = Math.floor(this.canvas.height / rows);
         var font = this.chh + 'px monospace';
         ctx.font= font;
-        ctx.textBaseline='top';
+        //ctx.textBaseline='top';
+        ctx.textBaseline='middle';
 
         var m=ctx.measureText('　'); //全形空白
         this.chw=Math.round(m.width/2);
@@ -425,7 +426,8 @@ TermView.prototype={
             this.canvas.width = this.chw * cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
-            ctx.textBaseline='top';
+            //ctx.textBaseline='top';
+            ctx.textBaseline='middle';
             this.redraw(true);
         }
         else {
@@ -433,7 +435,8 @@ TermView.prototype={
             this.canvas.width = this.chw * cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
-            ctx.textBaseline='top';
+            //ctx.textBaseline='top';
+            ctx.textBaseline='middle';
         }
 
         var visible=this.cursorVisible;
