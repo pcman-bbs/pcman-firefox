@@ -10,16 +10,20 @@ function msg(str) {
     return chrome.i18n.getMessage(str);
 }
 
-function createMenu(title, func, parentId) {
+var menuHandler = {};
+chrome.contextMenus.onClicked.addListener(function(onClickData, tab) {
+    menuHandler[onClickData.menuItemId]();
+});
+function createMenu(title, func, parentId, id) {
     if(!chrome || !chrome.contextMenus)
         return;
 
     if(!title)
         return chrome.contextMenus.removeAll();
 
-    var createProperties = { "title": title };
+    var createProperties = { "title": title, "id":(id?id:title) };
     if(func)
-        createProperties.onclick = func;
+        menuHandler[createProperties.id] = func;
     if(parentId)
         createProperties.parentId = parentId;
 
@@ -45,7 +49,7 @@ function speak(text) {
 }
 
 function getDetails() {
-    return chrome.app.getDetails();
+    return chrome.runtime.getManifest();
 }
 
 function dump(str) {

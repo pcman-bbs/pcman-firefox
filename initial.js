@@ -74,25 +74,25 @@ function pcmanMenuItems(create) {
     // create the contentMenu item
     var popup_copy = createMenu(msg("menu_copy"), function() {
         pcman.copy();
-    });
+    }, null, 'copy');
     var popup_coloredCopy = createMenu(msg("menu_coloredCopy"), function() {
         pcman.ansiColor.copy();
-    });
+    }, null, 'ansiCopy');
     var popup_paste = createMenu(msg("menu_paste"), function() {
         pcman.paste();
-    });
+    }, null, 'paste');
     var popup_selAll = createMenu(msg("menu_selAll"), function() {
         pcman.selAll();
-    });
-    var popup_search = createMenu(msg("menu_search"), searchText);
-    var popup_fileio = createMenu(msg("menu_fileio"));
+    }, null, 'selAll');
+    var popup_search = createMenu(msg("menu_search"), searchText, null, 'search');
+    var popup_fileio = createMenu(msg("menu_fileio"), null, null, 'fileIO');
     var popup_loadfile = createMenu(msg("menu_loadfile"), function() {
         pcman.ansiColor.file.openFile();
-    }, popup_fileio);
+    }, popup_fileio, 'loadFile');
     var popup_savefile = createMenu(msg("menu_savefile"), function() {
         pcman.ansiColor.file.savePage();
-    }, popup_fileio);
-    var popup_sitepref = createMenu(msg("menu_sitepref"), sitePref);
+    }, popup_fileio, 'savePage');
+    var popup_sitepref = createMenu(msg("menu_sitepref"), sitePref, null, 'pref');
 }
 
 window.onload = setup;
