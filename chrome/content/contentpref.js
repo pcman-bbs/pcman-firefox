@@ -134,7 +134,7 @@ PCManOptions.prototype = {
             }
         };
         var groupURIs = [null];
-        var groupedPrefs = prefService.getPrefsByName('Name');
+        var groupedPrefs = prefService.getPrefsByName('Name', null);
         var enumerator = groupedPrefs.enumerator;
         while(enumerator.hasMoreElements()) {
             var property = enumerator.getNext()
@@ -146,9 +146,9 @@ PCManOptions.prototype = {
         if(!isWrite) { // read
             for(var i=0; i<groupURIs.length; ++i) {
                 for(var key in this.setupDefault) {
-                    if(!prefService.hasPref(groupURIs[i], key))
+                    if(!prefService.hasPref(groupURIs[i], key, null))
                         continue;
-                    this.setVal(i, key, prefService.getPref(groupURIs[i], key));
+                    this.setVal(i, key, prefService.getPref(groupURIs[i], key, null));
                 }
             }
             return;
@@ -166,17 +166,17 @@ PCManOptions.prototype = {
                 var newVal = null;
                 if(!groupName || this.findGroup(groupName)>0)
                     newVal = this.getVal(this.findGroup(groupName), key);
-                if(prefService.hasPref(groupURIs[i], key)) {
-                    var orgVal = prefService.getPref(groupURIs[i], key);
+                if(prefService.hasPref(groupURIs[i], key, null)) {
+                    var orgVal = prefService.getPref(groupURIs[i], key, null);
                     if(newVal == orgVal) // not changed
                         continue;
                     if(newVal == null)
-                        prefService.removePref(groupURIs[i], key);
+                        prefService.removePref(groupURIs[i], key, null);
                     else
-                        prefService.setPref(groupURIs[i], key, newVal);
+                        prefService.setPref(groupURIs[i], key, newVal, null);
                 } else {
                     if(newVal != null)
-                        prefService.setPref(groupURIs[i], key, newVal);
+                        prefService.setPref(groupURIs[i], key, newVal, null);
                 }
             }
         }
