@@ -85,8 +85,10 @@
         onmouseup="pcman.view.onMouseUp(event);"
         onclick="pcman.view.onClick(event);"
         ondblclick="pcman.view.onDblClick(event);">
+      <html:div>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" ">
       </html:canvas>
+      </html:div>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
         <textbox id="input_proxy"/>
