@@ -51,7 +51,7 @@ function Conn(listener) {
     this.state=STATE_DATA;
     this.iac_sb='';
 
-    this.flash = new flashUtils(this);
+    this.socketHandler = 'icogghjphidkpfkpkloecjooiknfkdbl';
     this.oconv = getBGVar('oconv');
 }
 
@@ -64,6 +64,8 @@ Conn.prototype={
     oconv: Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
 */
+
+    socket: null,
 
     connect: function(host, port) {
         if(host) {
@@ -91,17 +93,75 @@ Conn.prototype={
         pump.asyncRead(this, null);
         this.ipump = pump;
 */
-        this.ins = this.flash.ins;
-        this.outs = this.flash.outs;
+        this.socket = socket(this.socketHandler);
+        var conn = this;
+        this.ins = {
+            buffer: '',
+            writeBuffer: function(str) {
+                this.buffer += str;
+            },
+            readBytes: function() {
+                var buffer = this.buffer;
+                this.buffer = '';
+                return buffer;
+            },
+            close: function() {
+                if(!conn.socket)
+                    return;
+                conn.socket.postMessage({ action: "disconnect" });
+                conn.socket.disconnect();
+                conn.socket = null; 
+            }
+        };
+        this.outs = {
+            buffer: '',
+            write: function(str, length) {
+                this.buffer += str;
+            },
+            flush: function() {
+                var output = this.buffer;
+                conn.socket.postMessage({
+                    action: "data",
+                    content: output
+                });
+                this.buffer = '';
+            },
+            close: function() {
+                if(!conn.socket)
+                    return;
+                conn.socket.postMessage({ action: "disconnect" });
+                conn.socket.disconnect();
+                conn.socket = null; 
+            }
+        };
         this._ins = {};
         this.trans = {};
 
-        this.flash.connect(this.host, this.port);
-        
-        this.connectTime = Date.now();
-        this.connectCount++;
+        this.socket.postMessage({
+            action: "connect",
+            host: this.host,
+            port: this.port
+        });
+        this.socket.onMessage.addListener(function(msg) {
+            switch(msg.action) {
+            case "connected":
+                this.onStartRequest(null, null);
+                break;
+            case "data":
+                this.ins.writeBuffer(msg.content);
+                this.onDataAvailable(null, null, this.ins, 0, this.ins.buffer.length);
+                break;
+            case "disconnected":
+                this.onStopRequest(null, null, null);
+                break;
+            default:
+            }
+        }.bind(this));
 
-        this.closeConfirm();
+        conn.connectTime = Date.now();
+        conn.connectCount++;
+
+        conn.closeConfirm();
     },
 
     close: function() {

@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.5.165",
+  "version": "0.0.1",
   "manifest_version": 2,
   "minimum_chrome_version": "24.0",
 
@@ -12,27 +12,24 @@
   },
   "default_locale": "en_US",
 
-  "browser_action": {
-    "default_icon": "icon16.png",
-    "default_popup": "popup.htm"
+  "app": {
+    "background": {
+      "scripts": ["background.js"],
+      "transient": true
+    }
   },
 
-  "background": { "page": "background.htm" },
-  "omnibox": { "keyword": "telnet" },
   "homepage_url": "http://code.google.com/p/pcmanfx/",
 
-  "options_page": "options.htm",
+  //"options_page": "options.htm",
 
   //"update_url": "http://path/to/updateInfo.xml",
 
   "permissions": [
-    "clipboardRead",
-    "clipboardWrite",
-    "contextMenus",
-    "notifications",
     "storage",
-    "tabs",
-    "tts",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    {"socket": [
+      "tcp-connect:*:*"
+    ]}
   ]
 }

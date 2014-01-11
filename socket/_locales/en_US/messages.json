@@ -1,0 +1,13 @@
+{
+  "appName": {
+    "message": "Socket Agent for PCMan Google Chrome Extension",
+    "description": "The title of the application, displayed in the web store."
+  },
+  "appDesc": {
+    "message": "A GNU/GPL socket agent providing extentions with access to the socket api.",
+    "description":"The description of the application, displayed in the web store."
+  },
+  "options_whitelist": {
+    "message": "ID of allowed extensions:"
+  }
+}

@@ -77,20 +77,3 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     });
 });
 
-function systemClipboard(text) {
-    var sandbox = document.getElementById('sandbox');
-    if(text) { // copy string to system clipboard
-        sandbox.value = text;
-        sandbox.select();
-        document.execCommand('copy');
-        sandbox.value = '';
-    } else { // get string from system clipboard
-        sandbox.value = '';
-        sandbox.select();
-        document.execCommand('paste');
-        text = sandbox.value;
-        sandbox.value = '';
-        return text;
-    }
-}
-

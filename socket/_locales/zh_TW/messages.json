@@ -1,0 +1,13 @@
+{
+  "appName": {
+    "message": "PCMan Google Chrome 擴充套件專用連線代理程式",
+    "description": "The title of the application, displayed in the web store."
+  },
+  "appDesc": {
+    "message": "讓套件可以存取 Apps 專用的 Socket API ，採 GNU/GPL 授權",
+    "description":"The description of the application, displayed in the web store."
+  },
+  "options_whitelist": {
+    "message": "可存取套件的ID："
+  }
+}
