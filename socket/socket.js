@@ -1,9 +1,38 @@
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    sendResponse({answer: true});
+var whitelist = "";
+chrome.storage.local.get("whitelist", function(data) {
+    whitelist = data.whitelist;
+});
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+    for(key in changes) {
+        switch(key) {
+        case "whitelist":
+            //if(whitelist == changes[key].oldValue);
+            whitelist = changes[key].newValue;
+            break;
+        default:
+        }
+    }
 });
 
-chrome.runtime.onConnectExternal.addListener(function(port) { chrome.storage.local.get('whitelist', function(data) {
-    if(data.whitelist.indexOf(port.sender.id) == -1)
+chrome.runtime.onMessageExternal.addListener(
+    function(request, sender, sendResponse) {
+        if(chrome.runtime.id != sender.id && whitelist.indexOf(sender.id) == -1)
+            return;  // don't allow this extension access
+        switch(request.action) {
+        case "wake":
+            sendResponse({action: "waked"});
+            break;
+        case "close":
+            sendResponse({action: "closing"});
+            window.close();
+            break;
+        default:
+        }
+    }
+);
+
+chrome.runtime.onConnectExternal.addListener(function(port) {
+    if(whitelist.indexOf(port.sender.id) == -1)
         return;
     port.onMessage.addListener(function(msg) {
         switch(msg.action) {
@@ -65,4 +94,4 @@ chrome.runtime.onConnectExternal.addListener(function(port) { chrome.storage.loc
         default:
         }
     });
-});});
+});

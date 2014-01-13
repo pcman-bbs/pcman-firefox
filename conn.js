@@ -51,7 +51,7 @@ function Conn(listener) {
     this.state=STATE_DATA;
     this.iac_sb='';
 
-    this.socketHandler = 'icogghjphidkpfkpkloecjooiknfkdbl';
+    this.socketAgent = getBGVar('socketAgent');
     this.oconv = getBGVar('oconv');
 }
 
@@ -93,7 +93,7 @@ Conn.prototype={
         pump.asyncRead(this, null);
         this.ipump = pump;
 */
-        this.socket = socket(this.socketHandler);
+        this.socket = socket(this.socketAgent);
         var conn = this;
         this.ins = {
             buffer: '',
@@ -158,10 +158,10 @@ Conn.prototype={
             }
         }.bind(this));
 
-        conn.connectTime = Date.now();
-        conn.connectCount++;
+        this.connectTime = Date.now();
+        this.connectCount++;
 
-        conn.closeConfirm();
+        this.closeConfirm();
     },
 
     close: function() {

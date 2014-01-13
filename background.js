@@ -77,3 +77,17 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     });
 });
 
+var socketAgent = 'icogghjphidkpfkpkloecjooiknfkdbl';
+chrome.runtime.sendMessage(socketAgent, {action: 'wake'}, function(response) {
+    //if(response.action == 'waked');
+});
+chrome.windows.onRemoved.addListener(function(windowId) {
+    chrome.windows.getAll(function(windows) {
+        if(windows.length > 0) // Not all browser windows are closed
+            return;
+        chrome.runtime.sendMessage(socketAgent, {action: 'close'}, function(response) {
+            //if(response.action == 'closing');
+        });
+    });
+});
+
