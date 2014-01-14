@@ -1,19 +1,19 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.5.166",
+  "version": "0.0.5.167",
   "manifest_version": 2,
   "minimum_chrome_version": "24.0",
 
   "description": "__MSG_appDesc__",
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "icon/icon16.png",
+    "48": "icon/icon48.png",
+    "128": "icon/icon128.png"
   },
   "default_locale": "en_US",
 
   "browser_action": {
-    "default_icon": "icon16.png",
+    "default_icon": "icon/icon16.png",
     "default_popup": "popup.htm"
   },
 

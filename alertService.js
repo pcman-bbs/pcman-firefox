@@ -67,7 +67,7 @@ AlertsService.prototype={
 
         //window.webkitNotifications.createHTMLNotification('http://ab.cd');
         var notification = window.webkitNotifications.createNotification(
-            'icon48.png', summary, body
+            'icon/icon48.png', summary, body
         );
         //notification.ondisplay = function() {};
         //notification.onclose =function() {};

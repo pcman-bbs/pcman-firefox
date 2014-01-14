@@ -253,22 +253,32 @@ PCMan.prototype={
     },
 
     updateTabIcon: function(aStatus) {
-      document.title = document.location.hash.substr(1) + ' - ' + aStatus;
-/*
-      var icon = 'chrome://pcmanfx2/skin/tab-connecting.png';
+      //document.title = document.location.hash.substr(1) + ' - ' + aStatus;
+      var icon = 'icon/tab-connecting.png';
       switch (aStatus) {
         case 'connect':
-          icon =  'chrome://pcmanfx2/skin/tab-connect.png';
+          icon =  'icon/tab-connect.png';
           break;
         case 'disconnect':
-          icon =  'chrome://pcmanfx2/skin/tab-disconnect.png';
+          icon =  'icon/tab-disconnect.png';
           break;
         case 'idle':  // Not used yet
-          icon =  'chrome://pcmanfx2/skin/tab-idle.png';
+          icon =  'icon/tab-idle.png';
           break;
         case 'connecting':  // Not used yet
         default:
       }
+
+      var link = document.querySelector("link[rel~='icon']");
+      if(!link) {
+          link = document.createElement("link");
+          link.setAttribute("rel", "icon");
+          link.setAttribute("href", icon);
+          document.head.appendChild(link);
+      } else {
+          link.setAttribute("href", icon);
+      }
+/*
       var rw = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
       var browserIndex = rw.gBrowser.getBrowserIndexForDocument(document);
 
