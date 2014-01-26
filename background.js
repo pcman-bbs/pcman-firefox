@@ -78,9 +78,31 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 });
 
 var socketAgent = 'icogghjphidkpfkpkloecjooiknfkdbl';
-chrome.runtime.sendMessage(socketAgent, {action: 'wake'}, function(response) {
-    //if(response.action == 'waked');
-});
+function initialSocket(callback, skipCheckApp) {
+    if(!skipCheckApp) {
+        chrome.management.get(socketAgent, function(result) {
+            if(result) {
+                if(result.enabled) {
+                    if(result.version == "0.0.1.168")
+                        initialSocket(callback, true);
+                    else
+                        callback('please upgrade socket app.');
+                } else
+                    callback('Please enable socket app.');
+            } else
+                callback('Please install socket app.');
+        });
+        return;
+    }
+    chrome.runtime.sendMessage(socketAgent, {action: 'wake'}, function(response) {
+        if(response && response.action == 'waked')
+            callback();
+        else
+            setTimeout(function() { initialSocket(callback, true); }, 100);
+    });
+}
+initialSocket(function() {});
+
 chrome.windows.onRemoved.addListener(function(windowId) {
     chrome.windows.getAll(function(windows) {
         if(windows.length > 0) // Not all browser windows are closed

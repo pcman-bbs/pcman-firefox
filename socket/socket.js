@@ -17,7 +17,7 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 chrome.runtime.onMessageExternal.addListener(
     function(request, sender, sendResponse) {
         if(chrome.runtime.id != sender.id && whitelist.indexOf(sender.id) == -1)
-            return;  // don't allow this extension access
+            return sendResponse({action: "denied"}); // access denied
         switch(request.action) {
         case "wake":
             sendResponse({action: "waked"});
@@ -33,7 +33,7 @@ chrome.runtime.onMessageExternal.addListener(
 
 chrome.runtime.onConnectExternal.addListener(function(port) {
     if(whitelist.indexOf(port.sender.id) == -1)
-        return;
+        return port.postMessage({ action: "denied" }); // access denied
     port.onMessage.addListener(function(msg) {
         switch(msg.action) {
         case "connect":

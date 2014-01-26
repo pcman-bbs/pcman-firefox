@@ -51,7 +51,6 @@ function Conn(listener) {
     this.state=STATE_DATA;
     this.iac_sb='';
 
-    this.socketAgent = getBGVar('socketAgent');
     this.oconv = getBGVar('oconv');
 }
 
@@ -93,7 +92,6 @@ Conn.prototype={
         pump.asyncRead(this, null);
         this.ipump = pump;
 */
-        this.socket = socket(this.socketAgent);
         var conn = this;
         this.ins = {
             buffer: '',
@@ -110,7 +108,7 @@ Conn.prototype={
                     return;
                 conn.socket.postMessage({ action: "disconnect" });
                 conn.socket.disconnect();
-                conn.socket = null; 
+                conn.socket = null;
             }
         };
         this.outs = {
@@ -131,31 +129,38 @@ Conn.prototype={
                     return;
                 conn.socket.postMessage({ action: "disconnect" });
                 conn.socket.disconnect();
-                conn.socket = null; 
+                conn.socket = null;
             }
         };
         this._ins = {};
         this.trans = {};
 
-        this.socket.postMessage({
-            action: "connect",
-            host: this.host,
-            port: this.port
-        });
-        this.socket.onMessage.addListener(function(msg) {
-            switch(msg.action) {
-            case "connected":
-                this.onStartRequest(null, null);
-                break;
-            case "data":
-                this.ins.writeBuffer(msg.content);
-                this.onDataAvailable(null, null, this.ins, 0, this.ins.buffer.length);
-                break;
-            case "disconnected":
-                this.onStopRequest(null, null, null);
-                break;
-            default:
+        getBGVar('initialSocket')(function(errorMsg) {
+            if(errorMsg) {
+                alert(errorMsg);
+                return;
             }
+            this.socket = socket(getBGVar('socketAgent'));
+            this.socket.postMessage({
+                action: "connect",
+                host: this.host,
+                port: this.port
+            });
+            this.socket.onMessage.addListener(function(msg) {
+                switch(msg.action) {
+                case "connected":
+                    this.onStartRequest(null, null);
+                    break;
+                case "data":
+                    this.ins.writeBuffer(msg.content);
+                    this.onDataAvailable(null, null, this.ins, 0, this.ins.buffer.length);
+                    break;
+                case "disconnected":
+                    this.onStopRequest(null, null, null);
+                    break;
+                default:
+                }
+            }.bind(this));
         }.bind(this));
 
         this.connectTime = Date.now();

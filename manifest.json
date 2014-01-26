@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.5.167",
+  "version": "0.0.5.168",
   "manifest_version": 2,
   "minimum_chrome_version": "24.0",
 
@@ -29,6 +29,7 @@
     "clipboardRead",
     "clipboardWrite",
     "contextMenus",
+    "management",
     "notifications",
     "storage",
     "tabs",
