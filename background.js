@@ -83,7 +83,7 @@ function initialSocket(callback, skipCheckApp) {
         chrome.management.get(socketAgent, function(result) {
             if(result) {
                 if(result.enabled) {
-                    if(result.version == "0.0.1.168")
+                    if(result.version.split('.').pop() >= 168)
                         initialSocket(callback, true);
                     else
                         callback('please upgrade socket app.');

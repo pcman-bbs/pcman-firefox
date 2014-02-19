@@ -1,13 +1,13 @@
 var whitelist = "";
 chrome.storage.local.get("whitelist", function(data) {
-    whitelist = data.whitelist;
+    whitelist = data.whitelist ? data.whitelist : " ";
 });
 chrome.storage.onChanged.addListener(function(changes, namespace) {
     for(key in changes) {
         switch(key) {
         case "whitelist":
             //if(whitelist == changes[key].oldValue);
-            whitelist = changes[key].newValue;
+            whitelist = changes[key].newValue ? changes[key].newValue : " ";
             break;
         default:
         }
