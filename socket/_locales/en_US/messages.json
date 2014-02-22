@@ -7,6 +7,9 @@
     "message": "A GNU/GPL socket agent providing extentions with access to the socket api.",
     "description":"The description of the application, displayed in the web store."
   },
+  "caution": {
+    "message": "PCMan extension can't connect if this window is closed."
+  },
   "options_whitelist": {
     "message": "ID of allowed extensions:"
   }

@@ -7,6 +7,9 @@
     "message": "讓套件可以存取 Apps 專用的 Socket API ，採 GNU/GPL 授權",
     "description":"The description of the application, displayed in the web store."
   },
+  "caution": {
+    "message": "關閉此視窗會使 PCMan 套件無法連線。"
+  },
   "options_whitelist": {
     "message": "可存取套件的ID："
   }

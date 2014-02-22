@@ -8,7 +8,9 @@ document.getElementById('whitelist').form.onreset = function(event) {
 document.getElementById('whitelist').form.onsubmit = function(event) {
     chrome.storage.local.set({
         whitelist: document.getElementById('whitelist').value.replace(/[^a-z\n]/g,'')
-    }, function() {});
+    }, function() {
+        window.close();
+    });
 };
 
 window.onload = document.getElementById('whitelist').form.onreset;

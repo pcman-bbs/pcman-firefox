@@ -229,6 +229,12 @@
   "options_creator": {
     "message": "Author: Hong Jen Yee"
   },
+  "options_committer": {
+    "message": "And the committers of the pcmanfx project:"
+  },
+  "options_bbsfox": {
+    "message": "Some of the codes are from BBSFOX written by"
+  },
   "options_download": {
     "message": "Download"
   },

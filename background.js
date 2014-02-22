@@ -86,11 +86,11 @@ function initialSocket(callback, skipCheckApp) {
                     if(result.version.split('.').pop() >= 168)
                         initialSocket(callback, true);
                     else
-                        callback('please upgrade socket app.');
+                        callback('upgrade_app');
                 } else
-                    callback('Please enable socket app.');
+                    callback('enable_app');
             } else
-                callback('Please install socket app.');
+                callback('install_app');
         });
         return;
     }

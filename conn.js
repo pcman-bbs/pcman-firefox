@@ -137,7 +137,20 @@ Conn.prototype={
 
         getBGVar('initialSocket')(function(errorMsg) {
             if(errorMsg) {
-                alert(errorMsg);
+                this.listener.updateTabIcon("error");
+                switch(errorMsg){
+                case "install_app":
+                    this.listener.onData(this, "\x1b[1mPlease \x1b[32minstall\x1b[;1m the \x1b[36;43msocket app\x1b[;1m.\x1b[m\r\n");
+                    break;
+                case "enable_app":
+                    this.listener.onData(this, "\x1b[1mPlease \x1b[32menable\x1b[;1m the \x1b[36;43msocket app\x1b[;1m.\x1b[m\r\n");
+                    break;
+                case "upgrade_app":
+                    this.listener.onData(this, "\x1b[1mPlease \x1b[32mupgrade\x1b[;1m the \x1b[36;43msocket app\x1b[;1m.\x1b[m\r\n");
+                    break;
+                default:
+                }
+                this.listener.onData(this, "\r\n\x1b[1mSee \x1b[34mhttp://goo.gl/RU0UgD\x1b[;1m for detail.\x1b[m\r\n");
                 return;
             }
             this.socket = socket(getBGVar('socketAgent'));

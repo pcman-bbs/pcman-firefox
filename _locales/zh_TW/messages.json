@@ -229,6 +229,12 @@
   "options_creator": {
     "message": "作者：洪任諭"
   },
+  "options_committer": {
+    "message": "以及協助開發 pcmanfx 計畫的人員"
+  },
+  "options_bbsfox": {
+    "message": "部分程式碼參考自 BBSFOX ，作者是："
+  },
   "options_download": {
     "message": "下載網址"
   },
