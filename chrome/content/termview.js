@@ -42,8 +42,23 @@ function TermView(canvas) {
 }
 
 TermView.prototype={
-    conv: Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-                                                .getService(Components.interfaces.nsIUTF8ConverterService),
+    conv: {
+        convertStringToUTF8: function(b5, charset, skipCheck, allowSubstitution) {
+            // when converting unicode to big5, use UAO.
+            if(charset.toLowerCase() == 'big5') {
+                if(!this.conn || !this.conn.uaoConvLoaded) {
+                    Components.utils.import("resource://pcmanfx2/uao.js");
+                    if(this.conn) this.conn.uaoConvLoaded = true;
+                }
+                return uaoConv.b2u(b5);
+            }
+            if(!this.conv) {
+                this.conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+                                                .getService(Components.interfaces.nsIUTF8ConverterService);
+            }
+            return this.conv.convertStringToUTF8(b5, charset, skipCheck, allowSubstitution);
+        }
+    },
 
     setBuf: function(buf) {
         this.buf=buf;
@@ -51,6 +66,7 @@ TermView.prototype={
 
     setConn: function(conn) {
         this.conn=conn;
+        this.conv.conn=conn;
     },
 
     /* update the canvas to reflect the change in TermBuf */

@@ -566,7 +566,7 @@ TermBuf.prototype={
       else colEnd = this.cols;
 
       text = text.slice(colStart, colEnd);
-      var conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"].getService(Components.interfaces.nsIUTF8ConverterService);
+      var conv = this.view.conv;
       var charset = this.view.conn.listener.prefs.Encoding;
       return text.map( function(c, col, line){
         if(!c.isLeadByte) {
