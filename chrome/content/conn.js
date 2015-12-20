@@ -50,6 +50,8 @@ function Conn(listener) {
 
     this.state=STATE_DATA;
     this.iac_sb='';
+
+    this.ssh = null;
 }
 
 Conn.prototype={
@@ -66,6 +68,23 @@ Conn.prototype={
             this.port = port;
         }
         this.isConnected = false;
+
+        // FIXME: connect to other site or port
+        var _this = (host == 'ptt.cc' && port == 22) ? this : null;
+        this.ssh = new SSH(_this, 'bbs', 'bbs', function(status, message){
+            switch(status) {
+            case 'onConnected':
+            case 'loginAccepted':
+            case 'loginDenied':
+                break;
+            case 'onDisconnect':
+                _this.close();
+                break;
+            case 'send':
+            default:
+                _this.send(message);
+            }
+        });
 
         // create the socket
         this.trans=this.ts.createTransport(null, 0,
@@ -103,6 +122,8 @@ Conn.prototype={
         delete this.trans;
 
         this.closeConfirm();
+
+        this.ssh.close(this.listener.abnormalClose);
 
         if(this.listener.abnormalClose)
             return;
@@ -158,6 +179,10 @@ Conn.prototype={
             var n=s.length;
             // this.oconv.charset='big5';
             // dump('data ('+n+'): >>>\n'+ this.oconv.ConvertToUnicode(s) + '\n<<<\n');
+            if(this.ssh.enable) { // use SSH
+                data = this.ssh.input(s);
+                n = 0; // bypass IAC
+            }
             for(var i = 0;i<n; ++i) {
                 var ch=s[i];
                 switch(this.state) {
@@ -253,7 +278,7 @@ Conn.prototype={
         var rows = this.listener.prefs.Rows;
         var nawsStr = String.fromCharCode(Math.floor(cols/256), cols%256, Math.floor(rows/256), rows%256).replace(/(\xff)/g,'\xff\xff');
         var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
-        this.send( rep );
+        this.send(this.ssh.sendNaws(rep));
     },
 
     send: function(str) {
@@ -265,6 +290,7 @@ Conn.prototype={
             this.idleTimeout.cancel();
 
         if(str) {
+            str = this.ssh.output(str);
             this.outs.write(str, str.length);
             this.outs.flush();
         }
