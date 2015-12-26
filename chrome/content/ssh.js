@@ -6,6 +6,8 @@ function SSH(conn, login, password, callback) {
     if(!conn) // use unencrypted connection
         return;
     this.enable = true;
+    this.sendRaw = false;
+    this.recvRaw = false;
     this.listener = conn;
     this.callback = callback;
 
@@ -23,8 +25,6 @@ function SSH(conn, login, password, callback) {
     this.transport = null;
     this.client = null;
     this.shell = null;
-
-    this.bufferOut = '';
 
     this.initial();
 }
@@ -52,8 +52,9 @@ SSH.prototype={
         };
 
         var write = function(str) {
-            self.bufferOut += str;
-            self.flush();
+            self.sendRaw = true;
+            self.callback('send', str);
+            self.sendRaw = false;
         };
 
         this.transport = this.client.connect(
@@ -64,8 +65,16 @@ SSH.prototype={
             this.login, this.password, null, this.privatekey);
     },
 
+    recv: function() { // for asyncRead, not used yet
+        var str = this.input();
+        this.recvRaw = true;
+        this.callback('recv', str);
+        this.recvRaw = false;
+        // TODO: recall this func periodically to imitate Firessh, should it?
+    },
+
     input: function(str) {
-        if(!this.enable)
+        if(!this.enable || this.recvRaw)
             return str;
         try {
             this.transport.fullBuffer += str;  // read data
@@ -74,7 +83,9 @@ SSH.prototype={
                 this.callback('onConnected');
             }
 
-            this.transport.run();
+            if (str) // false as recall this function for async reading
+                this.transport.run();
+
             if (!this.shell) // authorizing
                 return '';
         } catch(ex) {
@@ -87,18 +98,38 @@ SSH.prototype={
             return '';
         }
 
-        // FIXME: the above become async as WaitException appears
-        var data = '';
+        var stdin = '';
         try {
             if (!this.shell || this.shell.closed) {
                 this.callback('onDisconnect');
                 return '';
             }
-            var stdin = this.shell.recv(65536);
-        } catch(ex if ex instanceof paramikojs.ssh_exception.WaitException) {
-            // FIXME: check stderr
-            return '';
+            stdin = this.shell.recv(65536);
+            while(true) // break as data are read thoroughly
+                stdin += this.shell.recv(65536);
+        } catch(ex) {
+            if (ex instanceof paramikojs.ssh_exception.WaitException) {
+                // data are read thoroughly
+            } else {
+               throw(ex);
+            }
         }
+
+        var stderr = '';
+        try {
+            stderr = this.shell.recv_stderr(65536);
+            while(true) // break as data are read thoroughly
+                stderr += this.shell.recv_stderr(65536);
+        } catch(ex) {
+            if (ex instanceof paramikojs.ssh_exception.WaitException) {
+                // data are read thoroughly
+            } else {
+               throw(ex);
+            }
+        }
+        var logger = paramikojs.util.get_logger();
+        logger.log(null, 'STDERR: ' + stderr);
+
         if (stdin) {
             return stdin;
         }
@@ -106,24 +137,11 @@ SSH.prototype={
     },
 
     output: function(str) {
-        if(!this.enable)
+        if(!this.enable || this.sendRaw)
             return str;
-        // FIXME: catch WaitException and resend, which is async
         if(str)
             this.shell.send(str);
-        var bufferOut = this.bufferOut;
-        this.bufferOut = '';
-        return bufferOut;
-    },
-
-    flush: function() {
-        if(!this.enable)
-            return;
-        var bufferOut = this.bufferOut;
-        this.bufferOut = '';
-        delete this.enable;
-        this.callback('send', bufferOut);
-        this.enable = true;
+        return '';
     },
 
     sendNaws: function(str) {

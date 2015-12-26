@@ -80,6 +80,9 @@ Conn.prototype={
             case 'onDisconnect':
                 _this.close();
                 break;
+            case 'recv':
+                _this.onDataAvailable(null, null, message, 0, message.length);
+                break;
             case 'send':
             default:
                 _this.send(message);
@@ -173,7 +176,7 @@ Conn.prototype={
         var data='';
         // dump(count + 'bytes available\n');
         while(count > 0) {
-            var s = this.ins.readBytes(count);
+            var s = (typeof(ins) == 'string') ? ins : this.ins.readBytes(count);
             count -= s.length;
             // dump(count + 'bytes remaining\n');
             var n=s.length;
@@ -289,8 +292,9 @@ Conn.prototype={
         if(this.idleTimeout)
             this.idleTimeout.cancel();
 
+        str = this.ssh.output(str);
+
         if(str) {
-            str = this.ssh.output(str);
             this.outs.write(str, str.length);
             this.outs.flush();
         }
