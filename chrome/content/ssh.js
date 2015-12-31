@@ -15,8 +15,12 @@ function SSH(conn, login, password, callback) {
     this.port = conn.port;
     this.keepAlive = null;
 
-    this.login = login || 'bbs';
-    this.password = password || 'bbs';
+    this.login = login;
+    this.password = password;
+    this.loginStr = '';
+    this.passStr = '';
+
+    this.banner = '';
 
     this.privatekey = '';
     this.width = conn.listener.prefs.Cols;
@@ -25,8 +29,6 @@ function SSH(conn, login, password, callback) {
     this.transport = null;
     this.client = null;
     this.shell = null;
-
-    this.initial();
 }
 
 SSH.prototype={
@@ -73,9 +75,94 @@ SSH.prototype={
         // TODO: recall this func periodically to imitate Firessh, should it?
     },
 
+    isUserPassReady: function(s) {
+        if(this.login && this.password)
+            return true;
+
+        var _this = this;
+        var screen = function(str) {
+            _this.recvRaw = true;
+            _this.callback('recv', str);
+            _this.recvRaw = false;
+        };
+
+        if(!this.login) {
+            if(!this.loginStr)
+                screen('\x1b[m\x1b[2Jlogin as: ');
+            switch(s) {
+            case '\r': // Enter
+                if(!this.loginStr) {
+                    this.callback('onDisconnect');
+                    return false;
+                }
+                this.login = this.loginStr;
+                this.loginStr = '';
+                screen('\r\n'+this.login+'@'+this.host+'\'s password:');
+                return false;
+            case '\b': // Back
+                this.loginStr = this.loginStr.replace(/.$/,'');
+                screen('\b\x1b[K');
+                return false;
+            default:
+                if(s.search(/[^0-9A-z_a-z]/) > -1) // Not supported char
+                    return false;
+                this.loginStr += s;
+                screen(s);
+                return false;
+            }
+        }
+
+        switch(s) {
+        case '\r': // Enter
+            if(!this.passStr) {
+                this.login = '';
+                screen('\x1b[m\x1b[2Jlogin as: ');
+                return false;
+            }
+            this.password = this.passStr;
+            this.passStr = '';
+            screen('\x1b[2J');
+            return true;
+        case '\b': // Back
+            this.passStr = this.passStr.replace(/.$/,'');
+            return false;
+        default:
+            if(s.search(/[^0-9A-z_a-z]/) > -1) // Not supported char
+                return false;
+            this.passStr += s;
+            return false;
+        }
+    },
+
+    isSSH: function(str) {
+        this.banner += str;
+        str = this.banner;
+        if(!str)
+            return '';
+        if(str.length < 9 && str.search(/[^0-9A-z_a-z\-]/) == -1) {
+            if(str.length >= 4 && str.substr(0, 4) == 'SSH-')
+                return '';
+            if(str.length < 4 && str == ('SSH-').substr(0, str.length))
+                return '';
+        }
+        if(str.indexOf('SSH-2.0-') != 0 && str.indexOf('SSH-1.99-') != 0) {
+            this.enable = false; // use unencrypted connection
+            this.callback('recv', str);
+            return '';
+        }
+        return str;
+    },
+
     input: function(str) {
         if(!this.enable || this.recvRaw)
             return str;
+        if(!this.client) {
+            str = this.isSSH(str);
+            if(!str || !this.isUserPassReady(''))
+                return ''; // waiting next message or unencrypted connection
+            this.banner = '';
+            this.initial();
+        }
         try {
             this.transport.fullBuffer += str;  // read data
 
@@ -139,6 +226,11 @@ SSH.prototype={
     output: function(str) {
         if(!this.enable || this.sendRaw)
             return str;
+        if(!this.client) {
+            if(this.isUserPassReady(str))
+                this.input('');
+            return '';
+        }
         if(str)
             this.shell.send(str);
         return '';
