@@ -34,20 +34,38 @@ AnsiColor.prototype = {
     },
 
     ansiClipboard: function(text) {
+        if(typeof(Application) != 'undefined') {
+            var storage = {
+                setItem: Application.storage.set,
+                getItem: Application.storage.get
+            };
+        } else { // Firefox 47+
+            var url = "http://example.com";
+            var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                .getService(Components.interfaces.nsIIOService);
+            var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                .getService(Components.interfaces.nsIScriptSecurityManager);
+            var dsm = Components.classes["@mozilla.org/dom/storagemanager;1"]
+                .getService(Components.interfaces.nsIDOMStorageManager);
+
+            var uri = ios.newURI(url, "", null);
+            var principal = ssm.getCodebasePrincipal(uri);
+            var storage = dsm.getLocalStorageForPrincipal(principal, "");
+        }
         //FIXME: better approach to listen the change of the system clipboard
         // If user copy string the same as follows, it won't work
         var identifyStr = "\x02 Not Implemented \x03";
         if(text) { // copy string to internal buffer
-            Application.storage.set("copiedAnsiStr", text);
+            storage.setItem("copiedAnsiStr", text);
             this.systemClipboard(identifyStr);
         } else { // get string from internal buffer
             // Retrieving string from system clipboard directly is inefficient
             if(this.systemClipboard() != identifyStr) {
                 // The system clipboard is updated by other processes
-                Application.storage.set("copiedAnsiStr", "");
+                storage.setItem("copiedAnsiStr", "");
                 return false; // use normal paste
             }
-            return Application.storage.get("copiedAnsiStr", "");
+            return storage.getItem("copiedAnsiStr", "");
         }
     },
 
