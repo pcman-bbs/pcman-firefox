@@ -10,8 +10,30 @@ function PCManOptions() {
 PCManOptions.prototype = {
     // Find the version of PCManFx
     getVersion: function() {
-        var app = Components.classes["@mozilla.org/fuel/application;1"]
-                            .getService(Components.interfaces.fuelIApplication);
+        var fuel = Components.classes["@mozilla.org/fuel/application;1"];
+        if(fuel) {
+            var app = fuel.getService(Components.interfaces.fuelIApplication);
+        } else { // Firefox 47+
+            var app = {};
+            app.getExtensions = function(callback) {
+                Components.utils.import("resource://gre/modules/AddonManager.jsm");
+                var _this = this;
+                AddonManager.getAllAddons(function(addons) {
+                    var extensions = {};
+                    for(var i=0; i<addons.length; ++i) {
+                        extensions['_'+addons[i].id] = {
+                            name: addons[i].name,
+                            version: addons[i].version
+                        };
+                    }
+                    Components.utils.unload("resource://gre/modules/AddonManager.jsm");
+                    extensions.get = function(id) {
+                        return this['_'+id];
+                    }
+                    callback(extensions);
+                });
+            };
+        }
 
         if(document.getElementById('pcmanOption'))
             getVersion(app);
