@@ -1,5 +1,9 @@
 // Handle Telnet Connections according to RFC 855
 
+'use strict';
+
+var EXPORTED_SYMBOLS = ["Conn"];
+
 // Telnet commands
 const SE = '\xf0';
 const NOP = '\xf1';
@@ -38,9 +42,6 @@ const STATE_DONT = 5;
 const STATE_SB = 6;
 
 function Conn(listener) {
-    this.tran = null;
-    this.ins = null;
-    this.outs = null;
     this.host = null;
     this.port = 23;
 
@@ -50,15 +51,12 @@ function Conn(listener) {
 
     this.state = STATE_DATA;
     this.iac_sb = '';
+
+    this.app = null;
 }
 
 Conn.prototype = {
-    // transport service
-    ts: Components.classes["@mozilla.org/network/socket-transport-service;1"]
-        .getService(Components.interfaces.nsISocketTransportService),
-    // encoding converter
-    oconv: Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-        .createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
+    oconv: null,
 
     connect: function(host, port) {
         if (host) {
@@ -67,38 +65,17 @@ Conn.prototype = {
         }
         this.isConnected = false;
 
-        // create the socket
-        this.trans = this.ts.createTransport(null, 0,
-            this.host, this.port, null);
-        this._ins = this.trans.openInputStream(0, 0, 0);
-        this.outs = this.trans.openOutputStream(0, 0, 0);
-
-        // initialize input stream
-        this.ins = Components.classes["@mozilla.org/binaryinputstream;1"]
-            .createInstance(Components.interfaces.nsIBinaryInputStream);
-        this.ins.setInputStream(this._ins);
-
-        // data listener
-        var pump = Components.classes["@mozilla.org/network/input-stream-pump;1"]
-            .createInstance(Components.interfaces.nsIInputStreamPump);
-        pump.init(this._ins, -1, -1, 0, 0, false);
-        pump.asyncRead(this, null);
-        this.ipump = pump;
+        this.app.connect(host, port);
 
         this.connectTime = Date.now();
         this.connectCount++;
     },
 
     close: function() {
-        if (!this.ins)
+        if (!this.app.ws)
             return;
 
-        this.ins.close();
-        this.outs.close();
-        delete this._ins;
-        delete this.ins;
-        delete this.outs;
-        delete this.trans;
+        this.app.onunload();
 
         if (this.listener.abnormalClose)
             return;
@@ -109,7 +86,7 @@ Conn.prototype = {
         }
 
         // reconnect automatically if the site is disconnected in 15 seconds
-        let time = Date.now();
+        var time = Date.now();
         if (time - this.connectTime < 15000) {
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
@@ -122,7 +99,7 @@ Conn.prototype = {
                 this.connect();
             } else {
                 var _this = this;
-                this.reconnectTimer = setTimer(false, function() {
+                this.reconnectTimer = this.listener.ui.setTimer(false, function() {
                     delete _this.reconnectTimer;
                     _this.connect();
                 }, connectDelay * 1000);
@@ -144,128 +121,115 @@ Conn.prototype = {
     },
 
     onDataAvailable: function(req, ctx, ins, off, count) {
+        var content = '';
+        while (count > content.length)
+            content += this.app.ws.ins.readBytes(count - content.length);
         var data = '';
-        // dump(count + 'bytes available\n');
-        while (count > 0) {
-            var s = this.ins.readBytes(count);
-            count -= s.length;
-            // dump(count + 'bytes remaining\n');
-            var n = s.length;
-            // this.oconv.charset='big5';
-            // dump('data ('+n+'): >>>\n'+ this.oconv.ConvertToUnicode(s) + '\n<<<\n');
-            for (var i = 0; i < n; ++i) {
-                var ch = s[i];
-                switch (this.state) {
-                    case STATE_DATA:
-                        if (ch == IAC) {
-                            if (data) {
-                                this.listener.onData(this, data);
-                                data = '';
-                            }
-                            this.state = STATE_IAC;
-                        } else
-                            data += ch;
-                        break;
-                    case STATE_IAC:
-                        switch (ch) {
-                            case WILL:
-                                this.state = STATE_WILL;
-                                break;
-                            case WONT:
-                                this.state = STATE_WONT;
-                                break;
-                            case DO:
-                                this.state = STATE_DO;
-                                break;
-                            case DONT:
-                                this.state = STATE_DONT;
-                                break;
-                            case SB:
-                                this.state = STATE_SB;
-                                break;
-                            default:
-                                this.state = STATE_DATA;
+        var n = content.length;
+        for (var i = 0; i < n; ++i) {
+            var ch = content[i];
+            switch (this.state) {
+                case STATE_DATA:
+                    if (ch == IAC) {
+                        if (data) {
+                            this.listener.onData(this, data);
+                            data = '';
                         }
-                        break;
-                    case STATE_WILL:
-                        switch (ch) {
-                            case ECHO:
-                            case SUPRESS_GO_AHEAD:
-                                this.send(IAC + DO + ch);
-                                break;
-                            default:
-                                this.send(IAC + DONT + ch);
-                        }
-                        this.state = STATE_DATA;
-                        break;
-                    case STATE_DO:
-                        switch (ch) {
-                            case TERM_TYPE:
-                                this.send(IAC + WILL + ch);
-                                break;
-                            default:
-                                this.send(IAC + WONT + ch);
-                        }
-                        this.state = STATE_DATA;
-                        break;
-                    case STATE_DONT:
-                    case STATE_WONT:
-                        this.state = STATE_DATA;
-                        break;
-                    case STATE_SB: // sub negotiation
-                        this.iac_sb += ch;
-                        if (this.iac_sb.slice(-2) == IAC + SE) {
-                            // end of sub negotiation
-                            switch (this.iac_sb[0]) {
-                                case TERM_TYPE:
-                                    // FIXME: support other terminal types
-                                    var rep = IAC + SB + TERM_TYPE + IS + 'VT100' + IAC + SE;
-                                    this.send(rep);
-                                    break;
-                            }
-                            this.state = STATE_DATA;
-                            this.iac_sb = '';
+                        this.state = STATE_IAC;
+                    } else
+                        data += ch;
+                    break;
+                case STATE_IAC:
+                    switch (ch) {
+                        case WILL:
+                            this.state = STATE_WILL;
                             break;
+                        case WONT:
+                            this.state = STATE_WONT;
+                            break;
+                        case DO:
+                            this.state = STATE_DO;
+                            break;
+                        case DONT:
+                            this.state = STATE_DONT;
+                            break;
+                        case SB:
+                            this.state = STATE_SB;
+                            break;
+                        default:
+                            this.state = STATE_DATA;
+                    }
+                    break;
+                case STATE_WILL:
+                    switch (ch) {
+                        case ECHO:
+                        case SUPRESS_GO_AHEAD:
+                            this.send(IAC + DO + ch);
+                            break;
+                        default:
+                            this.send(IAC + DONT + ch);
+                    }
+                    this.state = STATE_DATA;
+                    break;
+                case STATE_DO:
+                    switch (ch) {
+                        case TERM_TYPE:
+                            this.send(IAC + WILL + ch);
+                            break;
+                        default:
+                            this.send(IAC + WONT + ch);
+                    }
+                    this.state = STATE_DATA;
+                    break;
+                case STATE_DONT:
+                case STATE_WONT:
+                    this.state = STATE_DATA;
+                    break;
+                case STATE_SB: // sub negotiation
+                    this.iac_sb += ch;
+                    if (this.iac_sb.slice(-2) == IAC + SE) {
+                        // end of sub negotiation
+                        switch (this.iac_sb[0]) {
+                            case TERM_TYPE:
+                                // FIXME: support other terminal types
+                                var rep = IAC + SB + TERM_TYPE + IS + 'VT100' + IAC + SE;
+                                this.send(rep);
+                                break;
                         }
-                }
+                        this.state = STATE_DATA;
+                        this.iac_sb = '';
+                        break;
+                    }
             }
-            if (data) {
-                this.listener.onData(this, data);
-                data = '';
-            }
+        }
+        if (data) {
+            this.listener.onData(this, data);
+            data = '';
         }
     },
 
     send: function(str) {
         // added by Hemiola SUN
-        if (!this.ins)
+        if (!this.app.ws)
             return;
 
         this.idleTimeout.cancel();
 
-        this.outs.write(str, str.length);
-        this.outs.flush();
+        if (str)
+            this.app.send(str)
 
-        let temp = this;
-        this.idleTimeout = setTimer(false, function() {
+        var temp = this;
+        this.idleTimeout = this.listener.ui.setTimer(false, function() {
             temp.sendIdleString();
         }, 180000);
     },
 
     convSend: function(unicode_str, charset) {
-        // supports UAO
         var s;
-        // when converting unicode to big5, use UAO.
-        if (charset.toLowerCase() == 'big5') {
-            if (!this.uaoConvLoaded) {
-                Components.utils.import("resource://pcmanfx2/uao.js");
-                this.uaoConvLoaded = true;
-            }
-            s = uaoConv.u2b(unicode_str);
-        } else {
-            this.oconv.charset = charset;
-            s = this.oconv.ConvertFromUnicode(unicode_str);
-        }
+
+        this.oconv.charset = charset;
+        s = this.oconv.ConvertFromUnicode(unicode_str);
+
         if (s)
             this.send(s);
     },

@@ -1,25 +1,8 @@
 // Terminal Screen Buffer, displayed by TermView
 
-const termColors = [
-    // dark
-    '#000000', // black
-    '#800000', // red
-    '#008000', // green
-    '#808000', // yellow
-    '#000080', // blue
-    '#800080', // magenta
-    '#008080', // cyan
-    '#c0c0c0', // light gray
-    // bright
-    '#808080', // gray
-    '#ff0000', // red
-    '#00ff00', // green
-    '#ffff00', // yellow
-    '#0000ff', // blue
-    '#ff00ff', // magenta
-    '#00ffff', // cyan
-    '#ffffff' // white
-];
+'use strict';
+
+var EXPORTED_SYMBOLS = ["TermBuf"];
 
 function TermChar(ch) {
     this.ch = ch;
@@ -61,8 +44,12 @@ TermChar.prototype = {
     }
 };
 
-function TermBuf(cols, rows) {
-    this.view = null;
+function TermBuf(listener) {
+    this.listener = listener;
+    this.view = listener.view;
+    this.view.buf = this;
+    var cols = 80;
+    var rows = 24;
     // numbers of columns and rows
     this.cols = cols;
     this.rows = rows;
@@ -94,10 +81,6 @@ TermBuf.prototype = {
     // From: http://snippets.dzone.com/posts/show/452
     // Modified by Hemiola
     uriRegEx: /(ftp|http|https|telnet):\/\/(\w+:{0,1}\w*@)?([\w\.]+)(:[0-9]+)?([\w#!;:.,\(\)?+=&%@!~\-\/])*/ig,
-
-    setView: function(view) {
-        this.view = view;
-    },
 
     puts: function(str) {
         if (!str)

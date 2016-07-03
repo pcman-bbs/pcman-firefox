@@ -1,9 +1,23 @@
 // Browser utilities, including preferences API access, site-depedent setting through Places API
 
+'use strict';
+
+var EXPORTED_SYMBOLS = ["BrowserUtils"];
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-function BrowserUtils() {
+function BrowserUtils(listener) {
+    this.listener = listener;
+    this.document = listener.global.document;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    this.e10sEnabled = Services.appinfo.processType ===
+        Services.appinfo.PROCESS_TYPE_CONTENT;
+
+    this.menu = null;
+
     // XXX: UNUSED AND UNTESTED
     this.__defineGetter__('_prefBranch', function() {
         delete this['_prefBranch'];
@@ -21,6 +35,14 @@ function BrowserUtils() {
 }
 
 BrowserUtils.prototype = {
+    getElementById: function(id) {
+        return this.document.getElementById(id);
+    },
+
+    getUrl: function() {
+        return this.document.location.host;
+    },
+
     findBookmarkTitle: function(url) {
         // Eat any errors
         try {
@@ -34,21 +56,113 @@ BrowserUtils.prototype = {
             }
         } catch (e) {
             // The URL might be incorrect >"<
-            return e10sEnabled ? url : '';
+            return this.e10sEnabled ? url : '';
         }
+    },
+
+    setConverter: function(callback) {
+        if (!callback)
+            return Cu.unload("resource://pcmanfx2/uao.js");
+        if (typeof(uaoConv) == 'undefined')
+            Cu.import("resource://pcmanfx2/uao.js");
+        this.listener.view.conv = uaoConv;
+        this.listener.conn.oconv = uaoConv;
+        callback();
+    },
+
+    setFocus: function() {
+        this.listener.view.input.focus();
+        this.document.onfocus = this.menu.eventHandler;
+    },
+
+    dispatchCopyEvent: function(target) {
+        var evt = this.document.createEvent("HTMLEvents");
+        evt.initEvent('copy', true, true);
+        target.dispatchEvent(evt);
+    },
+
+    // Fetch title from bookmarks. XXX: Places API can be slow!
+    updateTabTitle: function() {
+        this.document.title = this.findBookmarkTitle(this.document.location.href);
+    },
+
+    updateTabIcon: function(aStatus) {
+        var icon = 'chrome://pcmanfx2/skin/tab-connecting.png';
+        switch (aStatus) {
+            case 'connect':
+                icon = 'chrome://pcmanfx2/skin/tab-connect.png';
+                break;
+            case 'disconnect':
+                icon = 'chrome://pcmanfx2/skin/tab-disconnect.png';
+                break;
+            case 'idle': // Not used yet
+                icon = 'chrome://pcmanfx2/skin/tab-idle.png';
+                break;
+            case 'connecting': // Not used yet
+            default:
+        }
+
+        // Works in GC, IE, and FX 33+
+        var link = this.document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = this.document.createElement("link");
+            link.setAttribute("rel", "icon");
+            link.setAttribute("href", icon);
+            this.document.head.appendChild(link);
+        } else {
+            link.setAttribute("href", icon);
+        }
+
+        if (this.e10sEnabled) return;
+
+        // For FX 3.5-32
+        var rw = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+        var browserIndex = rw.gBrowser.getBrowserIndexForDocument(this.document);
+
+        // Modified by Hemiola 
+        if (browserIndex > -1) {
+            var tab = rw.gBrowser.mTabContainer.childNodes[browserIndex];
+            tab.image = icon;
+            switch (aStatus) {
+                case 'connect':
+                    tab.setAttribute("protected", "true");
+                    tab.setAttribute("locked", "true");
+                    break;
+                case 'disconnect':
+                    tab.removeAttribute("protected");
+                    tab.removeAttribute("locked");
+                    break;
+            }
+        }
+    },
+
+    openURI: function(uri, activate, postData) {
+        if (this.e10sEnabled)
+            return this.listener.global.open(uri, '_blank');
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Ci.nsIWindowMediator);
+        var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
+        var tab = postData ?
+            gBrowser.addTab(uri, gBrowser.currentURI, null, postData) :
+            gBrowser.addTab(uri, gBrowser.currentURI);
+        if (activate)
+            gBrowser.selectedTab = tab;
+    },
+
+    setTimer: function(repeat, func, timelimit) {
+        var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        timer.initWithCallback({ notify: function(timer) { func(); } },
+            timelimit,
+            repeat ? Ci.nsITimer.TYPE_REPEATING_SLACK :
+            Ci.nsITimer.TYPE_ONE_SHOT);
+        return timer;
+    },
+
+    debug: function(text) {
+        if (typeof(Application) != 'undefined')
+            return Application.console.log(text);
+        Cu.import("resource://gre/modules/Console.jsm");
+        return console.log(text);
     }
 };
-
-function openURI(uri, activate, postData) {
-    if (e10sEnabled)
-        return window.open(uri, '_blank');
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-        .getService(Components.interfaces.nsIWindowMediator);
-    var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;
-    var tab = postData ?
-        gBrowser.addTab(uri, gBrowser.currentURI, null, postData) :
-        gBrowser.addTab(uri, gBrowser.currentURI);
-    if (activate)
-        gBrowser.selectedTab = tab;
-}
 

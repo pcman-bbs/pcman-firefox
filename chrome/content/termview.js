@@ -1,25 +1,43 @@
 // Terminal View
 
+'use strict';
+
+var EXPORTED_SYMBOLS = ["TermView"];
+
 var uriColor = '#FF6600'; // color used to draw URI underline
 var selectedStyle = 'rgba(49, 106, 197, 0.6)';
 
-function setTimer(repeat, func, timelimit) {
-    var timer = Components.classes["@mozilla.org/timer;1"]
-        .createInstance(Components.interfaces.nsITimer);
-    timer.initWithCallback({ notify: function(timer) { func(); } },
-        timelimit,
-        repeat ? Components.interfaces.nsITimer.TYPE_REPEATING_SLACK :
-        Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-    return timer;
-}
+var termColors = [
+    // dark
+    '#000000', // black
+    '#800000', // red
+    '#008000', // green
+    '#808000', // yellow
+    '#000080', // blue
+    '#800080', // magenta
+    '#008080', // cyan
+    '#c0c0c0', // light gray
+    // bright
+    '#808080', // gray
+    '#ff0000', // red
+    '#00ff00', // green
+    '#ffff00', // yellow
+    '#0000ff', // blue
+    '#ff00ff', // magenta
+    '#00ffff', // cyan
+    '#ffffff' // white
+];
 
-function TermView(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
+function TermView(listener) {
+    this.listener = listener;
+    this.conn = listener.conn;
+    this.topwin = listener.ui.getElementById("topwin");
+    this.canvas = listener.ui.getElementById("canvas");
+    this.ctx = this.canvas.getContext("2d");
     this.buf = null;
 
     // text selection
-    this.selection = new TermSel(this);
+    this.selection = null;
 
     // Cursor
     this.cursorX = 0;
@@ -28,8 +46,8 @@ function TermView(canvas) {
     this.cursorShow = false; // blinking state of cursor
 
     // Process the input events
-    this.input = document.getElementById('input_proxy');
-    this.inputHandler = new InputHandler(this);
+    this.input = listener.ui.getElementById("input_proxy");
+    this.inputHandler = null;
 
     // initialize
     var ctx = this.ctx;
@@ -37,35 +55,13 @@ function TermView(canvas) {
     this.onResize();
 
     var _this = this;
-    this.blinkTimeout = setTimer(true, function() { _this.onBlink(); }, 600);
+    this.blinkTimeout = listener.ui.setTimer(true, function() {
+        _this.onBlink();
+    }, 600);
 }
 
 TermView.prototype = {
-    conv: {
-        convertStringToUTF8: function(b5, charset, skipCheck, allowSubstitution) {
-            // when converting unicode to big5, use UAO.
-            if (charset.toLowerCase() == 'big5') {
-                if (!this.conn || !this.conn.uaoConvLoaded) {
-                    Components.utils.import("resource://pcmanfx2/uao.js");
-                    if (this.conn) this.conn.uaoConvLoaded = true;
-                }
-                return uaoConv.b2u(b5);
-            }
-            if (!this.conv) {
-                this.conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-                    .getService(Components.interfaces.nsIUTF8ConverterService);
-            }
-            return this.conv.convertStringToUTF8(b5, charset, skipCheck, allowSubstitution);
-        }
-    },
-
-    setBuf: function(buf) {
-        this.buf = buf;
-    },
-
-    setConn: function(conn) {
-        this.conn = conn;
-    },
+    conv: null,
 
     /* update the canvas to reflect the change in TermBuf */
     update: function() {
@@ -93,8 +89,90 @@ TermView.prototype = {
         var line = this.buf.lines[row];
         if (line) {
             var ch = line[col];
-            tihs.doDrawChar(line, ch, row, col, x, y);
+            this.doDrawChar(line, ch, row, col, x, y);
         }
+    },
+
+    // http://www.unicode.org/cgi-bin/UnihanGrid.pl?codepoint=U+2581&useutf8=true
+    tryDrawIdeograph: function(ctx, ch, x, y, w, h) {
+        var code = ch.charCodeAt(0);
+        // We can draw some idographic characters with specialized painting code
+        // to make them prettier.
+        if (code >= 0x2581 && code <= 0x258f) { // ▁▂▃▄▅▆▇█  ▏▎▍▌▋▊▉
+            var idx;
+            if (code < 0x2589) {
+                idx = code - 0x2580;
+                y += h;
+                h *= (idx / 8);
+                y -= h;
+            } else {
+                idx = code - 0x2588; // 0x2589 is ▉
+                // block width = (1 - idx/8) * cell width
+                w *= ((8 - idx) / 8);
+            }
+            ctx.fillRect(x, y, w, h);
+        } else if (code >= 0x25e2 && code <= 0x25e5) { // ◢◣◥◤
+            var x1, y1, x2, y2, x3, y3;
+            switch (code) {
+                case 0x25e2: // ◢
+                    x1 = x;
+                    y1 = y + h;
+                    x2 = x + w;
+                    y2 = y1;
+                    x3 = x2;
+                    y3 = y;
+                    break;
+                case 0x25e3: // ◣
+                    x1 = x;
+                    y1 = y;
+                    x2 = x;
+                    y2 = y + h;
+                    x3 = x + w;
+                    y3 = y2;
+                    break;
+                case 0x25e4: // ◤
+                    x1 = x;
+                    y1 = y;
+                    x2 = x;
+                    y2 = y + h;
+                    x3 = x + w;
+                    y3 = y;
+                    break;
+                case 0x25e5: // ◥
+                    x1 = x;
+                    y1 = y;
+                    x2 = x + w;
+                    y2 = y;
+                    x3 = x2;
+                    y3 = y + h;
+                    break;
+            }
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.fill();
+            ctx.restore();
+        } else if (code == 0x25a0) { // ■  0x25fc and 0x25fe are also black square, but they're not used in big5.
+            //ctx.fillRect(x, y, w, h);
+            return false;
+        } else
+            return false;
+        return true;
+    },
+
+    drawClippedChar: function(ctx, unichar, style, x, y, maxw, clipx, clipy, clipw, cliph) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(clipx, clipy, clipw, cliph);
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = style;
+        // if this character is a CJK ideographic character (填色方塊)
+        if (!this.tryDrawIdeograph(ctx, unichar, x, y, maxw, cliph)) // FIXME: use cliph instead of expected height is not very good.
+            ctx.fillText(unichar, x, y, maxw);
+        ctx.restore();
     },
 
     doDrawChar: function(line, ch, row, col, x, y) {
@@ -143,19 +221,19 @@ TermView.prototype = {
                         if (fg == fg2) { // two bytes have the same fg
                             if (visible1) { // first half is visible
                                 if (visible2) // two bytes are all visible
-                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
+                                    this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
                                 else // only the first half is visible
-                                    drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                    this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             } else if (visible2) { // only the second half is visible
-                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
+                                this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
                             }
                         } else {
                             // draw first half
                             if (visible1)
-                                drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             // draw second half
                             if (visible2)
-                                drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                                this.drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
                         }
                     }
                 }
@@ -172,7 +250,7 @@ TermView.prototype = {
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
             if (ch.ch > ' ' && (!ch.blink || this.blinkShow))
-                drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
+                this.drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
 
             // TODO: draw underline
 
@@ -244,51 +322,56 @@ TermView.prototype = {
         this.conn.convSend(text, 'big5');
     },
 
-    onkeyPress: function(e) {
+    onkeyDown: function(e) {
         // dump('onKeyPress:'+e.charCode + ', '+e.keyCode+'\n');
         var conn = this.conn;
 
         // give keypress control back to Firefox
-        if (!conn.ins)
+        if (!conn.app.ws)
             return;
 
-        if (e.charCode) {
-            // Control characters
-            if (e.ctrlKey && !e.altKey && !e.shiftKey) {
-                // Ctrl + @, NUL, is not handled here
-                if (e.charCode >= 65 && e.charCode <= 90) { // A-Z
-                    if (e10sEnabled && e.charCode == 67 && this.selection.hasSelection())
-                        conn.listener.copy(); // ctrl+c
-                    else
-                        conn.send(String.fromCharCode(e.charCode - 64));
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                } else if (e.charCode >= 97 && e.charCode <= 122) { // a-z
-                    if (e10sEnabled && e.charCode == 99 && this.selection.hasSelection())
-                        conn.listener.copy(); // ctrl+c
-                    else
-                        conn.send(String.fromCharCode(e.charCode - 96));
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
-            } else if (e10sEnabled && e.ctrlKey && !e.altKey && e.shiftKey) {
-                switch (e.charCode) {
-                    case 65: // ctrl+shift+a
-                    case 97: // ctrl+shift+A
-                        conn.listener.selAll();
-                        break;
-                    case 86: // ctrl+shift+v
-                    case 118: // ctrl+shift+V
-                        conn.listener.paste();
-                        break;
-                    default:
-                        return; // don't stopPropagation
-                }
-                e.preventDefault();
-                e.stopPropagation();
+        // Don't handle Shift Ctrl Alt keys for speed
+        if (e.keyCode > 15 && e.keyCode < 19) return;
+
+        // Control characters
+        if (e.ctrlKey && !e.altKey && !e.shiftKey) {
+            if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
+                if (e.keyCode == 67 && this.selection.hasSelection())
+                    conn.listener.copy(); // ctrl+c
+                else
+                    conn.send(String.fromCharCode(e.keyCode - 64));
+            } else if (e.keyCode >= 219 && e.keyCode <= 221) { // [ \ ]
+                conn.send(String.fromCharCode(e.keyCode - 192));
+            } else return; // don't stopPropagation
+            e.preventDefault();
+            e.stopPropagation();
+        } else if (e.ctrlKey && !e.altKey && e.shiftKey) {
+            switch (e.keyCode) {
+                case 50: // @
+                    conn.send(String.fromCharCode(0));
+                    break;
+                case 54: // ^
+                    conn.send(String.fromCharCode(30));
+                    break;
+                case 109: // _
+                    conn.send(String.fromCharCode(31));
+                    break;
+                case 191: // ?
+                    conn.send(String.fromCharCode(127));
+                    break;
+                case 65: // ctrl+shift+a
+                case 97: // ctrl+shift+A
+                    conn.listener.selAll();
+                    break;
+                case 86: // ctrl+shift+v
+                case 118: // ctrl+shift+V
+                    conn.listener.paste();
+                    break;
+                default:
+                    return; // don't stopPropagation
             }
+            e.preventDefault();
+            e.stopPropagation();
         } else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch (e.keyCode) {
                 case 8:
@@ -341,6 +424,7 @@ TermView.prototype = {
     },
 
     onResize: function() {
+        this.canvas.height = this.topwin.clientHeight;
         var ctx = this.ctx;
         this.chh = Math.floor(this.canvas.height / 24);
         var font = this.chh + 'px monospace';
@@ -351,10 +435,9 @@ TermView.prototype = {
         this.chw = Math.round(m.width / 2);
 
         // if overflow, resize canvas again
-        var win = document.getElementById('topwin');
-        var overflowX = (this.chw * 80) - win.clientWidth;
+        var overflowX = (this.chw * 80) - this.topwin.clientWidth;
         if (overflowX > 0) {
-            this.canvas.width = win.clientWidth;
+            this.canvas.width = this.topwin.clientWidth;
             this.chw = Math.floor(this.canvas.width / 80);
             this.chh = this.chw * 2; // is it necessary to measureText?
             font = this.chh + 'px monospace';
@@ -618,7 +701,7 @@ TermView.prototype = {
                 var uri = "";
                 for (var j = uris[i][0]; j < uris[i][1]; j++)
                     uri = uri + this.buf.lines[row][j].ch;
-                openURI(uri);
+                this.conn.listener.ui.openURI(uri);
             }
         }
     },

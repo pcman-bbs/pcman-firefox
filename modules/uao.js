@@ -2,6 +2,8 @@
 // Reference: http://moztw.org/docs/big5/
 // http://moztw.org/docs/big5/table/uao250-u2b.txt
 
+'use strict';
+
 var EXPORTED_SYMBOLS = ["uaoConv"];
 
 var uaoConv = {
@@ -76,6 +78,34 @@ var uaoConv = {
                 ret += ch;
         }
         return ret;
+    },
+
+    conv: null,
+    convertStringToUTF8: function(b5, charset, skipCheck, allowSubstitution) {
+        // when converting unicode to big5, use UAO.
+        if (charset.toLowerCase() == 'big5') {
+            return this.b2u(b5);
+        }
+        if (!this.conv) {
+            this.conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
+                .getService(Components.interfaces.nsIUTF8ConverterService);
+        }
+        return this.conv.convertStringToUTF8(b5, charset, skipCheck, allowSubstitution);
+    },
+
+    oconv: '',
+    charset: '',
+    ConvertFromUnicode: function(unicode_str) {
+        // when converting unicode to big5, use UAO.
+        if (this.charset.toLowerCase() == 'big5') {
+            return this.u2b(unicode_str);
+        }
+        if (!this.oconv) {
+            this.oconv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+        }
+        this.oconv.charset = this.charset;
+        return this.oconv.ConvertFromUnicode(unicode_str);
     }
 };
 

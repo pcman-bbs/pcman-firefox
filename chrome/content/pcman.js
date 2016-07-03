@@ -1,21 +1,32 @@
 // Main Program
 
-function PCMan() {
-    var canvas = document.getElementById("canvas");
-    this.conn = new Conn(this);
-    this.view = new TermView(canvas);
-    this.buf = new TermBuf(80, 24);
-    this.buf.setView(this.view);
-    this.view.setBuf(this.buf);
-    this.view.setConn(this.conn);
-    this.parser = new AnsiParser(this.buf);
-    this.stringBundle = document.getElementById("pcman-string-bundle");
-    this.view.input.controllers.insertControllerAt(0, this.textboxControllers); // to override default commands for inputbox
-    this.os = Components.classes["@mozilla.org/xre/app-info;1"]
-        .getService(Components.interfaces.nsIXULRuntime).OS;
+'use strict';
+
+function PCMan(global) {
+    this.global = global;
+
+    // use it as callback when async loading relevant data of initialization
+    this.onload();
 }
 
 PCMan.prototype = {
+    onload: function() {
+        this.ui = new BrowserUtils(this);
+        this.ui.menu = new BrowserMenus(this.ui);
+        this.conn = new Conn(this);
+        this.conn.app = new AppCom(this.conn);
+        this.view = new TermView(this);
+        this.view.selection = new TermSel(this.view);
+        this.view.inputHandler = new InputHandler(this.view);
+        this.buf = new TermBuf(this);
+        this.parser = new AnsiParser(this.buf);
+        this.stringBundle = this.ui.getElementById("pcman-string-bundle");
+
+        var _this = this;
+        this.ui.setConverter(function() {
+            _this.connect(_this.ui.getUrl());
+        });
+    },
 
     connect: function(url) {
         var parts = url.split(':');
@@ -24,20 +35,25 @@ PCMan.prototype = {
             port = parseInt(parts[1], 10);
         this.conn.connect(parts[0], port);
 
-        let temp = this;
-        this.conn.idleTimeout = setTimer(false, function() {
+        this.ui.updateTabTitle();
+        this.ui.setFocus();
+        this.view.onResize();
+
+        var temp = this;
+        this.conn.idleTimeout = this.ui.setTimer(false, function() {
             temp.conn.sendIdleString();
         }, 180000);
     },
 
     close: function() {
-        if (this.conn.ins) {
+        if (this.conn.app.ws) {
             this.abnormalClose = true;
             this.conn.close();
         }
 
         this.view.removeEventListener();
-        this.view.input.controllers.removeController(this.textboxControllers);
+        this.ui.menu.onClose();
+        this.ui.setConverter();
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
@@ -45,7 +61,7 @@ PCMan.prototype = {
     },
 
     onConnect: function(conn) {
-        this.updateTabIcon('connect');
+        this.ui.updateTabIcon('connect');
     },
 
     onData: function(conn, data) {
@@ -59,170 +75,30 @@ PCMan.prototype = {
         if (this.abnormalClose) return;
 
         /* alert(this.stringBundle.getString("alert_conn_close")); */
-        this.updateTabIcon('disconnect');
+        this.ui.updateTabIcon('disconnect');
     },
 
     copy: function() {
-        var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-            .getService(Components.interfaces.nsIClipboardHelper);
-        if (this.view.selection.hasSelection()) {
-            var text = this.view.selection.getText();
-            if (this.os == 'WINNT') // handle CRLF
-                text = text.replace(/\n/g, "\r\n");
-            clipboardHelper.copyString(text);
-            var evt = document.createEvent("HTMLEvents");
-            evt.initEvent('copy', true, true);
-            this.view.input.dispatchEvent(evt);
-            this.view.selection.cancelSel(true);
-        }
+        if (!this.view.selection.hasSelection())
+            return;
+        var text = this.view.selection.getText();
+
+        var _this = this;
+        this.conn.app.copy(text, function() {
+            _this.ui.dispatchCopyEvent(_this.view.input);
+        });
+        this.view.selection.cancelSel(true);
     },
 
     paste: function() {
-        if (this.conn) {
-            // From: https://developer.mozilla.org/en/Using_the_Clipboard
-            var clip = Components.classes["@mozilla.org/widget/clipboard;1"]
-                .getService(Components.interfaces.nsIClipboard);
-            if (!clip)
-                return false;
-            var trans = Components.classes["@mozilla.org/widget/transferable;1"]
-                .createInstance(Components.interfaces.nsITransferable);
-            if (!trans)
-                return false;
-            trans.addDataFlavor("text/unicode");
-            clip.getData(trans, clip.kGlobalClipboard);
-            var data = {};
-            var len = {};
-            trans.getTransferData("text/unicode", data, len);
-            if (data && data.value) {
-                var s = data.value.QueryInterface(Components.interfaces.nsISupportsString);
-                s = s.data.substring(0, len.value / 2);
-                s = s.replace(/\r\n/g, '\r');
-                s = s.replace(/\n/g, '\r');
-                this.conn.convSend(s, 'big5');
-            }
-        }
+        var _this = this;
+        this.conn.app.paste(function(text) {
+            _this.conn.convSend(text, 'big5');
+        });
     },
 
     selAll: function() {
         this.view.selection.selectAll();
-    },
-
-    textboxControllers: {
-        supportsCommand: function(cmd) {
-            switch (cmd) {
-                case "cmd_undo":
-                case "cmd_redo":
-                case "cmd_cut":
-                case "cmd_copy":
-                case "cmd_paste":
-                case "cmd_selectAll":
-                case "cmd_delete":
-                case "cmd_switchTextDirection":
-                case "cmd_find":
-                case "cmd_findAgain":
-                    return true;
-            }
-        },
-        isCommandEnabled: function(cmd) {
-            switch (cmd) {
-                case "cmd_copy":
-                    return pcman.view.selection.hasSelection();
-                case "cmd_paste":
-                    return true;
-                case "cmd_selectAll":
-                    return true;
-                default:
-                    return false;
-            }
-        },
-        doCommand: function(cmd) {
-            switch (cmd) {
-                case "cmd_undo":
-                case "cmd_redo":
-                case "cmd_cut":
-                    return true;
-                case "cmd_copy":
-                    pcman.copy();
-                    break;
-                case "cmd_paste":
-                    pcman.paste();
-                    break;
-                case "cmd_selectAll":
-                    pcman.selAll();
-                    break;
-                case "cmd_delete":
-                case "cmd_switchTextDirection":
-                case "cmd_find":
-                case "cmd_findAgain":
-                    return true;
-            }
-        },
-        onEvent: function(e) {}
-    },
-
-    updateTabIcon: function(aStatus) {
-        var icon = 'chrome://pcmanfx2/skin/tab-connecting.png';
-        switch (aStatus) {
-            case 'connect':
-                icon = 'chrome://pcmanfx2/skin/tab-connect.png';
-                break;
-            case 'disconnect':
-                icon = 'chrome://pcmanfx2/skin/tab-disconnect.png';
-                break;
-            case 'idle': // Not used yet
-                icon = 'chrome://pcmanfx2/skin/tab-idle.png';
-                break;
-            case 'connecting': // Not used yet
-            default:
-        }
-
-        if (e10sEnabled) {
-            var link = document.querySelector("link[rel~='icon']");
-            if (!link) {
-                link = document.createElement("link");
-                link.setAttribute("rel", "icon");
-                link.setAttribute("href", icon);
-                document.head.appendChild(link);
-            } else {
-                link.setAttribute("href", icon);
-            }
-            return;
-        }
-
-        var rw = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-        var browserIndex = rw.gBrowser.getBrowserIndexForDocument(document);
-
-        // Modified by Hemiola 
-        if (browserIndex > -1) {
-            let tab = rw.gBrowser.mTabContainer.childNodes[browserIndex];
-            tab.image = icon;
-            switch (aStatus) {
-                case 'connect':
-                    tab.setAttribute("protected", "true");
-                    tab.setAttribute("locked", "true");
-                    break;
-                case 'disconnect':
-                    tab.removeAttribute("protected");
-                    tab.removeAttribute("locked");
-                    break;
-            }
-        }
-
-        if (browserIndex > -1) {
-            rw.gBrowser.mTabContainer.childNodes[browserIndex].image = icon;
-        }
-    },
-
-    onMenuPopupShowing: function() {
-        let copy = document.getElementById("popup-copy");
-        let searchMenu = document.getElementById("popup-search");
-        let hasSelection = pcman.view.selection.hasSelection();
-        copy.disabled = !hasSelection;
-        searchMenu.disabled = !hasSelection;
-    },
-
-    debug: function(text) {
-        Application.console.log(text);
     }
 };
 

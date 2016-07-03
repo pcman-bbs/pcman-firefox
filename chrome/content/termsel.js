@@ -1,14 +1,8 @@
 // Manage selected text of TermView
 
-function strStrip(s) {
-    var l = s.length;
-    var i = l - 1;
-    while (i >= 0 && s.charAt(i) == ' ')
-        --i;
-    if (i >= -1 && i < l)
-        return s.substr(0, i + 1);
-    return s;
-}
+'use strict';
+
+var EXPORTED_SYMBOLS = ["TermSel"];
 
 function TermSel(view) {
     this.view = view;
@@ -197,6 +191,17 @@ TermSel.prototype = {
         var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
         var tmp = '';
+
+        var strStrip = function(s) {
+            var l = s.length;
+            var i = l - 1;
+            while (i >= 0 && s.charAt(i) == ' ')
+                --i;
+            if (i >= -1 && i < l)
+                return s.substr(0, i + 1);
+            return s;
+        };
+
         if (this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
             tmp = '';

@@ -3,6 +3,10 @@
 //             http://www.it.usyd.edu.au/~tapted/ansi.html
 //             http://wapedia.mobi/en/ANSI_X3.64
 
+'use strict';
+
+var EXPORTED_SYMBOLS = ["AnsiParser"];
+
 const STATE_TEXT = 0;
 const STATE_ESC = 1;
 const STATE_CSI = 2;
