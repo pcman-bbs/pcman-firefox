@@ -5,7 +5,7 @@ function createMenuItem(label, image) {
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var item = document.createElementNS(XUL_NS, "menuitem"); // create a new XUL menuitem
     item.setAttribute("label", label);
-    if(image) {
+    if (image) {
         item.setAttribute('class', 'menuitem-iconic menuitem-with-favicon');
         item.setAttribute('image', image);
     }
@@ -16,38 +16,38 @@ function createMenuItem(label, image) {
 
 function onSearchItemCommand(event, name) {
     var view = pcman.view;
-    if(!view.selection.hasSelection())
+    if (!view.selection.hasSelection())
         return;
     var text = view.selection.getText();
     var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                            .getService(Components.interfaces.nsIBrowserSearchService);
-    if(searchService) {
+        .getService(Components.interfaces.nsIBrowserSearchService);
+    if (searchService) {
         //var engine = searchService.getEngineByName(name);
         var engine = event.target.engine;
         var submission = engine.getSubmission(text, null);
-        if(submission)
+        if (submission)
             openURI(submission.uri.spec, false, submission.postData);
     }
 }
 
 function createSearchMenu(menu, clear) {
-    while(menu.hasChildNodes()){
+    while (menu.hasChildNodes()) {
         menu.firstChild.removeEventListener('command', onSearchItemCommand, false);
         menu.removeChild(menu.firstChild);
     }
 
-    if(clear) return;
+    if (clear) return;
 
     var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
-                            .getService(Components.interfaces.nsIBrowserSearchService);
-    if(searchService) {
+        .getService(Components.interfaces.nsIBrowserSearchService);
+    if (searchService) {
         var n = {};
         var engines = searchService.getVisibleEngines(n);
         var i;
-        for(i = 0; i < n.value; ++i) {
+        for (i = 0; i < n.value; ++i) {
             var engine = engines[i];
             var item = createMenuItem(engine.name, engine.iconURI ? engine.iconURI.spec : null);
-            var oncommand ={
+            var oncommand = {
                 handleEvent: function(e) {
                     alert(this.engine.name);
                 }
@@ -56,8 +56,9 @@ function createSearchMenu(menu, clear) {
             item.setAttribute("engine", engine);
             //item.setAttribute('oncommand', "onSearchItemCommand(event, '" + engine.name + "');");
             item.addEventListener('command', onSearchItemCommand, false);
-//            item.addEventListener('command', oncommand, false);
+            //item.addEventListener('command', oncommand, false);
             menu.appendChild(item);
         }
     }
 }
+

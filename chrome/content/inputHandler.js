@@ -50,7 +50,7 @@ InputHandler.prototype = {
         input.removeEventListener('compositionend', this.composition_end, false);
         removeEventListener('keypress', this.key_press, false);
         input.removeEventListener('input', this.text_input, false);
-        this.compositionEnd({target: {}}); // Hide the input proxy
+        this.compositionEnd({ target: {} }); // Hide the input proxy
     },
 
     compositionStart: function(e) {
@@ -67,11 +67,12 @@ InputHandler.prototype = {
     },
 
     textInput: function(e) {
-        if(this.isComposition) // Fix for FX 12+
+        if (this.isComposition) // Fix for FX 12+
             return;
-        if(e.target.value) {
+        if (e.target.value) {
             this.view.onTextInput(e.target.value);
         }
-        e.target.value='';
+        e.target.value = '';
     }
-}
+};
+

@@ -1,32 +1,31 @@
 // Terminal View
 
-var uriColor='#FF6600'; // color used to draw URI underline
+var uriColor = '#FF6600'; // color used to draw URI underline
 var selectedStyle = 'rgba(49, 106, 197, 0.6)';
 
 function setTimer(repeat, func, timelimit) {
     var timer = Components.classes["@mozilla.org/timer;1"]
-                  .createInstance(Components.interfaces.nsITimer);
-    timer.initWithCallback(
-        { notify: function(timer) { func(); } },
+        .createInstance(Components.interfaces.nsITimer);
+    timer.initWithCallback({ notify: function(timer) { func(); } },
         timelimit,
-        repeat  ? Components.interfaces.nsITimer.TYPE_REPEATING_SLACK
-                : Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        repeat ? Components.interfaces.nsITimer.TYPE_REPEATING_SLACK :
+        Components.interfaces.nsITimer.TYPE_ONE_SHOT);
     return timer;
 }
 
 function TermView(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.buf=null;
+    this.buf = null;
 
     // text selection
     this.selection = new TermSel(this);
 
     // Cursor
-    this.cursorX=0;
-    this.cursorY=0;
-    this.cursorVisible=true; // false to hide the cursor
-    this.cursorShow=false; // blinking state of cursor
+    this.cursorX = 0;
+    this.cursorY = 0;
+    this.cursorVisible = true; // false to hide the cursor
+    this.cursorShow = false; // blinking state of cursor
 
     // Process the input events
     this.input = document.getElementById('input_proxy');
@@ -37,49 +36,49 @@ function TermView(canvas) {
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
 
-    var _this=this;
-    this.blinkTimeout=setTimer(true, function(){_this.onBlink();}, 600);
+    var _this = this;
+    this.blinkTimeout = setTimer(true, function() { _this.onBlink(); }, 600);
 }
 
-TermView.prototype={
+TermView.prototype = {
     conv: {
         convertStringToUTF8: function(b5, charset, skipCheck, allowSubstitution) {
             // when converting unicode to big5, use UAO.
-            if(charset.toLowerCase() == 'big5') {
-                if(!this.conn || !this.conn.uaoConvLoaded) {
+            if (charset.toLowerCase() == 'big5') {
+                if (!this.conn || !this.conn.uaoConvLoaded) {
                     Components.utils.import("resource://pcmanfx2/uao.js");
-                    if(this.conn) this.conn.uaoConvLoaded = true;
+                    if (this.conn) this.conn.uaoConvLoaded = true;
                 }
                 return uaoConv.b2u(b5);
             }
-            if(!this.conv) {
+            if (!this.conv) {
                 this.conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
-                                                .getService(Components.interfaces.nsIUTF8ConverterService);
+                    .getService(Components.interfaces.nsIUTF8ConverterService);
             }
             return this.conv.convertStringToUTF8(b5, charset, skipCheck, allowSubstitution);
         }
     },
 
     setBuf: function(buf) {
-        this.buf=buf;
+        this.buf = buf;
     },
 
     setConn: function(conn) {
-        this.conn=conn;
+        this.conn = conn;
     },
 
     /* update the canvas to reflect the change in TermBuf */
     update: function() {
         var buf = this.buf;
-        if(buf.changed) // content of TermBuf changed
+        if (buf.changed) // content of TermBuf changed
         {
             buf.updateCharAttr(); // prepare TermBuf
             this.redraw(false); // do the redraw
-            buf.changed=false;
+            buf.changed = false;
         }
-        if(buf.posChanged) { // cursor pos changed
+        if (buf.posChanged) { // cursor pos changed
             this.updateCursorPos();
-            buf.posChanged=false;
+            buf.posChanged = false;
         }
     },
 
@@ -92,7 +91,7 @@ TermView.prototype={
 
     drawChar: function(row, col, x, y) {
         var line = this.buf.lines[row];
-        if(line){
+        if (line) {
             var ch = line[col];
             tihs.doDrawChar(line, ch, row, col, x, y);
         }
@@ -101,9 +100,9 @@ TermView.prototype={
     doDrawChar: function(line, ch, row, col, x, y) {
         var chw = this.chw;
         var chh = this.chh;
-        if(!ch.isLeadByte) {
+        if (!ch.isLeadByte) {
             // if this is second byte of DBCS char, draw the first byte together.
-            if(col >=1 && line[col-1].isLeadByte) {
+            if (col >= 1 && line[col - 1].isLeadByte) {
                 --col;
                 x -= chw;
                 ch = line[col];
@@ -114,20 +113,19 @@ TermView.prototype={
         var ctx = this.ctx;
         ctx.save();
 
-        if(ch.isLeadByte) { // first byte of DBCS char
+        if (ch.isLeadByte) { // first byte of DBCS char
             var cols = this.buf.cols;
             ++col;
-            if(col < cols) {
+            if (col < cols) {
                 var ch2 = line[col]; // second byte of DBCS char
                 // draw background color
-                ctx.fillStyle=termColors[bg];
+                ctx.fillStyle = termColors[bg];
                 var bg2 = ch2.getBg();
-                if(bg == bg2) { // two bytes has the same bg
+                if (bg == bg2) { // two bytes has the same bg
                     ctx.fillRect(x, y, chw * 2, chh);
-                }
-                else { // two bytes has different bg
+                } else { // two bytes has different bg
                     ctx.fillRect(x, y, chw, chh); // lead byte
-                    ctx.fillStyle=termColors[bg2];
+                    ctx.fillStyle = termColors[bg2];
                     ctx.fillRect(x + chw, y, chw, chh); // second byte
                 }
                 // draw text
@@ -136,29 +134,27 @@ TermView.prototype={
                 var visible1 = (!ch.blink || this.blinkShow); // ch1 is visible
                 var visible2 = (!ch2.blink || this.blinkShow); // ch2 is visible
                 // don't draw hidden text
-                if(visible1 || visible2) { // at least one of the two bytes should be visible
+                if (visible1 || visible2) { // at least one of the two bytes should be visible
                     var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                    var u = this.conv.convertStringToUTF8(b5, 'big5',  true); // UTF-8
+                    var u = this.conv.convertStringToUTF8(b5, 'big5', true); // UTF-8
 
-                    if(u) { // ch can be converted to valid UTF-8
+                    if (u) { // ch can be converted to valid UTF-8
                         var fg2 = ch2.getFg(); // fg of second byte
-                        if( fg == fg2 ) { // two bytes have the same fg
-                            if(visible1) { // first half is visible
-                                if(visible2) // two bytes are all visible
+                        if (fg == fg2) { // two bytes have the same fg
+                            if (visible1) { // first half is visible
+                                if (visible2) // two bytes are all visible
                                     drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
                                 else // only the first half is visible
                                     drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
-                            }
-                            else if(visible2) { // only the second half is visible
+                            } else if (visible2) { // only the second half is visible
                                 drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
                             }
-                        }
-                        else {
+                        } else {
                             // draw first half
-                            if(visible1)
+                            if (visible1)
                                 drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
                             // draw second half
-                            if(visible2)
+                            if (visible2)
                                 drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
                         }
                     }
@@ -166,83 +162,81 @@ TermView.prototype={
                 // TODO: draw underline
 
                 // draw selected color
-                if(ch.isSelected)
+                if (ch.isSelected)
                     this.drawSelRect(ctx, x, y, chw2, chh);
 
-                line[col].needUpdate=false;
+                line[col].needUpdate = false;
             }
-        }
-        else {
-            ctx.fillStyle=termColors[bg];
+        } else {
+            ctx.fillStyle = termColors[bg];
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
-            if(ch.ch > ' ' && (!ch.blink || this.blinkShow))
+            if (ch.ch > ' ' && (!ch.blink || this.blinkShow))
                 drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
 
             // TODO: draw underline
 
             // draw selected color
-            if(ch.isSelected)
+            if (ch.isSelected)
                 this.drawSelRect(ctx, x, y, chw, chh);
         }
         ctx.restore();
-        ch.needUpdate=false;
+        ch.needUpdate = false;
     },
 
     redraw: function(force) {
-        var cursorShow=this.cursorShow;
-        if(cursorShow)
+        var cursorShow = this.cursorShow;
+        if (cursorShow)
             this.hideCursor();
 
-        var cols=this.buf.cols;
-        var rows=this.buf.rows;
+        var cols = this.buf.cols;
+        var rows = this.buf.rows;
         var ctx = this.ctx;
 
         var lines = this.buf.lines;
 
-        for(var row=0; row<rows; ++row) {
+        for (var row = 0; row < rows; ++row) {
             var chh = this.chh;
-            var y=row * chh;
+            var y = row * chh;
             var x = 0;
             var line = lines[row];
             var lineUpdated = false;
             var chw = this.chw;
-            for(var col=0; col<cols;) {
+            for (var col = 0; col < cols;) {
                 var ch = line[col];
-                if(force || ch.needUpdate) {
+                if (force || ch.needUpdate) {
                     this.doDrawChar(line, ch, row, col, x, y);
                     lineUpdated = true;
                 }
 
-                if(ch.isLeadByte) {
+                if (ch.isLeadByte) {
                     col += 2;
                     x += chw * 2;
-                }
-                else {
+                } else {
                     ++col;
                     x += chw;
                 }
             }
 
             // draw underline for links
-            if(lineUpdated){
-              var uris = line.uris;
-              if(uris){
-                for (var i=0 ; i<uris.length ; i++) {
-                  ctx.save();
-                  ctx.strokeStyle = uriColor;
-                  ctx.lineWidth = 2;
-                  ctx.beginPath();
-                  ctx.lineTo( uris[i][0] * chw, y + chh - 1 );
-                  ctx.lineTo( uris[i][1] * chw, y + chh - 1 );
-                  ctx.stroke();
-                  ctx.restore();
+            if (lineUpdated) {
+                var uris = line.uris;
+                if (uris) {
+                    for (var i = 0; i < uris.length; i++) {
+                        ctx.save();
+                        ctx.strokeStyle = uriColor;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.lineTo(uris[i][0] * chw, y + chh - 1);
+                        ctx.lineTo(uris[i][1] * chw, y + chh - 1);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
                 }
-              }
-              lineUpdated = false;
+                lineUpdated = false;
             }
         }
-        if(cursorShow)
+        if (cursorShow)
             this.showCursor();
     },
 
@@ -253,98 +247,95 @@ TermView.prototype={
     onkeyPress: function(e) {
         // dump('onKeyPress:'+e.charCode + ', '+e.keyCode+'\n');
         var conn = this.conn;
-        
+
         // give keypress control back to Firefox
-        if ( !conn.ins )
-          return;
-          
-        if(e.charCode){
+        if (!conn.ins)
+            return;
+
+        if (e.charCode) {
             // Control characters
-            if(e.ctrlKey && !e.altKey && !e.shiftKey) {
+            if (e.ctrlKey && !e.altKey && !e.shiftKey) {
                 // Ctrl + @, NUL, is not handled here
-                if( e.charCode >= 65 && e.charCode <=90 ) { // A-Z
-                    if(e10sEnabled && e.charCode == 67 && this.selection.hasSelection())
+                if (e.charCode >= 65 && e.charCode <= 90) { // A-Z
+                    if (e10sEnabled && e.charCode == 67 && this.selection.hasSelection())
                         conn.listener.copy(); // ctrl+c
                     else
-                        conn.send( String.fromCharCode(e.charCode - 64) );
+                        conn.send(String.fromCharCode(e.charCode - 64));
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                } else if (e.charCode >= 97 && e.charCode <= 122) { // a-z
+                    if (e10sEnabled && e.charCode == 99 && this.selection.hasSelection())
+                        conn.listener.copy(); // ctrl+c
+                    else
+                        conn.send(String.fromCharCode(e.charCode - 96));
                     e.preventDefault();
                     e.stopPropagation();
                     return;
                 }
-                else if( e.charCode >= 97 && e.charCode <=122 ) { // a-z
-                    if(e10sEnabled && e.charCode == 99 && this.selection.hasSelection())
-                        conn.listener.copy(); // ctrl+c
-                    else
-                        conn.send( String.fromCharCode(e.charCode - 96) );
+            } else if (e10sEnabled && e.ctrlKey && !e.altKey && e.shiftKey) {
+                switch (e.charCode) {
+                    case 65: // ctrl+shift+a
+                    case 97: // ctrl+shift+A
+                        conn.listener.selAll();
+                        break;
+                    case 86: // ctrl+shift+v
+                    case 118: // ctrl+shift+V
+                        conn.listener.paste();
+                        break;
+                    default:
+                        return; // don't stopPropagation
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        } else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
+            switch (e.keyCode) {
+                case 8:
+                    conn.send('\b');
+                    break;
+                case 9:
+                    conn.send('\t');
+                    // don't move input focus to next control
                     e.preventDefault();
                     e.stopPropagation();
-                    return;
-                }
-            }
-            else if(e10sEnabled && e.ctrlKey && !e.altKey && e.shiftKey) {
-                switch(e.charCode) {
-                case 65: // ctrl+shift+a
-                case 97: // ctrl+shift+A
-                    conn.listener.selAll();
                     break;
-                case 86: // ctrl+shift+v
-                case 118: // ctrl+shift+V
-                    conn.listener.paste();
+                case 13:
+                    conn.send('\r');
                     break;
-                default:
-                    return; // don't stopPropagation
-                }
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }
-        else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
-            switch(e.keyCode){
-            case 8:
-                conn.send('\b');
-                break;
-            case 9:
-                conn.send('\t');
-                // don't move input focus to next control
-                e.preventDefault();
-                e.stopPropagation();
-                break;
-            case 13:
-                conn.send('\r');
-                break;
-            case 27: //ESC
-                conn.send('\x1b');
-                break;
-            case 33: //Page Up
-                conn.send('\x1b[5~');
-                break;
-            case 34: //Page Down
-                conn.send('\x1b[6~');
-                break;
-            case 35: //End
-                conn.send('\x1b[4~');
-                break;
-            case 36: //Home
-                conn.send('\x1b[1~');
-                break;
-            case 37: //Arrow Left
-                conn.send('\x1b[D');
-                break;
-            case 38: //Arrow Up
-                conn.send('\x1b[A');
-                break;
-            case 39: //Arrow Right
-                conn.send('\x1b[C');
-                break;
-            case 40: //Arrow Down
-                conn.send('\x1b[B');
-                break;
-            case 45: //Insert
-                conn.send('\x1b[2~');
-                break;
-            case 46: //DEL
-                conn.send('\x1b[3~');
-                break;
+                case 27: //ESC
+                    conn.send('\x1b');
+                    break;
+                case 33: //Page Up
+                    conn.send('\x1b[5~');
+                    break;
+                case 34: //Page Down
+                    conn.send('\x1b[6~');
+                    break;
+                case 35: //End
+                    conn.send('\x1b[4~');
+                    break;
+                case 36: //Home
+                    conn.send('\x1b[1~');
+                    break;
+                case 37: //Arrow Left
+                    conn.send('\x1b[D');
+                    break;
+                case 38: //Arrow Up
+                    conn.send('\x1b[A');
+                    break;
+                case 39: //Arrow Right
+                    conn.send('\x1b[C');
+                    break;
+                case 40: //Arrow Down
+                    conn.send('\x1b[B');
+                    break;
+                case 45: //Insert
+                    conn.send('\x1b[2~');
+                    break;
+                case 46: //DEL
+                    conn.send('\x1b[3~');
+                    break;
             }
         }
     },
@@ -353,114 +344,112 @@ TermView.prototype={
         var ctx = this.ctx;
         this.chh = Math.floor(this.canvas.height / 24);
         var font = this.chh + 'px monospace';
-        ctx.font= font;
-        ctx.textBaseline='top';
+        ctx.font = font;
+        ctx.textBaseline = 'top';
 
-        var m=ctx.measureText('　'); //全形空白
-        this.chw=Math.round(m.width/2);
+        var m = ctx.measureText('　'); //全形空白
+        this.chw = Math.round(m.width / 2);
 
         // if overflow, resize canvas again
         var win = document.getElementById('topwin');
         var overflowX = (this.chw * 80) - win.clientWidth;
-        if(overflowX > 0) {
-          this.canvas.width = win.clientWidth;
-          this.chw = Math.floor(this.canvas.width / 80);
-          this.chh = this.chw*2;  // is it necessary to measureText?
-          font = this.chh + 'px monospace';
-          ctx.font= font;
-          this.canvas.height = this.chh * 24;
+        if (overflowX > 0) {
+            this.canvas.width = win.clientWidth;
+            this.chw = Math.floor(this.canvas.width / 80);
+            this.chh = this.chw * 2; // is it necessary to measureText?
+            font = this.chh + 'px monospace';
+            ctx.font = font;
+            this.canvas.height = this.chh * 24;
         }
 
-        if(this.buf) {
+        if (this.buf) {
             this.canvas.width = this.chw * this.buf.cols;
             // font needs to be reset after resizing canvas
-            ctx.font= font;
-            ctx.textBaseline='top';
+            ctx.font = font;
+            ctx.textBaseline = 'top';
             this.redraw(true);
-        }
-        else {
+        } else {
             // dump(this.chw + ', ' + this.chw * 80 + '\n');
             this.canvas.width = this.chw * 80;
             // font needs to be reset after resizing canvas
-            ctx.font= font;
-            ctx.textBaseline='top';
+            ctx.font = font;
+            ctx.textBaseline = 'top';
         }
 
-        var visible=this.cursorVisible;
-        if(visible)
+        var visible = this.cursorVisible;
+        if (visible)
             this.hideCursor();
 
         this.updateCursorPos();
         // should we set cursor height according to chh?
         this.setCursorSize(this.chw, 2);
 
-        if(visible)
+        if (visible)
             this.showCursor();
     },
 
     // Cursor
-    setCursorSize: function(w, h){
-        var visible=this.cursorVisible;
-        if(visible)
+    setCursorSize: function(w, h) {
+        var visible = this.cursorVisible;
+        if (visible)
             this.hideCursor();
-        this.cursorW=w;
-        this.cursorH=h;
-        if(visible)
+        this.cursorW = w;
+        this.cursorH = h;
+        if (visible)
             this.showCursor();
     },
 
-    updateCursorPos: function(){
-        var visible=this.cursorVisible;
-        if(visible)
+    updateCursorPos: function() {
+        var visible = this.cursorVisible;
+        if (visible)
             this.hideCursor();
-        if(this.buf) {
-            this.cursorX=this.buf.curX * this.chw;
-            this.cursorY=(this.buf.curY + 1)*this.chh - this.cursorH;
+        if (this.buf) {
+            this.cursorX = this.buf.curX * this.chw;
+            this.cursorY = (this.buf.curY + 1) * this.chh - this.cursorH;
+        } else {
+            this.cursorX = 0;
+            this.cursorY = this.chh - this.cursorH;
         }
-        else {
-            this.cursorX=0;
-            this.cursorY=this.chh - this.cursorH;
-        }
-        if(visible)
+        if (visible)
             this.showCursor();
     },
 
     onCompositionStart: function(e) {
         var top = (this.buf.curY + 1) * this.chh;
-        this.input.style.top = (this.canvas.offsetTop + ( top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top )) + 'px';
-        this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw ) + 'px';
+        this.input.style.top = (this.canvas.offsetTop + (top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top)) + 'px';
+        this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw) + 'px';
     },
 
     onCompositionEnd: function(e) {
-      this.input.style.top = '-100px';
+        this.input.style.top = '-100px';
     },
 
-    onBlink: function(){
-        this.blinkShow=!this.blinkShow;
+    onBlink: function() {
+        this.blinkShow = !this.blinkShow;
         var buf = this.buf;
 
         // redraw the canvas first if needed
-        if(buf.changed)
+        if (buf.changed)
             this.update();
 
-        var col, cols=buf.cols;
-        var row, rows=buf.rows;
+        var col, cols = buf.cols;
+        var row, rows = buf.rows;
         var lines = buf.lines;
 
         // FIXME: draw blinking characters
-        for(row = 0; row < rows; ++row) {
+        for (row = 0; row < rows; ++row) {
             var line = lines[row];
-            for(col = 0; col < cols; ++col) {
+            for (col = 0; col < cols; ++col) {
                 var ch = line[col];
-                if(ch.blink)
+                if (ch.blink)
                     ch.needUpdate = true;
                 // two bytes of DBCS chars need to be updated together
-                if(ch.isLeadByte) {
+                if (ch.isLeadByte) {
                     ++col;
-                    if(ch.blink)
+                    if (ch.blink)
                         line[col].needUpdate = true;
                     // only second byte is blinking
-                    else if(line[col].blink) {
+                    else if (line[col].blink) {
                         ch.needUpdate = true;
                         line[col].needUpdate = true;
                     }
@@ -469,113 +458,110 @@ TermView.prototype={
         }
         this.redraw(false);
 
-        if(this.cursorVisible){
-            this.cursorShow=!this.cursorShow;
+        if (this.cursorVisible) {
+            this.cursorShow = !this.cursorShow;
             this.drawCursor();
         }
     },
 
-    showCursor: function(){
-        this.cursorVisible=true;
-        if( !this.cursorShow ){
-            this.cursorShow=true;
+    showCursor: function() {
+        this.cursorVisible = true;
+        if (!this.cursorShow) {
+            this.cursorShow = true;
             this.drawCursor();
         }
     },
 
-    hideCursor: function(){
-        if(this.cursorShow){ // the cursor is currently shown
-            this.cursorShow=false;
+    hideCursor: function() {
+        if (this.cursorShow) { // the cursor is currently shown
+            this.cursorShow = false;
             this.drawCursor();
         }
-        this.cursorVisible=false;
+        this.cursorVisible = false;
     },
 
-    drawCursor: function(){
-        if(this.chh == 0 || this.chw == 0)
+    drawCursor: function() {
+        if (this.chh == 0 || this.chw == 0)
             return;
 
-        var ctx=this.ctx;
+        var ctx = this.ctx;
         var row = Math.floor(this.cursorY / this.chh);
         var col = Math.floor(this.cursorX / this.chw);
 
         // Some BBS allow the cursor outside the screen range
-        if(this.buf && this.buf.cols == col)
+        if (this.buf && this.buf.cols == col)
             return;
 
-        if(this.cursorShow) {
-            if(this.buf) {
+        if (this.cursorShow) {
+            if (this.buf) {
                 var line = this.buf.lines[row];
-                if(!line)
-                    return;
-                var ch=line[col];
-                var fg=ch.getFg();
-                ctx.save();
-                ctx.fillStyle=termColors[fg];
-                ctx.fillRect(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
-                ctx.restore();
-            }
-            else {
-
-            }
-        }
-        else {
-            if(this.buf) {
-                var line = this.buf.lines[row];
-                if(!line)
+                if (!line)
                     return;
                 var ch = line[col];
-                if(!ch.needUpdate)
+                var fg = ch.getFg();
+                ctx.save();
+                ctx.fillStyle = termColors[fg];
+                ctx.fillRect(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
+                ctx.restore();
+            } else {
+
+            }
+        } else {
+            if (this.buf) {
+                var line = this.buf.lines[row];
+                if (!line)
+                    return;
+                var ch = line[col];
+                if (!ch.needUpdate)
                     this.doDrawChar(line, ch, row, col, this.cursorX, row * this.chh);
-                    if(line.uris) { // has URI in this line
-                        var n=line.uris.length;
-                        for(var i=0; i<n;++i) {
-                            var uri=line.uris[i];
-                            if(uri[0] <= col && uri[1] > col) { // the char is part of a URI
-                                // draw underline for URI.
-                                ctx.strokeStyle = uriColor;
-                                ctx.lineWidth = 2;
-                                ctx.beginPath();
-                                var y = (row + 1) * this.chh - 1;
-                                var x = col * this.chw;
-                                ctx.lineTo(x, y);
-                                ctx.lineTo(x + this.chw, y);
-                                ctx.stroke();
-                            }
+                if (line.uris) { // has URI in this line
+                    var n = line.uris.length;
+                    for (var i = 0; i < n; ++i) {
+                        var uri = line.uris[i];
+                        if (uri[0] <= col && uri[1] > col) { // the char is part of a URI
+                            // draw underline for URI.
+                            ctx.strokeStyle = uriColor;
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            var y = (row + 1) * this.chh - 1;
+                            var x = col * this.chw;
+                            ctx.lineTo(x, y);
+                            ctx.lineTo(x + this.chw, y);
+                            ctx.stroke();
                         }
                     }
-            }
-            else {
+                }
+            } else {
 
             }
         }
     },
 
     // convert mouse pointer position (x, y) to (col, row)
-    mouseToColRow: function(cX, cY){
+    mouseToColRow: function(cX, cY) {
         var x = cX - this.canvas.offsetLeft;
         var y = cY - this.canvas.offsetTop;
         var col = Math.floor(x / this.chw);
         var row = Math.floor(y / this.chh);
 
-        if(col < 0)
+        if (col < 0)
             col = 0;
-        else if(col > this.buf.cols)
+        else if (col > this.buf.cols)
             col = this.buf.cols;
 
-        if(row < 0)
+        if (row < 0)
             row = 0;
-        else if(row >= this.buf.rows)
+        else if (row >= this.buf.rows)
             row = this.buf.rows - 1;
 
         // FIXME: we shouldn't select half of a DBCS character
-        return {col: col, row: row};
+        return { col: col, row: row };
     },
 
     onMouseDown: function(event) {
-        if(event.button == 0) { // left button
+        if (event.button == 0) { // left button
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
-            if(!cursor) return;
+            if (!cursor) return;
             // FIXME: only handle left button
             this.selection.selStart(false, cursor.col, cursor.row);
         }
@@ -583,20 +569,21 @@ TermView.prototype={
 
     onMouseMove: function(event) {
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
-        if(!cursor) return;
+        if (!cursor) return;
 
         // handle text selection
-        if(this.selection.isSelecting)
+        if (this.selection.isSelecting)
             this.selection.selUpdate(cursor.col, cursor.row);
 
         // handle cursors for hyperlinks
-        var col = cursor.col, row = cursor.row;
+        var col = cursor.col,
+            row = cursor.row;
         var uris = this.buf.lines[row].uris;
         if (!uris) {
             this.canvas.style.cursor = "default";
             return;
         }
-        for (var i=0;i<uris.length;i++) {
+        for (var i = 0; i < uris.length; i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 this.canvas.style.cursor = "pointer";
                 return
@@ -606,29 +593,30 @@ TermView.prototype={
     },
 
     onMouseUp: function(event) {
-        if(event.button == 0) { // left button
+        if (event.button == 0) { // left button
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
-            if(!cursor) return;
-            if(this.selection.isSelecting)
+            if (!cursor) return;
+            if (this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
         }
     },
 
     onClick: function(event) {
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
-        if(!cursor) return;
+        if (!cursor) return;
 
         // Event dispatching order: mousedown -> mouseup -> click
         // For a common click, previous selection always collapses in mouseup
         if (this.selection.hasSelection()) return;
 
-        var col = cursor.col, row = cursor.row;
+        var col = cursor.col,
+            row = cursor.row;
         var uris = this.buf.lines[row].uris;
         if (!uris) return;
-        for (var i=0;i<uris.length;i++) {
+        for (var i = 0; i < uris.length; i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 var uri = "";
-                for (var j=uris[i][0];j<uris[i][1];j++)
+                for (var j = uris[i][0]; j < uris[i][1]; j++)
                     uri = uri + this.buf.lines[row][j].ch;
                 openURI(uri);
             }
@@ -637,12 +625,12 @@ TermView.prototype={
 
     onDblClick: function(event) {
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
-        if(!cursor) return;
+        if (!cursor) return;
         this.selection.selectWordAt(cursor.col, cursor.row);
     },
 
     updateSel: function() {
-        if(this.buf.changed) // we're in the middle of screen update
+        if (this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;
@@ -650,11 +638,11 @@ TermView.prototype={
         var rows = this.buf.rows;
         var lines = this.buf.lines;
 
-        for(row = 0; row < rows; ++row) {
-            for(col = 0; col < cols; ++col) {
+        for (row = 0; row < rows; ++row) {
+            for (col = 0; col < cols; ++col) {
                 var ch = lines[row][col];
                 var is_sel = this.selection.isCharSelected(col, row);
-                if(is_sel != ch.isSelected) {
+                if (is_sel != ch.isSelected) {
                     ch.isSelected = is_sel;
                     ch.needUpdate = true;
                 }
@@ -666,4 +654,5 @@ TermView.prototype={
     removeEventListener: function() {
         this.inputHandler.unload();
     }
-}
+};
+

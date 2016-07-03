@@ -26,20 +26,21 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/searchmenu.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
     <script type="application/x-javascript">
-    var pcman=null;
+    var pcman = null;
     var e10sEnabled = false;
+
     function setup() {
         Components.utils.import("resource://gre/modules/Services.jsm");
         e10sEnabled = Services.appinfo.processType ===
-        Services.appinfo.PROCESS_TYPE_CONTENT;
-        var url=document.location.host;
-        pcman=new PCMan();
+            Services.appinfo.PROCESS_TYPE_CONTENT;
+        var url = document.location.host;
+        pcman = new PCMan();
         pcman.connect(url);
         // Fetch title from bookmarks. XXX: Places API can be slow!
         var browserutils = new BrowserUtils();
         var topwin = document.getElementById('topwin');
         topwin.setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
-        if(e10sEnabled) {
+        if (e10sEnabled) {
             topwin.removeAttribute('context');
             topwin.removeAttribute('oncontextmenu');
         }
@@ -49,29 +50,31 @@
         resize();
     }
 
-    function set_focus(e) { document.getElementById('input_proxy').focus(); }
+    function set_focus(e) {
+        document.getElementById('input_proxy').focus();
+    }
 
     function finalize() {
         pcman.close();
-        pcman=null;
+        pcman = null;
         document.removeEventListener('focus', set_focus, false);
-        if(e10sEnabled) return;
+        if (e10sEnabled) return;
         createSearchMenu(document.getElementById('search_menu'), true);
     }
 
-    function resize(){
-        var win=document.getElementById('topwin');
-        var canvas=document.getElementById("canvas");
+    function resize() {
+        var win = document.getElementById('topwin');
+        var canvas = document.getElementById("canvas");
         //canvas.width=win.clientWidth;
         //canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
-        canvas.height=win.clientHeight;
+        canvas.height = win.clientHeight;
         pcman.view.onResize();
         // rc=document.getElementById('topwin').getBoundingClientRect();
     }
 
     function prepare_popup(event) {
         var search_menu = document.getElementById('search_menu');
-        if(e10sEnabled) return;
+        if (e10sEnabled) return;
         createSearchMenu(search_menu);
     }
     </script>
