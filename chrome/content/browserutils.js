@@ -34,12 +34,14 @@ BrowserUtils.prototype = {
       }
     } catch (e) {
       // The URL might be incorrect >"<
-      return '';
+      return e10sEnabled ? url : '';
     }
   }
 }
 
 function openURI(uri, activate, postData) {
+    if(e10sEnabled)
+        return window.open(uri, '_blank');
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                 .getService(Components.interfaces.nsIWindowMediator);
     var gBrowser = wm.getMostRecentWindow("navigator:browser").gBrowser;

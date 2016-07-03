@@ -160,10 +160,10 @@ AnsiParser.prototype={
                     // case 'm':
                     // this is the most frequently used. So it's moved to top.
                     case 'r': // FIXME: scroll range
-                        if(!params || params.length == 0) // reset
+                        if(!params || !params[0]) // reset
                             term.setScrollRegion(0, term.rows - 1);
                         else {
-                            if(params.length >= 2)
+                            if(params.length >= 2 && params[1])
                                 term.setScrollRegion(params[0] - 1, params[1] - 1);
                             else
                                 term.setScrollRegion(0, params[0] - 1);
@@ -202,6 +202,12 @@ AnsiParser.prototype={
                                 term.lineFeed();
                                 term.carriageReturn();
                                 break;
+                            default:
+                                dump("C1 control char ESC " + ch + "is not handled\n");
+                                break;
+                        };
+                    } else { // Other control chars
+                        switch(ch) {
                             case '7':
                                 term.saveCursor();
                                 break;
@@ -209,7 +215,7 @@ AnsiParser.prototype={
                                 term.restoreCursor();
                                 break;
                             default:
-                                dump("C1 control char ESC " + ch + "is not handled\n");
+                                dump("Other control char ESC " + ch + "is not handled\n");
                                 break;
                         };
                     }

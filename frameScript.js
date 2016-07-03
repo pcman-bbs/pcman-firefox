@@ -44,6 +44,8 @@
 
 'use strict';
 
+(function contentScriptClosure(cont) {
+
 const RESOURCE_NAME = 'pcmanfx2';
 
 const Cc = Components.classes;
@@ -53,26 +55,15 @@ const Cu = Components.utils;
 Cu.import('resource://gre/modules/Services.jsm');
 
 function log(str) {
-  Cu.import("resource://gre/modules/Console.jsm");
-  console.log(str + '\n');
+  sendSyncMessage(RESOURCE_NAME + ':Parent:obj', {name:'log', args:[str]});
 }
 
-var addonBaseUrl = null;
-var e10sEnabled = false;
-
-function exec(msg) {
-  switch(msg.data.name) {
-    case 'log':
-      return log.apply(null, msg.data.args);
-    case 'addonBaseUrl':
-      return addonBaseUrl;
-    default:
-  }
-}
+var e10sEnabled = Services.appinfo.processType ===
+    Services.appinfo.PROCESS_TYPE_CONTENT;
 
 // quit or refresh tabs after uninstalling or upgrading this addon
 // created by u881831
-function refreshTabs(close) {
+function refreshTabs(cont, close) {
   var doRefreshTabs = function(doc, close) {
     var loc = doc.location;
     var protocol = loc.protocol.toLowerCase();
@@ -83,78 +74,40 @@ function refreshTabs(close) {
         loc.reload();
     }
   };
-  var browserEnumerator = Services.wm.getEnumerator("navigator:browser");
-  while (browserEnumerator.hasMoreElements()) {
-    var tabsBrowser = browserEnumerator.getNext().gBrowser;
-    for (var index = tabsBrowser.browsers.length-1; index >= 0; index--) {
-      var doc = tabsBrowser.getBrowserAtIndex(index).contentDocument;
-      if(doc) // null in multiprocess firefox
-        doRefreshTabs(doc, close);
-    }
-  }
+  doRefreshTabs(cont.document, close);
   // stringbundle is cached by firefox before restarting by default
   Services.strings.flushBundles();
 }
 
-// As of Firefox 13 bootstrapped add-ons don't support automatic registering and
-// unregistering of resource urls and components/contracts. Until then we do
-// it programatically. See ManifestDirective ManifestParser.cpp for support.
-
 function startup(aData, aReason) {
-  // Setup the resource url.
-  var ioService = Services.io;
-  var resProt = ioService.getProtocolHandler('resource')
-                  .QueryInterface(Ci.nsIResProtocolHandler);
-  var aliasURI = ioService.newURI('modules/', 'UTF-8', aData.resourceURI);
-  resProt.setSubstitution(RESOURCE_NAME, aliasURI);
+  if(typeof(RegisterProtocol) == 'object')
+    return;
+  Cu.import('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
+  RegisterProtocol.register('telnet', 'TelnetProtocol.js', sendSyncMessage(RESOURCE_NAME + ':Parent:obj', {name:'addonBaseUrl'}) + 'components/');
 
-  // Load the component and register it.
-  addonBaseUrl = aData.resourceURI.spec;
-
-  Cu.import(addonBaseUrl + 'modules/RegisterProtocol.js');
-  RegisterProtocol.register('telnet', 'TelnetProtocol.js', addonBaseUrl + 'components/');
-  try {
-    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
-                     .getService(Ci.nsIFrameScriptLoader);
-    globalMM.loadFrameScript(addonBaseUrl + 'frameScript.js', true);
-    globalMM.addMessageListener(RESOURCE_NAME + ':Parent:obj', exec);
-    e10sEnabled = true;
-  } catch (ex) {
-  }
-
-  refreshTabs(); // only for upgrading
+  refreshTabs(cont); // only for upgrading
 }
 
 function shutdown(aData, aReason) {
-  if (aReason == APP_SHUTDOWN)
+  if(typeof(RegisterProtocol) != 'object')
     return;
-
-  if (e10sEnabled) {
-    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
-                     .getService(Ci.nsIMessageBroadcaster);
-    globalMM.broadcastAsyncMessage(RESOURCE_NAME + ':Child:shutdown', aReason);
-    globalMM.removeMessageListener(RESOURCE_NAME + ':Parent:obj', exec);
-    globalMM.removeDelayedFrameScript(addonBaseUrl + 'frameScript.js');
-  }
-
   RegisterProtocol.unregister('telnet', 'TelnetProtocol.js');
-  Cu.unload(addonBaseUrl + 'modules/RegisterProtocol.js');
-
-  var ioService = Services.io;
-  var resProt = ioService.getProtocolHandler('resource')
-                  .QueryInterface(Ci.nsIResProtocolHandler);
-  // Remove the resource url.
-  resProt.setSubstitution(RESOURCE_NAME, null);
+  Cu.unload('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
 
   // quit existing telnet page
-  if(aReason != ADDON_UPGRADE && aReason != ADDON_DOWNGRADE)
-    refreshTabs(true); // uninstall
+  if(aReason != 7/*ADDON_UPGRADE*/ && aReason != 8/*ADDON_DOWNGRADE*/)
+    refreshTabs(cont, true); // uninstall
   //FIXME: close preferences dialogs and others opened by this addon
 }
 
-function install(aData, aReason) {
-}
+if (e10sEnabled) {
+  startup(null, null);
 
-function uninstall(aData, aReason) {
+  var shutdownListener = function (msg) {
+    shutdown(null, msg ? msg.data : 0);
+    removeMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
+  };
+  addMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
 }
+})(content);
 

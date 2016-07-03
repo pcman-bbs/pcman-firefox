@@ -66,7 +66,6 @@ TermView.prototype={
 
     setConn: function(conn) {
         this.conn=conn;
-        this.conv.conn=conn;
     },
 
     /* update the canvas to reflect the change in TermBuf */
@@ -139,8 +138,7 @@ TermView.prototype={
                 // don't draw hidden text
                 if(visible1 || visible2) { // at least one of the two bytes should be visible
                     var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                    var charset = this.conn.listener.prefs.Encoding;
-                    var u = this.conv.convertStringToUTF8(b5, charset, true, true); // UTF-8
+                    var u = this.conv.convertStringToUTF8(b5, 'big5',  true); // UTF-8
 
                     if(u) { // ch can be converted to valid UTF-8
                         var fg2 = ch2.getFg(); // fg of second byte
@@ -249,8 +247,7 @@ TermView.prototype={
     },
 
     onTextInput: function(text) {
-        var charset = this.conn.listener.prefs.Encoding;
-        this.conn.convSend(text, charset);
+        this.conn.convSend(text, 'big5');
     },
 
     onkeyPress: function(e) {
@@ -261,37 +258,50 @@ TermView.prototype={
         if ( !conn.ins )
           return;
           
-        var downloadArticle = this.conn.listener.robot.downloadArticle;
-        if(downloadArticle.isDownloading()) {
-            downloadArticle.stopDownload();
-            return;
-        }
-
         if(e.charCode){
             // Control characters
             if(e.ctrlKey && !e.altKey && !e.shiftKey) {
                 // Ctrl + @, NUL, is not handled here
                 if( e.charCode >= 65 && e.charCode <=90 ) { // A-Z
-                    conn.send( String.fromCharCode(e.charCode - 64) );
+                    if(e10sEnabled && e.charCode == 67 && this.selection.hasSelection())
+                        conn.listener.copy(); // ctrl+c
+                    else
+                        conn.send( String.fromCharCode(e.charCode - 64) );
                     e.preventDefault();
                     e.stopPropagation();
                     return;
                 }
                 else if( e.charCode >= 97 && e.charCode <=122 ) { // a-z
-                    conn.send( String.fromCharCode(e.charCode - 96) );
+                    if(e10sEnabled && e.charCode == 99 && this.selection.hasSelection())
+                        conn.listener.copy(); // ctrl+c
+                    else
+                        conn.send( String.fromCharCode(e.charCode - 96) );
                     e.preventDefault();
                     e.stopPropagation();
                     return;
                 }
             }
+            else if(e10sEnabled && e.ctrlKey && !e.altKey && e.shiftKey) {
+                switch(e.charCode) {
+                case 65: // ctrl+shift+a
+                case 97: // ctrl+shift+A
+                    conn.listener.selAll();
+                    break;
+                case 86: // ctrl+shift+v
+                case 118: // ctrl+shift+V
+                    conn.listener.paste();
+                    break;
+                default:
+                    return; // don't stopPropagation
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            }
         }
         else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch(e.keyCode){
             case 8:
-                if(this.detectDBCS(true))
-                    conn.send('\b\b');
-                else
-                    conn.send('\b');
+                conn.send('\b');
                 break;
             case 9:
                 conn.send('\t');
@@ -300,8 +310,7 @@ TermView.prototype={
                 e.stopPropagation();
                 break;
             case 13:
-                var EnterKey = UnEscapeStr(this.conn.listener.prefs.EnterKey);
-                conn.send(EnterKey);
+                conn.send('\r');
                 break;
             case 27: //ESC
                 conn.send('\x1b');
@@ -319,19 +328,13 @@ TermView.prototype={
                 conn.send('\x1b[1~');
                 break;
             case 37: //Arrow Left
-                if(this.detectDBCS(true))
-                    conn.send('\x1b[D\x1b[D');
-                else
-                    conn.send('\x1b[D');
+                conn.send('\x1b[D');
                 break;
             case 38: //Arrow Up
                 conn.send('\x1b[A');
                 break;
             case 39: //Arrow Right
-                if(this.detectDBCS(false))
-                    conn.send('\x1b[C\x1b[C');
-                else
-                    conn.send('\x1b[C');
+                conn.send('\x1b[C');
                 break;
             case 40: //Arrow Down
                 conn.send('\x1b[B');
@@ -340,33 +343,15 @@ TermView.prototype={
                 conn.send('\x1b[2~');
                 break;
             case 46: //DEL
-                if(this.detectDBCS(false))
-                    conn.send('\x1b[3~\x1b[3~');
-                else
-                    conn.send('\x1b[3~');
+                conn.send('\x1b[3~');
                 break;
             }
         }
     },
 
-    detectDBCS: function(back) {
-        if(!this.conn.listener.prefs.DetectDBCS || !this.buf)
-            return false;
-        var line = this.buf.lines[this.buf.curY];
-        if(back && this.buf.curX > 1)
-            return line[this.buf.curX-2].isLeadByte;
-        if(!back && this.buf.curX < this.buf.cols)
-            return line[this.buf.curX].isLeadByte;
-        return false;
-    },
-
     onResize: function() {
-        var cols = this.buf ? this.buf.cols : 80;
-        var rows = this.buf ? this.buf.rows : 24;
-        var win = document.getElementById('topwin');
-        this.canvas.height = win.clientHeight;
         var ctx = this.ctx;
-        this.chh = Math.floor(this.canvas.height / rows);
+        this.chh = Math.floor(this.canvas.height / 24);
         var font = this.chh + 'px monospace';
         ctx.font= font;
         ctx.textBaseline='top';
@@ -375,18 +360,19 @@ TermView.prototype={
         this.chw=Math.round(m.width/2);
 
         // if overflow, resize canvas again
-        var overflowX = (this.chw * cols) - win.clientWidth;
+        var win = document.getElementById('topwin');
+        var overflowX = (this.chw * 80) - win.clientWidth;
         if(overflowX > 0) {
           this.canvas.width = win.clientWidth;
-          this.chw = Math.floor(this.canvas.width / cols);
+          this.chw = Math.floor(this.canvas.width / 80);
           this.chh = this.chw*2;  // is it necessary to measureText?
           font = this.chh + 'px monospace';
           ctx.font= font;
-          this.canvas.height = this.chh * rows;
+          this.canvas.height = this.chh * 24;
         }
 
         if(this.buf) {
-            this.canvas.width = this.chw * cols;
+            this.canvas.width = this.chw * this.buf.cols;
             // font needs to be reset after resizing canvas
             ctx.font= font;
             ctx.textBaseline='top';
@@ -394,7 +380,7 @@ TermView.prototype={
         }
         else {
             // dump(this.chw + ', ' + this.chw * 80 + '\n');
-            this.canvas.width = this.chw * cols;
+            this.canvas.width = this.chw * 80;
             // font needs to be reset after resizing canvas
             ctx.font= font;
             ctx.textBaseline='top';
@@ -410,21 +396,6 @@ TermView.prototype={
 
         if(visible)
             this.showCursor();
-    },
-
-    setAlign: function() {
-        var HAlignCenter = this.conn.listener.prefs.HAlignCenter;
-        var VAlignCenter = this.conn.listener.prefs.VAlignCenter;
-
-        if(HAlignCenter)
-            document.getElementById('box1').align = "center";
-        else
-            document.getElementById('box1').align = "start";
-
-        if(VAlignCenter)
-            document.getElementById('topwin').pack = "center";
-        else
-            document.getElementById('topwin').pack = "start";
     },
 
     // Cursor
@@ -601,30 +572,12 @@ TermView.prototype={
         return {col: col, row: row};
     },
 
-    checkURI: function(cursor, fullURI) {
-        var col = cursor.col, row = cursor.row;
-        var uris = this.buf.lines[row].uris;
-
-        var length = uris ? uris.length : 0;
-        for (var i=0;i<length;i++) {
-            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-                if(!fullURI)
-                    return true;
-                var uri = "";
-                for (var j=uris[i][0];j<uris[i][1];j++)
-                    uri = uri + this.buf.lines[row][j].ch;
-                return uri;
-            }
-        }
-        return false;
-    },
-
     onMouseDown: function(event) {
         if(event.button == 0) { // left button
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
             if(!cursor) return;
             // FIXME: only handle left button
-            this.selection.selStart(event.shiftKey, cursor.col, cursor.row);
+            this.selection.selStart(false, cursor.col, cursor.row);
         }
     },
 
@@ -637,47 +590,27 @@ TermView.prototype={
             this.selection.selUpdate(cursor.col, cursor.row);
 
         // handle cursors for hyperlinks
-        if(this.checkURI(cursor)) {
-            this.canvas.style.cursor = "pointer";
-            this.buf.mouseBrowsing.setHighlight(-1);
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+        if (!uris) {
+            this.canvas.style.cursor = "default";
             return;
         }
+        for (var i=0;i<uris.length;i++) {
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                this.canvas.style.cursor = "pointer";
+                return
+            }
+        }
         this.canvas.style.cursor = "default";
-
-        // handle mouse browsing
-        if(this.selection.hasSelection())
-            this.buf.mouseBrowsing.setHighlight(-1);
-        else if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
-            this.buf.mouseBrowsing.setCursorState(cursor.col, cursor.row);
     },
 
     onMouseUp: function(event) {
-        var cursor = this.mouseToColRow(event.pageX, event.pageY);
-        if(!cursor) return;
         if(event.button == 0) { // left button
+            var cursor = this.mouseToColRow(event.pageX, event.pageY);
+            if(!cursor) return;
             if(this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
-        } else if(event.button == 1) { // middle button
-            if(this.checkURI(cursor))
-                {} // don't trigger MouseBrowsing or Paste
-            else if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
-                this.conn.send(this.buf.mouseBrowsing.getCommand('back'));
-            else if(this.conn.listener.prefs.PasteAsMidClick)
-                this.conn.listener.paste();
-            else
-                this.conn.listener.paste(true); // selection clipboard
-
-            // a dirty hack for pasting url by middle click
-            // its behavior is up to users (paste or go to new url)
-            if(!this.conn.beforeunload) {
-                var beforeunload = function(e) {
-                    e.preventDefault();
-                };
-                addEventListener('beforeunload', beforeunload, false);
-                setTimer(false, function() {
-                    removeEventListener('beforeunload', beforeunload, false);
-                }, 100);
-            }
         }
     },
 
@@ -687,48 +620,29 @@ TermView.prototype={
 
         // Event dispatching order: mousedown -> mouseup -> click
         // For a common click, previous selection always collapses in mouseup
-        if (this.selection.hasSelection()) {
-            this.buf.mouseBrowsing.selection = true;
-            return;
-        } else if(this.buf.mouseBrowsing.selection) {
-            this.buf.mouseBrowsing.selection = false;
-            var noCmd = true;
-        }
+        if (this.selection.hasSelection()) return;
 
-        var uri = this.checkURI(cursor, true);
-        if(uri) {
-            if(event.button == 0) // left button
-                openURI(uri, this.conn.listener.prefs.NewTab);
-            else if(event.button == 1) // middle button
-                openURI(uri, false);
-            else if(event.button == 2) // right button
-                {} //FIXME: add "Save As", "Copy Link" and so on to context menu
-            return;
+        var col = cursor.col, row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+        if (!uris) return;
+        for (var i=0;i<uris.length;i++) {
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                var uri = "";
+                for (var j=uris[i][0];j<uris[i][1];j++)
+                    uri = uri + this.buf.lines[row][j].ch;
+                openURI(uri);
+            }
         }
-
-        // handle mouse browsing
-        if(event.button != 0) // left buttun;
-            return;
-        this.buf.mouseBrowsing.setCursorState(cursor.col, cursor.row);
-        if(this.conn.listener.prefs.MouseBrowsing > 1) // General and Advance
-            this.conn.send(noCmd ? '' : this.buf.mouseBrowsing.getCommand());
-        else if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
-            this.conn.send(this.buf.mouseBrowsing.getCommand('enter'));
     },
 
     onDblClick: function(event) {
-        if(this.conn.listener.prefs.MouseBrowsing == 1) // Simple
-            return;
-        if(this.conn.listener.prefs.MouseBrowsing > 1 && event.button == 0)
-            return; // General and Advance
-
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if(!cursor) return;
         this.selection.selectWordAt(cursor.col, cursor.row);
     },
 
-    updateSel: function(updateCharAttr) {
-        if(!updateCharAttr && this.buf.changed) // we're in the middle of screen update
+    updateSel: function() {
+        if(this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;
@@ -746,9 +660,7 @@ TermView.prototype={
                 }
             }
         }
-
-        if(!updateCharAttr)
-            this.redraw(false);
+        this.redraw(false);
     },
 
     removeEventListener: function() {

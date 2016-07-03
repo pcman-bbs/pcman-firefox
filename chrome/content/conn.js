@@ -87,8 +87,6 @@ Conn.prototype={
         
         this.connectTime = Date.now();
         this.connectCount++;
-
-        this.closeConfirm();
     },
 
     close: function() {
@@ -102,23 +100,20 @@ Conn.prototype={
         delete this.outs;
         delete this.trans;
 
-        this.closeConfirm();
-
         if(this.listener.abnormalClose)
             return;
 
-        var ReconnectCount = this.listener.prefs.ReconnectCount;
-        if(ReconnectCount && this.connectCount >= ReconnectCount) {
+        if(this.connectCount >= 100) {
             this.connectFailed = true; //FIXME: show something on UI?
             return;
         }
 
         // reconnect automatically if the site is disconnected in 15 seconds
         let time = Date.now();
-        if ( time - this.connectTime < this.listener.prefs.ReconnectTime * 1000 ) {
+        if ( time - this.connectTime < 15000 ) {
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
-            var connectDelay = this.listener.prefs.ReconnectDelay;
+            var connectDelay = 0;
             if(this.reconnectTimer) {
                 this.reconnectTimer.cancel(); // wait for this reconnection
                 delete this.reconnectTimer;
@@ -209,10 +204,6 @@ Conn.prototype={
                     case TERM_TYPE:
                         this.send( IAC + WILL + ch );
                         break;
-                    case NAWS:
-                        this.send( IAC + WILL + ch );
-                        this.sendNaws();
-                        break;
                     default:
                         this.send( IAC + WONT + ch );
                     }
@@ -229,8 +220,7 @@ Conn.prototype={
                         switch(this.iac_sb[0]) {
                         case TERM_TYPE: {
                             // FIXME: support other terminal types
-                            var termType = this.listener.prefs.TermType;
-                            var rep = IAC + SB + TERM_TYPE + IS + termType + IAC + SE;
+                            var rep = IAC + SB + TERM_TYPE + IS + 'VT100' + IAC + SE;
                             this.send( rep );
                             break;
                             }
@@ -248,33 +238,18 @@ Conn.prototype={
         }
     },
 
-    sendNaws: function() {
-        var cols = this.listener.prefs.Cols;
-        var rows = this.listener.prefs.Rows;
-        var nawsStr = String.fromCharCode(Math.floor(cols/256), cols%256, Math.floor(rows/256), rows%256).replace(/(\xff)/g,'\xff\xff');
-        var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
-        this.send( rep );
-    },
-
     send: function(str) {
         // added by Hemiola SUN
         if ( !this.ins )
           return;
 
-        if(this.idleTimeout)
-            this.idleTimeout.cancel();
+        this.idleTimeout.cancel();
 
-        if(str) {
-            this.outs.write(str, str.length);
-            this.outs.flush();
-        }
+        this.outs.write(str, str.length);
+        this.outs.flush();
 
-        if(this.listener.prefs.AntiIdleTime > 0) {
-            let temp = this;
-            this.idleTimeout = setTimer( false, function (){
-                temp.sendIdleString();
-            }, this.listener.prefs.AntiIdleTime * 1000 );
-        }
+        let temp = this;
+        this.idleTimeout = setTimer( false, function (){ temp.sendIdleString(); }, 180000 );
     },
 
     convSend: function(unicode_str, charset) {
@@ -298,53 +273,6 @@ Conn.prototype={
     },
     
     sendIdleString : function () {
-        this.send(UnEscapeStr(this.listener.prefs.AntiIdleStr));
-    },
-
-    closeConfirm: function() {
-        if(this.listener.prefs.AskForClose && this.ins) {
-            //window.onbeforeunload = function() { return document.title; } // Warning in AMO
-            this.beforeunload = function(e) {
-                e.preventDefault();
-            };
-            window.addEventListener('beforeunload', this.beforeunload, false);
-        } else {
-            //window.onbeforeunload = null; // Warning in AMO
-            if(this.beforeunload) {
-                window.removeEventListener('beforeunload', this.beforeunload, false);
-                delete this.beforeunload;
-            }
-        } 
-    },
-
-    showConnTime: function() {
-        var show = this.listener.prefs.ShowConnTimer;
-        if(!document.getElementById('connTimer')) {
-            if(!show)
-                return;
-            var newDiv = document.createElement('div');
-            this.listener.view.input.parentNode.appendChild(newDiv);
-            newDiv.id = 'connTimer';
-            newDiv.style.background = 'white';
-            newDiv.style.position = 'fixed';
-            newDiv.style.bottom = '5px';
-            newDiv.style.right = '5px';
-        } else if(!show) {
-            var connTimerDiv = document.getElementById('connTimer');
-            this.listener.view.input.parentNode.removeChild(connTimerDiv);
-            return;
-        }
-
-        if(!this.ins) {
-            document.getElementById('connTimer').textContent = '0:00:00';
-            return;
-        }
-
-        var connectedTime = Math.floor((Date.now() - this.connectTime)/1000);
-        var s = connectedTime % 60;
-        var m = ((connectedTime - s) / 60) % 60;
-        var h = (connectedTime - s - m * 60) / 3600;
-        var str = h + ':' + ('00'+m).substr(-2) + ':' + ('00'+s).substr(-2);
-        document.getElementById('connTimer').textContent = str;
+        this.send("\x1b[A\x1b[B"); // Arrow Up and Arrow Down
     }
 }

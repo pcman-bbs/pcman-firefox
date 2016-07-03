@@ -5,7 +5,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>pcmanfx2@pcman.org</em:id>
-    <em:version>0.2.6.183</em:version>
+    <em:version>0.2.6.20160626</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into,
@@ -13,13 +13,16 @@
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>3.6</em:minVersion>
-        <em:maxVersion>47.*</em:maxVersion>
+        <em:minVersion>38.0</em:minVersion>
+        <em:maxVersion>51.*</em:maxVersion>
       </Description>
     </em:targetApplication>
     <em:bootstrap>true</em:bootstrap>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
+    <!--
     <em:optionsURL>chrome://pcmanfx2/content/preferences.xul</em:optionsURL>
+    -->
 
     <!-- Front End MetaData -->
     <em:name>PCMan Firefox Extension</em:name>
@@ -40,7 +43,7 @@
             <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
             <em:developer>呂康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
             <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
-	    <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
+            <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
         </Description>
     </em:localized>
 
@@ -53,7 +56,7 @@
             <em:developer>bootleq &lt;bootleq@gmail.com&gt;</em:developer>
             <em:developer>吕康豪 &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</em:developer>
             <em:developer>littlebtc &lt;http://blog.littleb.tc/&gt;</em:developer>
-	    <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
+            <em:developer>u881831 &lt;u881831@hotmail.com&gt;</em:developer>
         </Description>
     </em:localized>
 

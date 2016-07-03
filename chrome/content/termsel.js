@@ -72,71 +72,22 @@ TermSel.prototype={
         this.endCol = col2;
         this.endRow = row2;
 
-        if(this.blockMode) {
-            if(this.startCol > this.endCol) { // swap
-                this.startCol = col2;
-                this.endCol = col1;
-            }
-        }
-
         // ask the term view to redraw selected text
         this.view.updateSel();
     },
 
-    selEnd: function(col, row, refresh) {
+    selEnd: function(col, row) {
         this.selUpdate(col, row);
-        if(refresh) {
-            // updateSel() is called but won't work (buf.changed==true)
-            this.view.updateSel(true); // only update Char Attr
-        }
-
         this.isSelecting = false;
         if ( this.startCol == this.endCol && this.startRow == this.endRow ) {
           this.cancelSel(true);
           return;
         }
-
-        if(this.blockMode) {
-            if(this.startCol == this.endCol) {
-                this.cancelSel(true);
-                return;
-            }
-        }
-
         this.selTrim();
-
-        this.view.conn.listener.copy(true); // selection clipboard
-        if(this.view.conn.listener.prefs.CopyAfterSel)
-            this.view.conn.listener.copy();
     },
 
     selTrim: function() {
         var buf = this.view.buf;
-
-        if(this.blockMode) {
-            for(var row=this.startRow; row<=this.endRow; ++row) {
-                var line = buf.lines[row];
-                var startCol = this.startCol;
-                if(startCol > 0) {
-                    if(line[startCol-1].isLeadByte) {
-                        line[startCol].isSelected = false;
-                        startCol++;
-                    }
-                }
-                var endCol = this.endCol;
-                if(endCol > 0) {
-                    if(line[endCol-1].isLeadByte) {
-                        line[endCol].isSelected = true;
-                        endCol++;
-                    }
-                }
-                if(startCol < endCol) // has visible selection region
-                    var hasSelection = true;
-            }
-            if(!hasSelection)
-                this.cancelSel(true);
-            return;
-        }
 
         // ensure we don't select half of a DBCS character
         var col = this.startCol;
@@ -167,13 +118,8 @@ TermSel.prototype={
 
     // Updating selection range just after termbuf changes
     refreshSel: function() {
-        var prefs = this.view.conn.listener.prefs;
-        if(!prefs.KeepSelAtBufUpd) {
-            this.cancelSel(false);
-            this.view.updateSel(true); // only update Char Attr
-        } else { // Trim the DBCS character again with the updated termbuf
-            this.selEnd(this.realEndCol, this.realEndRow, true);
-        }
+        this.cancelSel(false);
+        this.view.updateSel(true); // only update Char Attr
     },
 
     cancelSel: function(redraw) {
@@ -193,11 +139,6 @@ TermSel.prototype={
             if(this.startCol == this.endCol)
                 return false;
             return row == this.startRow && col >= this.startCol && col < this.endCol;
-        }
-
-        if(this.blockMode) {
-            return this.startRow <= row && row <= this.endRow &&
-                   this.startCol <= col && col < this.endCol;
         }
 
         // if multiple lines are selected
@@ -254,76 +195,42 @@ TermSel.prototype={
     getText: function() {
         if(!this.hasSelection())
             return null;
-
-        if(this.blockMode)
-            return this.getBlockText();
-
         var buf = this.view.buf;
         var lines = buf.lines;
         var row, col;
         var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
         var tmp = '';
-        var TrimTail = this.view.conn.listener.prefs.TrimTail;
         if(this.startRow == this.endRow) { // only one line is selected
             var line = lines[this.startRow];
             tmp = '';
             for(col = this.startCol; col <= endCol; ++col)
                 tmp += line[col].ch;
-            ret += TrimTail ? strStrip(tmp) : tmp;
+            ret += strStrip(tmp);
         }
         else {
             var cols = buf.cols;
             var line = lines[this.startRow];
             for(col = this.startCol; col < cols; ++col)
                 tmp += line[col].ch;
-            ret += TrimTail ? strStrip(tmp) : tmp;
+            ret += strStrip(tmp);
             ret += '\n';
             for(row = this.startRow + 1; row < this.endRow; ++row) {
                 line = lines[row];
                 tmp = '';
                 for(col = 0; col < cols; ++col)
                     tmp += line[col].ch;
-                ret += TrimTail ? strStrip(tmp) : tmp;
+                ret += strStrip(tmp);
                 ret += '\n';
             }
             line = lines[this.endRow];
             tmp = '';
             for(col = 0; col <= endCol; ++col)
                 tmp += line[col].ch;
-            ret += TrimTail ? strStrip(tmp) : tmp;
+            ret += strStrip(tmp);
         }
-        var charset = this.view.conn.listener.prefs.Encoding;
-        ret = this.view.conv.convertStringToUTF8(ret, charset, true, true);
+        ret = this.view.conv.convertStringToUTF8(ret, 'big5',  true);
         return ret;
-    },
-
-    getBlockText: function() {
-        if(this.startCol == this.endCol)
-            return null;
-        var buf = this.view.buf;
-        var lines = buf.lines;
-        var row, col;
-        var startCol = this.startCol;
-        var endCol = this.endCol;
-        var ret = '';
-        var tmp = '';
-        var TrimTail = this.view.conn.listener.prefs.TrimTail;
-        for(row = this.startRow; row <= this.endRow; ++row) {
-            var line = lines[row];
-            tmp = '';
-            for(col = startCol; col < endCol; ++col)
-                tmp += line[col].ch;
-            // Detect DBCS
-            if(startCol > 0 && line[startCol-1].isLeadByte)
-                tmp = tmp.replace(/^./, ' '); // keep the position of selection
-            if(line[endCol-1].isLeadByte)
-                tmp += line[endCol].ch;
-            ret += TrimTail ? strStrip(tmp) : tmp;
-            ret += (row < this.endRow ? '\n' : '');
-        }
-        var charset = this.view.conn.listener.prefs.Encoding;
-        return this.view.conv.convertStringToUTF8(ret, charset, true, true);
     }
 }
 

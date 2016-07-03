@@ -2,33 +2,17 @@
 
 function PCMan() {
     var canvas = document.getElementById("canvas");
-    this.prefs=new PrefHandler(this);
     this.conn=new Conn(this);
     this.view=new TermView(canvas);
-    this.buf=new TermBuf(this.prefs.Cols, this.prefs.Rows);
+    this.buf=new TermBuf(80, 24);
     this.buf.setView(this.view);
     this.view.setBuf(this.buf);
     this.view.setConn(this.conn);
     this.parser=new AnsiParser(this.buf);
-    this.ansiColor=new AnsiColor(this);
-    this.robot=new Robot(this);
-    if(FireGesturesTrail)
-        this.gestures = new FireGesturesTrail(this);
     this.stringBundle = document.getElementById("pcman-string-bundle");
     this.view.input.controllers.insertControllerAt(0, this.textboxControllers);   // to override default commands for inputbox
     this.os = Components.classes["@mozilla.org/xre/app-info;1"]
                  .getService(Components.interfaces.nsIXULRuntime).OS;
-
-    this.prefs.observe(true);
-    this.view.setAlign();
-
-    var _this = this;
-    this.robot.eventListener = function(event) {
-        _this.robot.execExtCommand(event.getData("command"));
-        if(_this.gestures)
-            _this.gestures.cancelAll();
-    }
-    document.addEventListener("FireGesturesCommand", this.robot.eventListener, false);
 }
 
 PCMan.prototype={
@@ -41,18 +25,7 @@ PCMan.prototype={
         this.conn.connect(parts[0], port);
         
         let temp = this;
-        this.connTimer = setTimer( true, function (){
-            temp.conn.showConnTime();
-        }, 1000 );
-
-        this.robot.initialAutoLogin();
-
-        if(this.prefs.AntiIdleTime > 0) {
-            let temp = this;
-            this.conn.idleTimeout = setTimer( false, function (){
-                temp.conn.sendIdleString();
-            }, this.prefs.AntiIdleTime * 1000 );
-        }
+        this.conn.idleTimeout = setTimer( false, function (){ temp.conn.sendIdleString(); }, 180000 );
     },
 
     close: function() {
@@ -63,17 +36,10 @@ PCMan.prototype={
 
         this.view.removeEventListener();
         this.view.input.controllers.removeController(this.textboxControllers);
-        this.prefs.observe(false);
-        if(this.gestures)
-            this.gestures.removeEventListener();
-        document.removeEventListener("FireGesturesCommand", this.robot.eventListener, false);
-
-        this.connTimer.cancel();
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
-        if(this.conn.idleTimeout)
-            this.conn.idleTimeout.cancel();
+        this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {
@@ -94,40 +60,23 @@ PCMan.prototype={
         this.updateTabIcon('disconnect');
     },
 
-    copy: function(selection){
-        if(selection && this.os == 'WINNT')
-            return; // Windows doesn't support selection clipboard
-
+    copy: function(){
         var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                                     .getService(Components.interfaces.nsIClipboardHelper);
         if(this.view.selection.hasSelection()) {
             var text = this.view.selection.getText();
             if(this.os == 'WINNT') // handle CRLF
                 text = text.replace(/\n/g, "\r\n");
-
-            var selClipID = Components.interfaces.nsIClipboard.kSelectionClipboard;
-            if(selection) {
-                clipboardHelper.copyStringToClipboard(text, selClipID);
-                return;
-            }
-
             clipboardHelper.copyString( text );
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent('copy', true, true);
             this.view.input.dispatchEvent(evt);
-            if(this.prefs.ClearCopiedSel)
-                this.view.selection.cancelSel(true);
+            this.view.selection.cancelSel(true);
         }
     },
 
-    paste: function(selection) {
-        if(selection && this.os == 'WINNT')
-            return; // Windows doesn't support selection clipboard
-
+    paste: function() {
         if(this.conn) {
-            if(!selection && this.ansiColor.paste())
-                return;
-
             // From: https://developer.mozilla.org/en/Using_the_Clipboard
             var clip = Components.classes["@mozilla.org/widget/clipboard;1"]
                             .getService(Components.interfaces.nsIClipboard);
@@ -138,10 +87,7 @@ PCMan.prototype={
             if (!trans)
                 return false;
             trans.addDataFlavor("text/unicode");
-            if(selection)
-                clip.getData(trans, clip.kSelectionClipboard);
-            else
-                clip.getData(trans, clip.kGlobalClipboard);
+            clip.getData(trans, clip.kGlobalClipboard);
             var data={};
             var len={};
             trans.getTransferData("text/unicode", data, len);
@@ -150,13 +96,7 @@ PCMan.prototype={
                 s = s.data.substring(0, len.value / 2);
                 s=s.replace(/\r\n/g, '\r');
                 s=s.replace(/\n/g, '\r');
-                s = s.replace(/\r/g, UnEscapeStr(this.prefs.EnterKey));
-                if(s.indexOf('\x1b') < 0 && this.prefs.LineWrap > 0)
-                    s = wrapText(s, this.prefs.LineWrap, UnEscapeStr(this.prefs.EnterKey));
-                //FIXME: stop user from pasting DBCS words with 2-color
-                s = s.replace(/\x1b/g, UnEscapeStr(this.prefs.EscapeString));
-                var charset = this.prefs.Encoding;
-                this.conn.convSend(s, charset);
+                this.conn.convSend(s, 'big5');
             }
         }
     },
@@ -233,6 +173,20 @@ PCMan.prototype={
         case 'connecting':  // Not used yet
         default:
       }
+
+      if(e10sEnabled) {
+        var link = document.querySelector("link[rel~='icon']");
+        if(!link) {
+          link = document.createElement("link");
+          link.setAttribute("rel", "icon");
+          link.setAttribute("href", icon);
+          document.head.appendChild(link);
+        } else {
+          link.setAttribute("href", icon);
+        }
+        return;
+      }
+
       var rw = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("navigator:browser");
       var browserIndex = rw.gBrowser.getBrowserIndexForDocument(document);
 
@@ -259,11 +213,9 @@ PCMan.prototype={
     
     onMenuPopupShowing : function () {
       let copy = document.getElementById("popup-copy");
-      let coloredCopy = document.getElementById("popup-coloredCopy");
       let searchMenu = document.getElementById("popup-search");
       let hasSelection = pcman.view.selection.hasSelection();
       copy.disabled = !hasSelection;
-      coloredCopy.disabled = !hasSelection;
       searchMenu.disabled = !hasSelection;
     },
     

@@ -16,10 +16,6 @@
     <!-- Fix the error message in the error console -->
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
-    <!-- <script type="application/x-javascript" src="chrome://pcmanfx2/content/inifile.js" /> -->
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefdefault.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/contentpref.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefhandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/drawutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
@@ -29,22 +25,24 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/searchmenu.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/stringutil.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/alertService.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiColor.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiFile.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/mouseBrowsing.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/robot.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/FireGesturesTrail.js" />
     <script type="application/x-javascript">
     var pcman=null;
+    var e10sEnabled = false;
     function setup() {
+        Components.utils.import("resource://gre/modules/Services.jsm");
+        e10sEnabled = Services.appinfo.processType ===
+        Services.appinfo.PROCESS_TYPE_CONTENT;
         var url=document.location.host;
         pcman=new PCMan();
         pcman.connect(url);
         // Fetch title from bookmarks. XXX: Places API can be slow!
         var browserutils = new BrowserUtils();
-        document.getElementById('topwin').setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
+        var topwin = document.getElementById('topwin');
+        topwin.setAttribute('title', browserutils.findBookmarkTitle(document.location.href));
+        if(e10sEnabled) {
+            topwin.removeAttribute('context');
+            topwin.removeAttribute('oncontextmenu');
+        }
         document.getElementById('input_proxy').focus();
         //document.onfocus="document.getElementById('input_proxy').focus();";
         document.addEventListener('focus', set_focus, false);
@@ -57,26 +55,24 @@
         pcman.close();
         pcman=null;
         document.removeEventListener('focus', set_focus, false);
+        if(e10sEnabled) return;
         createSearchMenu(document.getElementById('search_menu'), true);
     }
 
     function resize(){
-        //var win=document.getElementById('topwin');
-        //var canvas=document.getElementById("canvas");
+        var win=document.getElementById('topwin');
+        var canvas=document.getElementById("canvas");
         //canvas.width=win.clientWidth;
         //canvas.height=win.clientHeight - document.getElementById("box3").clientHeight;
-        //canvas.height=win.clientHeight;
+        canvas.height=win.clientHeight;
         pcman.view.onResize();
         // rc=document.getElementById('topwin').getBoundingClientRect();
     }
 
     function prepare_popup(event) {
         var search_menu = document.getElementById('search_menu');
+        if(e10sEnabled) return;
         createSearchMenu(search_menu);
-    }
-
-    function sitePref() {
-        window.openDialog("chrome://pcmanfx2/content/preferences.xul", "", "", document.location.href);
     }
     </script>
     <vbox align="center" id='box1'
@@ -85,10 +81,8 @@
         onmouseup="pcman.view.onMouseUp(event);"
         onclick="pcman.view.onClick(event);"
         ondblclick="pcman.view.onDblClick(event);">
-      <html:div>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" ">
       </html:canvas>
-      </html:div>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
         <textbox id="input_proxy"/>
@@ -104,21 +98,12 @@
     <popupset>
       <menupopup id="popup-menu" onpopupshowing="pcman.onMenuPopupShowing();">
         <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="pcman.copy();"/>
-        <menuitem label="&menu_coloredCopy.label;" id="popup-coloredCopy" oncommand="pcman.ansiColor.copy();"/>
         <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="pcman.paste();"/>
         <menuitem label="&menu_selAll.label;" oncommand="pcman.selAll();"/>
         <!-- <menuitem id="search_menu" label="&menu_search.label;"/> -->
         <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
         </menu>
-        <menuseparator/>
-        <menu label="&menu_fileio.label;">
-          <menupopup>
-            <menuitem label="&menu_loadfile.label;" oncommand="pcman.ansiColor.file.openFile();"/>
-            <menuitem label="&menu_savefile.label;" oncommand="pcman.ansiColor.file.savePage();"/>
-          </menupopup>
-        </menu>
-        <menuitem label="&menu_sitepref.label;" oncommand="sitePref();"/>
       </menupopup>
     </popupset>
 

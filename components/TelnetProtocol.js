@@ -94,7 +94,17 @@ Protocol.prototype =
     var ios = Components.classes[kIOSERVICE_CONTRACTID]
                         .getService(nsIIOService);
 
-    return ios.newChannel('chrome://pcmanfx2/content/pcman.xul', null, null);
+    //return ios.newChannel('chrome://pcmanfx2/content/pcman.xul', null, null);
+    return ios.newChannel2(
+      'chrome://pcmanfx2/content/pcman.xul', //aSpec
+      null, //aOriginCharset
+      null, //aBaseURI
+      null, //aLoadingNode
+      Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService(Components.interfaces.nsIScriptSecurityManager).getSystemPrincipal(), //aLoadingPrincipal
+      null, //aTriggeringPrincipal
+      Components.interfaces.nsILoadInfo.SEC_NORMAL, //aSecurityFlags
+      Components.interfaces.nsIContentPolicy.TYPE_OTHER //aContentPolicyType
+    );
   },
 }
 
