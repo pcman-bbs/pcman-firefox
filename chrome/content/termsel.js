@@ -63,6 +63,13 @@ TermSel.prototype = {
         this.endCol = col2;
         this.endRow = row2;
 
+        if (this.blockMode) {
+            if (this.startCol > this.endCol) { // swap
+                this.startCol = col2;
+                this.endCol = col1;
+            }
+        }
+
         // ask the term view to redraw selected text
         this.view.updateSel();
     },
@@ -74,6 +81,16 @@ TermSel.prototype = {
             this.cancelSel(true);
             return;
         }
+
+        if (this.blockMode) {
+            if (this.startCol == this.endCol) {
+                this.cancelSel(true);
+                return;
+            }
+            this.selBlockTrim();
+            return;
+        }
+
         this.selTrim();
     },
 
@@ -96,7 +113,10 @@ TermSel.prototype = {
         }
 
         // fit the real selection on the screen
-        if (this.endCol == buf.cols) this.endCol--;
+        if (this.endCol == buf.cols) {
+            this.endCol--;
+            return;
+        }
         col = this.endCol;
         line = buf.lines[this.endRow];
         if (!line[col].isSelected) {
@@ -107,10 +127,37 @@ TermSel.prototype = {
         }
     },
 
+    selBlockTrim: function() {
+        var buf = this.view.buf;
+
+        this.endCol--;
+        var hasSelection = false;
+        for (var row = this.startRow; row <= this.endRow; ++row) {
+            var line = buf.lines[row];
+            var startCol = this.startCol;
+            if (startCol > 0) {
+                if (line[startCol - 1].isLeadByte) {
+                    line[startCol].isSelected = false;
+                    startCol++;
+                }
+            }
+            var endCol = this.endCol;
+            if (endCol < buf.cols - 1) {
+                if (line[endCol].isLeadByte) {
+                    line[endCol + 1].isSelected = true;
+                    endCol++;
+                }
+            }
+            if (startCol < endCol) // has visible selection region
+                hasSelection = true;
+        }
+        if (!hasSelection)
+            this.cancelSel(true);
+    },
+
     // Updating selection range just after termbuf changes
     refreshSel: function() {
-        this.cancelSel(false);
-        this.view.updateSel(true); // only update Char Attr
+        this.cancelSel(true);
     },
 
     cancelSel: function(redraw) {
@@ -130,6 +177,11 @@ TermSel.prototype = {
             if (this.startCol == this.endCol)
                 return false;
             return row == this.startRow && col >= this.startCol && col < this.endCol;
+        }
+
+        if (this.blockMode) {
+            return this.startRow <= row && row <= this.endRow &&
+                this.startCol <= col && col < this.endCol;
         }
 
         // if multiple lines are selected
@@ -182,54 +234,54 @@ TermSel.prototype = {
         return this.startRow != -1;
     },
 
+    strStrip: function(str) {
+        return str.replace(/ +$/, '');
+    },
+
     getText: function() {
         if (!this.hasSelection())
             return null;
+
+        if (this.blockMode)
+            return this.getBlockText();
+
         var buf = this.view.buf;
-        var lines = buf.lines;
-        var row, col;
         var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
-        var tmp = '';
 
-        var strStrip = function(s) {
-            var l = s.length;
-            var i = l - 1;
-            while (i >= 0 && s.charAt(i) == ' ')
-                --i;
-            if (i >= -1 && i < l)
-                return s.substr(0, i + 1);
-            return s;
-        };
+        if (this.startRow == this.endRow) // only one line is selected
+            return this.strStrip(buf.getRowText(this.startRow, this.startCol, endCol + 1));
 
-        if (this.startRow == this.endRow) { // only one line is selected
-            var line = lines[this.startRow];
-            tmp = '';
-            for (col = this.startCol; col <= endCol; ++col)
-                tmp += line[col].ch;
-            ret += strStrip(tmp);
-        } else {
-            var cols = buf.cols;
-            var line = lines[this.startRow];
-            for (col = this.startCol; col < cols; ++col)
-                tmp += line[col].ch;
-            ret += strStrip(tmp);
-            ret += '\n';
-            for (row = this.startRow + 1; row < this.endRow; ++row) {
-                line = lines[row];
-                tmp = '';
-                for (col = 0; col < cols; ++col)
-                    tmp += line[col].ch;
-                ret += strStrip(tmp);
-                ret += '\n';
+        ret = this.strStrip(buf.getRowText(this.startRow, this.startCol, buf.cols)) + '\n';
+        for (var row = this.startRow + 1; row < this.endRow; ++row)
+            ret += this.strStrip(buf.getRowText(row, 0, buf.cols)) + '\n';
+        ret += this.strStrip(buf.getRowText(this.endRow, 0, endCol + 1));
+
+        return ret;
+    },
+
+    getBlockText: function() {
+        if (this.startCol == this.endCol)
+            return null;
+        var buf = this.view.buf;
+        var lines = buf.lines;
+        var startCol, endCol;
+        var ret = '';
+        for (var row = this.startRow; row <= this.endRow; ++row) {
+            startCol = this.startCol;
+            endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
+            var line = lines[row];
+            // Detect DBCS
+            if (startCol > 0 && line[startCol - 1].isLeadByte) {
+                startCol++;
+                ret += ' '; // keep the position of selection
             }
-            line = lines[this.endRow];
-            tmp = '';
-            for (col = 0; col <= endCol; ++col)
-                tmp += line[col].ch;
-            ret += strStrip(tmp);
+            if (line[endCol].isLeadByte)
+                endCol++;
+            ret += this.strStrip(buf.getRowText(row, startCol, endCol + 1));
+            ret += (row < this.endRow ? '\n' : '');
         }
-        ret = this.view.conv.convertStringToUTF8(ret, 'big5', true);
+
         return ret;
     }
 };

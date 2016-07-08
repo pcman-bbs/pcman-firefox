@@ -93,7 +93,7 @@ var uaoConv = {
         return this.conv.convertStringToUTF8(b5, charset, skipCheck, allowSubstitution);
     },
 
-    oconv: '',
+    oconv: null,
     charset: '',
     ConvertFromUnicode: function(unicode_str) {
         // when converting unicode to big5, use UAO.

@@ -43,6 +43,10 @@ BrowserUtils.prototype = {
         return this.document.location.host;
     },
 
+    i18n: function(str) {
+        this.getElementById("pcman-string-bundle").getString(str);
+    },
+
     findBookmarkTitle: function(url) {
         // Eat any errors
         try {
@@ -67,7 +71,8 @@ BrowserUtils.prototype = {
             Cu.import("resource://pcmanfx2/uao.js");
         this.listener.view.conv = uaoConv;
         this.listener.conn.oconv = uaoConv;
-        callback();
+        if (callback)
+            callback();
     },
 
     setFocus: function() {

@@ -33,11 +33,30 @@ AppCom.prototype.connect = function(host, port) {
         .createInstance(Components.interfaces.nsIBinaryInputStream);
     this.ws.ins.setInputStream(this.ws._ins);
 
+    // data handler
+    var _this = this;
+    var callback = {
+        onStartRequest: function(req, ctx) {
+            _this.conn.onStartRequest();
+        },
+
+        onStopRequest: function(req, ctx, status) {
+            _this.conn.onStopRequest();
+        },
+
+        onDataAvailable: function(req, ctx, ins, off, count) {
+            var content = '';
+            while (count > content.length)
+                content += _this.ws.ins.readBytes(count - content.length);
+            _this.conn.onDataAvailable(content);
+        }
+    };
+
     // data listener
     var pump = Components.classes["@mozilla.org/network/input-stream-pump;1"]
         .createInstance(Components.interfaces.nsIInputStreamPump);
     pump.init(this.ws._ins, -1, -1, 0, 0, false);
-    pump.asyncRead(this.conn, null);
+    pump.asyncRead(callback, null);
     this.ws.ipump = pump;
 };
 
@@ -66,7 +85,8 @@ AppCom.prototype.copy = function(text, callback) {
     if (os == 'WINNT') // handle CRLF
         text = text.replace(/\n/g, "\r\n");
     clipboardHelper.copyString(text);
-    callback();
+    if (callback)
+        callback();
 };
 
 AppCom.prototype.paste = function(callback) {
@@ -92,6 +112,9 @@ AppCom.prototype.paste = function(callback) {
     s = s.data.substring(0, len.value / 2);
     s = s.replace(/\r\n/g, '\r');
     s = s.replace(/\n/g, '\r');
-    callback(s);
+    if (callback)
+        callback(s);
+    else
+        return s;
 };
 

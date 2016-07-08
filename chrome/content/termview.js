@@ -30,7 +30,6 @@ var termColors = [
 
 function TermView(listener) {
     this.listener = listener;
-    this.conn = listener.conn;
     this.topwin = listener.ui.getElementById("topwin");
     this.canvas = listener.ui.getElementById("canvas");
     this.ctx = this.canvas.getContext("2d");
@@ -319,12 +318,11 @@ TermView.prototype = {
     },
 
     onTextInput: function(text) {
-        this.conn.convSend(text, 'big5');
+        this.listener.conn.convSend(text, 'big5');
     },
 
     onkeyDown: function(e) {
-        // dump('onKeyPress:'+e.charCode + ', '+e.keyCode+'\n');
-        var conn = this.conn;
+        var conn = this.listener.conn;
 
         // give keypress control back to Firefox
         if (!conn.app.ws)
@@ -452,7 +450,6 @@ TermView.prototype = {
             ctx.textBaseline = 'top';
             this.redraw(true);
         } else {
-            // dump(this.chw + ', ' + this.chw * 80 + '\n');
             this.canvas.width = this.chw * 80;
             // font needs to be reset after resizing canvas
             ctx.font = font;
@@ -646,7 +643,7 @@ TermView.prototype = {
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
             if (!cursor) return;
             // FIXME: only handle left button
-            this.selection.selStart(false, cursor.col, cursor.row);
+            this.selection.selStart(event.shiftKey, cursor.col, cursor.row);
         }
     },
 
@@ -701,7 +698,7 @@ TermView.prototype = {
                 var uri = "";
                 for (var j = uris[i][0]; j < uris[i][1]; j++)
                     uri = uri + this.buf.lines[row][j].ch;
-                this.conn.listener.ui.openURI(uri);
+                this.listener.ui.openURI(uri);
             }
         }
     },

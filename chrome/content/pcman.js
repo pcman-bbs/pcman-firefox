@@ -20,7 +20,6 @@ PCMan.prototype = {
         this.view.inputHandler = new InputHandler(this.view);
         this.buf = new TermBuf(this);
         this.parser = new AnsiParser(this.buf);
-        this.stringBundle = this.ui.getElementById("pcman-string-bundle");
 
         var _this = this;
         this.ui.setConverter(function() {
@@ -65,16 +64,13 @@ PCMan.prototype = {
     },
 
     onData: function(conn, data) {
-        //alert('data('+data.length +') ' +data);
         this.parser.feed(data); // parse the received data
         this.view.update(); // update the view
-        //alert('end data');
     },
 
     onClose: function(conn) {
         if (this.abnormalClose) return;
 
-        /* alert(this.stringBundle.getString("alert_conn_close")); */
         this.ui.updateTabIcon('disconnect');
     },
 

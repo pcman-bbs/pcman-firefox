@@ -108,22 +108,19 @@ Conn.prototype = {
     },
 
     // data listener
-    onStartRequest: function(req, ctx) {
+    onStartRequest: function() {
         if (!this.isConnected) {
             this.isConnected = true;
         }
         this.listener.onConnect(this);
     },
 
-    onStopRequest: function(req, ctx, status) {
+    onStopRequest: function() {
         this.close();
         this.listener.onClose(this);
     },
 
-    onDataAvailable: function(req, ctx, ins, off, count) {
-        var content = '';
-        while (count > content.length)
-            content += this.app.ws.ins.readBytes(count - content.length);
+    onDataAvailable: function(content) {
         var data = '';
         var n = content.length;
         for (var i = 0; i < n; ++i) {
@@ -176,6 +173,10 @@ Conn.prototype = {
                         case TERM_TYPE:
                             this.send(IAC + WILL + ch);
                             break;
+                        case NAWS: // RFC 1073
+                            this.send(IAC + WILL + ch);
+                            this.sendNaws();
+                            break;
                         default:
                             this.send(IAC + WONT + ch);
                     }
@@ -206,6 +207,14 @@ Conn.prototype = {
             this.listener.onData(this, data);
             data = '';
         }
+    },
+
+    sendNaws: function() {
+        var cols = 80;
+        var rows = 24;
+        var nawsStr = String.fromCharCode(cols >> 8, cols % 256, rows >> 8, rows % 256).replace(/(\xff)/g, '\xff\xff');
+        var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
+        this.send(rep);
     },
 
     send: function(str) {
