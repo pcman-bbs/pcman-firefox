@@ -16,9 +16,13 @@
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserstorage.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsermenus.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsersocket.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefdefault.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/preferences.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefhandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/app.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
@@ -53,6 +57,7 @@
         <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
         </menu>
+        <menuitem label="&menu_sitepref.label;" id="sitePref"/>
       </menupopup>
     </popupset>
 

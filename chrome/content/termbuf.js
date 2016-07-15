@@ -46,8 +46,7 @@ TermChar.prototype = {
 
 function TermBuf(listener) {
     this.listener = listener;
-    this.view = listener.view;
-    this.view.buf = this;
+    this.listener.view.buf = this;
     var cols = 80;
     var rows = 24;
     // numbers of columns and rows
@@ -200,8 +199,8 @@ TermBuf.prototype = {
                 }
             }
         }
-        if (this.view.selection.hasSelection())
-            this.view.selection.refreshSel();
+        if (this.listener.view.selection.hasSelection())
+            this.listener.view.selection.refreshSel();
     },
 
     clear: function(param) {
@@ -515,13 +514,14 @@ TermBuf.prototype = {
         } else colEnd = this.cols;
 
         text = text.slice(colStart, colEnd);
-        var conv = this.view.conv;
+        var conv = this.listener.view.conv;
+        var charset = this.listener.prefs.get('Encoding');
         return text.map(function(c, col, line) {
             if (!c.isLeadByte) {
                 if (col >= 1 && line[col - 1].isLeadByte) { // second byte of DBCS char
                     var prevC = line[col - 1];
                     var b5 = prevC.ch + c.ch;
-                    return conv.convertStringToUTF8(b5, 'big5', true);
+                    return conv.convertStringToUTF8(b5, charset, true);
                 } else
                     return c.ch;
             }

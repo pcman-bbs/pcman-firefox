@@ -52,7 +52,7 @@ function Conn(listener) {
     this.state = STATE_DATA;
     this.iac_sb = '';
 
-    this.app = null;
+    this.socket = listener.ui.socket;
 }
 
 Conn.prototype = {
@@ -65,17 +65,17 @@ Conn.prototype = {
         }
         this.isConnected = false;
 
-        this.app.connect(host, port);
+        this.socket.connect(this, host, port);
 
         this.connectTime = Date.now();
         this.connectCount++;
     },
 
     close: function() {
-        if (!this.app.ws)
+        if (!this.socket.ws)
             return;
 
-        this.app.onunload();
+        this.socket.onunload();
 
         if (this.listener.abnormalClose)
             return;
@@ -219,13 +219,13 @@ Conn.prototype = {
 
     send: function(str) {
         // added by Hemiola SUN
-        if (!this.app.ws)
+        if (!this.socket.ws)
             return;
 
         this.idleTimeout.cancel();
 
         if (str)
-            this.app.send(str)
+            this.socket.send(str)
 
         var temp = this;
         this.idleTimeout = this.listener.ui.setTimer(false, function() {

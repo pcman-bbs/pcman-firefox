@@ -65,8 +65,7 @@ TermView.prototype = {
     /* update the canvas to reflect the change in TermBuf */
     update: function() {
         var buf = this.buf;
-        if (buf.changed) // content of TermBuf changed
-        {
+        if (buf.changed) { // content of TermBuf changed
             buf.updateCharAttr(); // prepare TermBuf
             this.redraw(false); // do the redraw
             buf.changed = false;
@@ -213,7 +212,8 @@ TermView.prototype = {
                 // don't draw hidden text
                 if (visible1 || visible2) { // at least one of the two bytes should be visible
                     var b5 = ch.ch + ch2.ch; // convert char to UTF-8 before drawing
-                    var u = this.conv.convertStringToUTF8(b5, 'big5', true); // UTF-8
+                    var charset = this.listener.prefs.get('Encoding');
+                    var u = this.conv.convertStringToUTF8(b5, charset, true); // UTF-8
 
                     if (u) { // ch can be converted to valid UTF-8
                         var fg2 = ch2.getFg(); // fg of second byte
@@ -318,14 +318,15 @@ TermView.prototype = {
     },
 
     onTextInput: function(text) {
-        this.listener.conn.convSend(text, 'big5');
+        var charset = this.listener.prefs.get('Encoding');
+        this.listener.conn.convSend(text, charset);
     },
 
     onkeyDown: function(e) {
         var conn = this.listener.conn;
 
         // give keypress control back to Firefox
-        if (!conn.app.ws)
+        if (!conn.socket.ws)
             return;
 
         // Don't handle Shift Ctrl Alt keys for speed
@@ -709,8 +710,8 @@ TermView.prototype = {
         this.selection.selectWordAt(cursor.col, cursor.row);
     },
 
-    updateSel: function() {
-        if (this.buf.changed) // we're in the middle of screen update
+    updateSel: function(force) {
+        if (!force && this.buf.changed) // we're in the middle of screen update
             return;
 
         var col, row;
@@ -728,7 +729,8 @@ TermView.prototype = {
                 }
             }
         }
-        this.redraw(false);
+        if (!this.buf.changed)
+            this.redraw(false);
     },
 
     removeEventListener: function() {

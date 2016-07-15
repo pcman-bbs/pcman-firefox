@@ -157,7 +157,8 @@ TermSel.prototype = {
 
     // Updating selection range just after termbuf changes
     refreshSel: function() {
-        this.cancelSel(true);
+        this.cancelSel(false);
+        this.view.updateSel(true); // force updating even if buf.changed == true
     },
 
     cancelSel: function(redraw) {

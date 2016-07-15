@@ -1,0 +1,19 @@
+<!ENTITY options_pcmanoptions.label "PCMan 選項">
+<!ENTITY options_sitesetting.label "個別站台設定">
+<!ENTITY options_default.label "預設站台">
+<!ENTITY options_address.label "站台位址：">
+<!ENTITY options_add.label "新增站台">
+<!ENTITY options_del.label "移除站台">
+<!ENTITY options_general.label "一般">
+<!ENTITY options_about.label "關於">
+<!ENTITY options_codepage.label "編碼：">
+<!ENTITY appName.label "PCMan Firefox 擴充套件">
+<!ENTITY appDesc.label "專為 BBS 瀏覽設計，採 GNU/GPL 授權的 telnet 連線程式套件">
+<!ENTITY options_creator.label "作者：洪任諭">
+<!ENTITY options_committer.label "以及協助開發 pcmanfx 計畫的人員">
+<!ENTITY options_bbsfox.label "部分程式碼參考自 BBSFOX ，作者是：">
+<!ENTITY options_download.label "下載網址">
+<!ENTITY options_downloadurl.label "https://addons.mozilla.org/zh-TW/firefox/addon/pcman-bbs-extension/">
+<!ENTITY options_homepage.label "網站首頁">
+<!ENTITY options_reportbug.label "回報錯誤">
+

@@ -1,0 +1,19 @@
+<!ENTITY options_pcmanoptions.label "PCMan Options">
+<!ENTITY options_sitesetting.label "Site settings">
+<!ENTITY options_default.label "Default">
+<!ENTITY options_address.label "Site Address:">
+<!ENTITY options_add.label "Create">
+<!ENTITY options_del.label "Remove">
+<!ENTITY options_general.label "General">
+<!ENTITY options_about.label "About">
+<!ENTITY options_codepage.label "Codepage:">
+<!ENTITY appName.label "PCMan Firefox Extension">
+<!ENTITY appDesc.label "A GNU/GPL telnet client extension specifically designed for BBS browsing.">
+<!ENTITY options_creator.label "Author:">
+<!ENTITY options_committer.label "And the committers of the pcmanfx project:">
+<!ENTITY options_bbsfox.label "Some of the codes are from BBSFOX written by">
+<!ENTITY options_download.label "Download">
+<!ENTITY options_downloadurl.label "https://addons.mozilla.org/en-US/firefox/addon/pcman-bbs-extension/">
+<!ENTITY options_homepage.label "Homepage">
+<!ENTITY options_reportbug.label "Report Bugs">
+

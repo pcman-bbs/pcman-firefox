@@ -12,6 +12,7 @@ function BrowserMenus(ui) {
     ui.getElementById('popup-copy').addEventListener("command", this.eventHandler, false);
     ui.getElementById('popup-paste').addEventListener("command", this.eventHandler, false);
     ui.getElementById('popup-selAll').addEventListener("command", this.eventHandler, false);
+    ui.getElementById('sitePref').addEventListener("command", this.eventHandler, false);
     ui.getElementById('input_proxy').controllers.insertControllerAt(0, this.textboxControllers); // to override default commands for inputbox
     if (ui.e10sEnabled) {
         ui.getElementById('topwin').removeAttribute('context');
@@ -84,6 +85,7 @@ BrowserMenus.prototype = {
         this.ui.getElementById('popup-selAll').removeEventListener("command", this.eventHandler, false)
         this.ui.getElementById('popup-paste').removeEventListener("command", this.eventHandler, false);
         this.ui.getElementById('popup-copy').removeEventListener("command", this.eventHandler, false);
+        this.ui.getElementById('sitePref').removeEventListener("command", this.eventHandler, false);
         this.ui.getElementById('input_proxy').controllers.removeController(this.textboxControllers);
         this.createSearchMenu(this.ui.getElementById('search_menu'), true);
     },

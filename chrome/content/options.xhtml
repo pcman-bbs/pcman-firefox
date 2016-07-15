@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html SYSTEM "chrome://pcmanfx2/locale/pcmanoptions.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>&options_pcmanoptions.label;</title>
+    <link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png"/>
+    <link rel="stylesheet" type="text/css" href="chrome://pcmanfx2/skin/options.css" />
+    <script type="text/javascript" src="chrome://pcmanfx2/content/pcmanoptions.js"></script>
+    <script type="text/javascript" src="chrome://pcmanfx2/content/browserutils.js"></script>
+    <script type="text/javascript" src="chrome://pcmanfx2/content/browserstorage.js"></script>
+    <script type="text/javascript" src="chrome://pcmanfx2/content/prefdefault.js"></script>
+    <script type="text/javascript" src="chrome://pcmanfx2/content/preferences.js"></script>
+</head>
+
+<body>
+    <!-- HTML5 TABS CODE -->
+    <aside>
+        <fieldset>
+            <legend><label>&options_sitesetting.label;</label></legend>
+            <div>
+                <select id="siteList" size="17">
+                    <option selected="true">&options_default.label;</option>
+                </select>
+            </div>
+            <div>
+                <label for="siteAddr">&options_address.label;</label>
+            </div>
+            <div>
+                <!-- 'type="search"' workarounds the TypeError in console -->
+                <input id="siteAddr" type="search"/>
+            </div>
+            <div>
+                <button id="addSite">
+                    <label>&options_add.label;</label>
+                </button>
+                <button id="delSite">
+                    <label>&options_del.label;</label>
+                </button>
+            </div>
+        </fieldset>
+    </aside>
+    <div class="main">
+    <article id="_0" class="tabs">
+        <section class="active">
+            <header>&options_general.label;</header>
+            <div class="content">
+                <div>
+                    <label for="Encoding_0">&options_codepage.label;</label>
+                    <!-- FIXME: Safari support -->
+                    <datalist id="datalist_Encoding_0">
+                        <option>system</option>
+                        <option>big5</option>
+                        <option>gb2312</option>
+                    </datalist>
+                    <input id="Encoding_0" list="datalist_Encoding_0" type="search"/>
+                </div>
+            </div>
+        </section>
+        <section>
+            <header>&options_about.label;</header>
+            <div class="content">
+                <div>
+                    <img src="chrome://pcmanfx2/skin/PCMan.png"/>
+                    <label>&appName.label;</label>
+                    <span class="version"></span>
+                </div>
+                <div>
+                    <label>&appDesc.label;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <label>&options_creator.label;</label>
+                </div>
+                <div>
+                    <label>u881831 &lt;u881831@hotmail.com&gt;</label>
+                </div>
+                <div>
+                    <label>Hong Jen Yee &lt;pcman.tw@gmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <label>&options_committer.label;</label>
+                </div>
+                <div>
+                    <label>bootleq &lt;bootleq@gmail.com&gt;</label>
+                </div>
+                <div>
+                    <label>Kang Hao Lu &lt;http://dig.csail.mit.edu/People/kennyluck#I&gt;</label>
+                </div>
+                <div>
+                    <label>Littlebtc &lt;http://blog.littleb.tc/&gt;</label>
+                </div>
+                <div>
+                    <label>Hemiola SUN &lt;scy.hemi@gmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <label>&options_bbsfox.label;</label>
+                </div>
+                <div>
+                    <label>Ett Chung &lt;ettoolong@hotmail.com&gt;</label>
+                </div>
+                <p> </p>
+                <div>
+                    <a href="&options_downloadurl.label;" target="_blank"><label>&options_download.label;</label></a>
+                    <span>&#8195;</span><!-- emsp -->
+                    <a href="http://code.google.com/p/pcmanfx/" target="_blank"><label>&options_homepage.label;</label></a>
+                    <span>&#8195;</span><!-- emsp -->
+                    <a href="http://code.google.com/p/pcmanfx/issues/list" target="_blank"><label>&options_reportbug.label;</label></a>
+                </div>
+            </div>
+        </section>
+    </article>
+    </div>
+    <!-- /HTML5 TABS CODE -->
+
+    <input id="submit" type="submit"/>
+
+    <script type="text/javascript" src="chrome://pcmanfx2/content/options.js"></script>
+</body>
+</html>
+

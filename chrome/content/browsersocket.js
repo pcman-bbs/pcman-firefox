@@ -2,20 +2,20 @@
 
 'use strict';
 
-var EXPORTED_SYMBOLS = ["AppCom"];
+var EXPORTED_SYMBOLS = ["BrowserSocket"];
 
-function AppCom(conn) {
-    this.conn = conn;
+function BrowserSocket(ui) {
+    this.listener = ui.listener;
     this.ws = null;
     this.onload();
 }
 
-AppCom.prototype.onload = function() {
+BrowserSocket.prototype.onload = function() {
     if (this.ws)
         this.onunload();
 };
 
-AppCom.prototype.connect = function(host, port) {
+BrowserSocket.prototype.connect = function(conn, host, port) {
     if (this.ws)
         this.onunload();
 
@@ -37,18 +37,18 @@ AppCom.prototype.connect = function(host, port) {
     var _this = this;
     var callback = {
         onStartRequest: function(req, ctx) {
-            _this.conn.onStartRequest();
+            conn.onStartRequest();
         },
 
         onStopRequest: function(req, ctx, status) {
-            _this.conn.onStopRequest();
+            conn.onStopRequest();
         },
 
         onDataAvailable: function(req, ctx, ins, off, count) {
             var content = '';
             while (count > content.length)
                 content += _this.ws.ins.readBytes(count - content.length);
-            _this.conn.onDataAvailable(content);
+            conn.onDataAvailable(content);
         }
     };
 
@@ -60,14 +60,14 @@ AppCom.prototype.connect = function(host, port) {
     this.ws.ipump = pump;
 };
 
-AppCom.prototype.send = function(output) {
+BrowserSocket.prototype.send = function(output) {
     if (!this.ws)
         return;
     this.ws.outs.write(output, output.length);
     this.ws.outs.flush();
 };
 
-AppCom.prototype.onunload = function() {
+BrowserSocket.prototype.onunload = function() {
     if (!this.ws)
         return;
     this.ws.ins.close();
@@ -75,7 +75,7 @@ AppCom.prototype.onunload = function() {
     this.ws = null;
 };
 
-AppCom.prototype.copy = function(text, callback) {
+BrowserSocket.prototype.copy = function(text, callback) {
     /*if(!this.ws)
         return;*/
     var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
@@ -89,7 +89,7 @@ AppCom.prototype.copy = function(text, callback) {
         callback();
 };
 
-AppCom.prototype.paste = function(callback) {
+BrowserSocket.prototype.paste = function(callback) {
     /*if(!this.ws)
         return;*/
     // From: https://developer.mozilla.org/en/Using_the_Clipboard

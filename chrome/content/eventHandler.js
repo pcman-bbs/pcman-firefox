@@ -4,7 +4,7 @@ var pcman = null;
 
 function eventHandler(event, target) {
     var targetId = '';
-    if (event.target == window || target == window) targetId = 'topwin';
+    if (event.target == document || target == window) targetId = 'topwin';
     else if (!target) targetId = event.target.id;
     else targetId = target.id;
     switch (targetId) {
@@ -23,10 +23,11 @@ function eventHandler(event, target) {
                     return pcman.view.onResize();
                 case 'contextmenu':
                     return pcman.ui.menu.onMenuPopupShowing();
+                case 'focus':
                 case 'mousedown':
                 case 'mouseup':
                 default:
-                    pcman.view.input.focus();
+                    return pcman.view.input.focus();
             }
             break;
         case 'box1':
@@ -50,20 +51,24 @@ function eventHandler(event, target) {
             return pcman.paste();
         case 'popup-selAll': // event.type == 'command'
             return pcman.selAll();
+        case 'sitePref': // event.type == 'command'
+            return pcman.ui.sitePref();
         default: // !targetId
             if (event.type == 'command') // event.target == searchmenu
-                pcman.ui.menu.onSearchItemCommand(event);
-            else if (event.target == document) // event.type == 'focus'
-                pcman.view.input.focus();
+                return pcman.ui.menu.onSearchItemCommand(event);
     }
 }
 
 /*var modules = {
     import: function() {
         Components.utils.import("chrome://pcmanfx2/content/browserutils.js");
+        Components.utils.import("chrome://pcmanfx2/content/browserstorage.js");
         Components.utils.import("chrome://pcmanfx2/content/browsermenus.js");
+        Components.utils.import("chrome://pcmanfx2/content/browsersocket.js");
+        Components.utils.import("chrome://pcmanfx2/content/prefdefault.js");
+        Components.utils.import("chrome://pcmanfx2/content/preferences.js");
+        Components.utils.import("chrome://pcmanfx2/content/prefhandler.js");
         Components.utils.import("chrome://pcmanfx2/content/conn.js");
-        Components.utils.import("chrome://pcmanfx2/content/app.js");
         Components.utils.import("chrome://pcmanfx2/content/termview.js");
         Components.utils.import("chrome://pcmanfx2/content/termsel.js");
         Components.utils.import("chrome://pcmanfx2/content/inputHandler.js");
@@ -73,9 +78,13 @@ function eventHandler(event, target) {
 
     unload: function() {
         Components.utils.unload("chrome://pcmanfx2/content/browserutils.js");
+        Components.utils.unload("chrome://pcmanfx2/content/browserstorage.js");
         Components.utils.unload("chrome://pcmanfx2/content/browsermenus.js");
+        Components.utils.unload("chrome://pcmanfx2/content/browsersocket.js");
+        Components.utils.unload("chrome://pcmanfx2/content/prefdefault.js");
+        Components.utils.unload("chrome://pcmanfx2/content/preferences.js");
+        Components.utils.unload("chrome://pcmanfx2/content/prefhandler.js");
         Components.utils.unload("chrome://pcmanfx2/content/conn.js");
-        Components.utils.unload("chrome://pcmanfx2/content/app.js");
         Components.utils.unload("chrome://pcmanfx2/content/termview.js");
         Components.utils.unload("chrome://pcmanfx2/content/termsel.js");
         Components.utils.unload("chrome://pcmanfx2/content/inputHandler.js");

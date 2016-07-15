@@ -5,16 +5,23 @@
 function PCMan(global) {
     this.global = global;
 
-    // use it as callback when async loading relevant data of initialization
-    this.onload();
+    this.ui = new BrowserUtils(this);
+    this.ui.storage = new BrowserStorage(this.ui);
+    //this.prefs = new Preferences(this, PrefDefaults);
+    //this.onload();
+    var _this = this;
+    var prefs = new Preferences(this, PrefDefaults, function(prefs) {
+        _this.onload(prefs);
+    });
 }
 
 PCMan.prototype = {
-    onload: function() {
-        this.ui = new BrowserUtils(this);
+    onload: function(prefs) {
+        if (prefs) this.prefs = prefs;
+        this.prefs.handler = new PrefHandler(this.prefs);
         this.ui.menu = new BrowserMenus(this.ui);
+        this.ui.socket = new BrowserSocket(this.ui);
         this.conn = new Conn(this);
-        this.conn.app = new AppCom(this.conn);
         this.view = new TermView(this);
         this.view.selection = new TermSel(this.view);
         this.view.inputHandler = new InputHandler(this.view);
@@ -45,7 +52,7 @@ PCMan.prototype = {
     },
 
     close: function() {
-        if (this.conn.app.ws) {
+        if (this.conn.socket.ws) {
             this.abnormalClose = true;
             this.conn.close();
         }
@@ -53,6 +60,7 @@ PCMan.prototype = {
         this.view.removeEventListener();
         this.ui.menu.onClose();
         this.ui.setConverter();
+        this.prefs.onChanged();
 
         // added by Hemiola SUN 
         this.view.blinkTimeout.cancel();
@@ -80,7 +88,7 @@ PCMan.prototype = {
         var text = this.view.selection.getText();
 
         var _this = this;
-        this.conn.app.copy(text, function() {
+        this.conn.socket.copy(text, function() {
             _this.ui.dispatchCopyEvent(_this.view.input);
         });
         this.view.selection.cancelSel(true);
@@ -88,8 +96,9 @@ PCMan.prototype = {
 
     paste: function() {
         var _this = this;
-        this.conn.app.paste(function(text) {
-            _this.conn.convSend(text, 'big5');
+        this.conn.socket.paste(function(text) {
+            var charset = _this.prefs.get('Encoding');
+            _this.conn.convSend(text, charset);
         });
     },
 

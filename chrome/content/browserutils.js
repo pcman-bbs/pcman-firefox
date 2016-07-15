@@ -16,7 +16,9 @@ function BrowserUtils(listener) {
     this.e10sEnabled = Services.appinfo.processType ===
         Services.appinfo.PROCESS_TYPE_CONTENT;
 
+    this.storage = null;
     this.menu = null;
+    this.socket = null;
 
     // XXX: UNUSED AND UNTESTED
     this.__defineGetter__('_prefBranch', function() {
@@ -43,11 +45,32 @@ BrowserUtils.prototype = {
         return this.document.location.host;
     },
 
-    i18n: function(str) {
+    getSearch: function(key) {
+        var search = this.listener.global.location.search;
+        if (!search)
+            return null;
+        var parameters = {};
+        decodeURIComponent(search).split(/[?|&]/).map(function(s) {
+            if (s.indexOf('=') > 0)
+                parameters[s.split('=')[0]] = s.split('=')[1];
+        });
+        return (key ? parameters[key] : parameters);
+    },
+
+    getVersion: function(callback) {
+        Cu.import("resource://gre/modules/AddonManager.jsm");
+        AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
+            callback(addon.version);
+        });
+    },
+
+    l10n: function(str) {
         this.getElementById("pcman-string-bundle").getString(str);
     },
 
     findBookmarkTitle: function(url) {
+        if (url.search(/.*:\/\/([^\/]*).*/) < 0)
+            url = 'telnet://' + url;
         // Eat any errors
         try {
             var uri = this._ioService.newURI(url, null, null);
@@ -58,19 +81,19 @@ BrowserUtils.prototype = {
             } else {
                 return uri.host;
             }
-        } catch (e) {
+        } catch (e) { // fails in e10s
             // The URL might be incorrect >"<
-            return this.e10sEnabled ? url : '';
+            return url.replace(/.*:\/\/([^\/]*).*/, '$1');
         }
     },
 
     setConverter: function(callback) {
         if (!callback)
-            return Cu.unload("resource://pcmanfx2/uao.js");
-        if (typeof(uaoConv) == 'undefined')
-            Cu.import("resource://pcmanfx2/uao.js");
-        this.listener.view.conv = uaoConv;
-        this.listener.conn.oconv = uaoConv;
+            return Cu.unload("resource://pcmanfx2/uao.js", this);
+        if (typeof(this.uaoConv) == 'undefined')
+            Cu.import("resource://pcmanfx2/uao.js", this);
+        this.listener.view.conv = this.uaoConv;
+        this.listener.conn.oconv = this.uaoConv;
         if (callback)
             callback();
     },
@@ -139,6 +162,11 @@ BrowserUtils.prototype = {
                     break;
             }
         }
+    },
+
+    sitePref: function() {
+        var url = 'chrome://pcmanfx2/content/options.xhtml?url=' + this.getUrl();
+        this.openURI(url, true, null);
     },
 
     openURI: function(uri, activate, postData) {
