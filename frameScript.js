@@ -44,28 +44,27 @@
 
 'use strict';
 
-(function contentScriptClosure(cont) {
+(function contentScriptClosure(content) {
 
-const RESOURCE_NAME = 'pcmanfx2';
+  const RESOURCE_NAME = 'pcmanfx2';
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cu = Components.utils;
 
-Cu.import('resource://gre/modules/Services.jsm');
+  Cu.import('resource://gre/modules/Services.jsm');
 
-function log(str) {
-  sendSyncMessage(RESOURCE_NAME + ':Parent:obj', {name:'log', args:[str]});
-}
+  function log(str) {
+    sendSyncMessage(RESOURCE_NAME + ':Parent:obj', { name: 'log', args: [str] });
+  }
 
-var e10sEnabled = Services.appinfo.processType ===
+  var e10sEnabled = Services.appinfo.processType ===
     Services.appinfo.PROCESS_TYPE_CONTENT;
 
-// quit or refresh tabs after uninstalling or upgrading this addon
-// created by u881831
-function refreshTabs(cont, close) {
-  var doRefreshTabs = function(doc, close) {
-    var loc = doc.location;
+  // quit or refresh tabs after uninstalling or upgrading this addon
+  // created by u881831
+  function refreshTabs(close) {
+    var loc = content.document.location;
     var protocol = loc.protocol.toLowerCase();
     if (protocol == 'telnet:') {
       if (close)
@@ -73,41 +72,43 @@ function refreshTabs(cont, close) {
       else
         loc.reload();
     }
-  };
-  doRefreshTabs(cont.document, close);
-  // stringbundle is cached by firefox before restarting by default
-  Services.strings.flushBundles();
-}
+    // stringbundle is cached by firefox before restarting by default
+    Services.strings.flushBundles();
+  }
 
-function startup(aData, aReason) {
-  if(typeof(RegisterProtocol) == 'object')
-    return;
-  Cu.import('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
-  RegisterProtocol.register('telnet', 'TelnetProtocol.js', sendSyncMessage(RESOURCE_NAME + ':Parent:obj', {name:'addonBaseUrl'}) + 'components/');
+  function startup(aData, aReason) {
+    if (typeof(RegisterProtocol) == 'object')
+      return;
+    Cu.import('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
+    RegisterProtocol.register('telnet', 'TelnetProtocol.js', sendSyncMessage(RESOURCE_NAME + ':Parent:obj', { name: 'addonBaseUrl' }) + 'components/');
 
-  refreshTabs(cont); // only for upgrading
-}
+    refreshTabs(); // only for upgrading
+  }
 
-function shutdown(aData, aReason) {
-  if(typeof(RegisterProtocol) != 'object')
-    return;
-  RegisterProtocol.unregister('telnet', 'TelnetProtocol.js');
-  Cu.unload('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
+  function shutdown(aData, aReason) {
+    if (typeof(RegisterProtocol) != 'object')
+      return;
+    RegisterProtocol.unregister('telnet', 'TelnetProtocol.js');
+    Cu.unload('resource://' + RESOURCE_NAME + '/RegisterProtocol.js');
 
-  // quit existing telnet page
-  if(aReason != 7/*ADDON_UPGRADE*/ && aReason != 8/*ADDON_DOWNGRADE*/)
-    refreshTabs(cont, true); // uninstall
-  //FIXME: close preferences dialogs and others opened by this addon
-}
+    Cu.import('resource://' + RESOURCE_NAME + '/RegisterModule.js');
+    RegisterModule.unload(this);
+    Cu.unload('resource://' + RESOURCE_NAME + '/RegisterModule.js');
 
-if (e10sEnabled) {
-  startup(null, null);
+    // quit existing telnet page
+    if (aReason != 7 /*ADDON_UPGRADE*/ && aReason != 8 /*ADDON_DOWNGRADE*/ )
+      refreshTabs(true); // uninstall
+    //FIXME: close preferences dialogs and others opened by this addon
+  }
 
-  var shutdownListener = function (msg) {
-    shutdown(null, msg ? msg.data : 0);
-    removeMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
-  };
-  addMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
-}
+  if (e10sEnabled) {
+    startup(null, null);
+
+    var shutdownListener = function(msg) {
+      shutdown(null, msg ? msg.data : 0);
+      removeMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
+    };
+    addMessageListener(RESOURCE_NAME + ':Child:shutdown', shutdownListener);
+  }
 })(content);
 

@@ -2,6 +2,12 @@
 
 var pcmanOptions = null;
 
+if(typeof(Components) != 'undefined' && Components.utils) {
+    Components.utils.import("resource://pcmanfx2/RegisterModule.js");
+    RegisterModule.import(window);
+    Components.utils.unload("resource://pcmanfx2/RegisterModule.js");
+}
+
 function eventHandler(event, target) {
     var targetId = '';
     if (event.target == document || target == window) targetId = 'topwin';
@@ -11,13 +17,11 @@ function eventHandler(event, target) {
         case 'topwin':
             switch (event.type) {
                 case 'load':
-                    //modules.import();
                     pcmanOptions = new PCManOptions(window);
                     return;
                 case 'unload':
                     pcmanOptions.close();
                     pcmanOptions = null;
-                    //modules.unload();
                     return;
                 default:
             }
@@ -33,22 +37,6 @@ function eventHandler(event, target) {
         default:
     }
 }
-
-/*var modules = {
-    import: function() {
-        Components.utils.import("chrome://pcmanfx2/content/browserutils.js");
-        Components.utils.import("chrome://pcmanfx2/content/browserstorage.js");
-        Components.utils.import("chrome://pcmanfx2/content/prefdefault.js");
-        Components.utils.import("chrome://pcmanfx2/content/preferences.js");
-    },
-
-    unload: function() {
-        Components.utils.unload("chrome://pcmanfx2/content/browserutils.js");
-        Components.utils.unload("chrome://pcmanfx2/content/browserstorage.js");
-        Components.utils.unload("chrome://pcmanfx2/content/prefdefault.js");
-        Components.utils.unload("chrome://pcmanfx2/content/preferences.js");
-    }
-};*/
 
 window.onload = eventHandler;
 window.onunload = eventHandler;

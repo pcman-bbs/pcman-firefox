@@ -61,7 +61,7 @@ var addonBaseUrl = null;
 var e10sEnabled = false;
 
 function exec(msg) {
-  switch(msg.data.name) {
+  switch (msg.data.name) {
     case 'log':
       return log.apply(null, msg.data.args);
     case 'addonBaseUrl':
@@ -73,23 +73,21 @@ function exec(msg) {
 // quit or refresh tabs after uninstalling or upgrading this addon
 // created by u881831
 function refreshTabs(close) {
-  var doRefreshTabs = function(doc, close) {
-    var loc = doc.location;
-    var protocol = loc.protocol.toLowerCase();
-    if (protocol == 'telnet:') {
-      if (close)
-        loc.href = 'about:blank'; // able to use BACK after reinstalling
-      else
-        loc.reload();
-    }
-  };
   var browserEnumerator = Services.wm.getEnumerator("navigator:browser");
   while (browserEnumerator.hasMoreElements()) {
     var tabsBrowser = browserEnumerator.getNext().gBrowser;
-    for (var index = tabsBrowser.browsers.length-1; index >= 0; index--) {
+    for (var index = tabsBrowser.browsers.length - 1; index >= 0; index--) {
       var doc = tabsBrowser.getBrowserAtIndex(index).contentDocument;
-      if(doc) // null in multiprocess firefox
-        doRefreshTabs(doc, close);
+      if (!doc) // null in multiprocess firefox
+        break;
+      var loc = doc.location;
+      var protocol = loc.protocol.toLowerCase();
+      if (protocol == 'telnet:') {
+        if (close)
+          loc.href = 'about:blank'; // able to use BACK after reinstalling
+        else
+          loc.reload();
+      }
     }
   }
   // stringbundle is cached by firefox before restarting by default
@@ -104,7 +102,7 @@ function startup(aData, aReason) {
   // Setup the resource url.
   var ioService = Services.io;
   var resProt = ioService.getProtocolHandler('resource')
-                  .QueryInterface(Ci.nsIResProtocolHandler);
+    .QueryInterface(Ci.nsIResProtocolHandler);
   var aliasURI = ioService.newURI('modules/', 'UTF-8', aData.resourceURI);
   resProt.setSubstitution(RESOURCE_NAME, aliasURI);
 
@@ -115,12 +113,11 @@ function startup(aData, aReason) {
   RegisterProtocol.register('telnet', 'TelnetProtocol.js', addonBaseUrl + 'components/');
   try {
     let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
-                     .getService(Ci.nsIFrameScriptLoader);
+      .getService(Ci.nsIFrameScriptLoader);
     globalMM.loadFrameScript(addonBaseUrl + 'frameScript.js', true);
     globalMM.addMessageListener(RESOURCE_NAME + ':Parent:obj', exec);
     e10sEnabled = true;
-  } catch (ex) {
-  }
+  } catch (ex) {}
 
   refreshTabs(); // only for upgrading
 }
@@ -131,7 +128,7 @@ function shutdown(aData, aReason) {
 
   if (e10sEnabled) {
     let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
-                     .getService(Ci.nsIMessageBroadcaster);
+      .getService(Ci.nsIMessageBroadcaster);
     globalMM.broadcastAsyncMessage(RESOURCE_NAME + ':Child:shutdown', aReason);
     globalMM.removeMessageListener(RESOURCE_NAME + ':Parent:obj', exec);
     globalMM.removeDelayedFrameScript(addonBaseUrl + 'frameScript.js');
@@ -140,21 +137,23 @@ function shutdown(aData, aReason) {
   RegisterProtocol.unregister('telnet', 'TelnetProtocol.js');
   Cu.unload(addonBaseUrl + 'modules/RegisterProtocol.js');
 
+  Cu.import(addonBaseUrl + 'modules/RegisterModule.js');
+  RegisterModule.unload(this);
+  Cu.unload(addonBaseUrl + 'modules/RegisterModule.js');
+
   var ioService = Services.io;
   var resProt = ioService.getProtocolHandler('resource')
-                  .QueryInterface(Ci.nsIResProtocolHandler);
+    .QueryInterface(Ci.nsIResProtocolHandler);
   // Remove the resource url.
   resProt.setSubstitution(RESOURCE_NAME, null);
 
   // quit existing telnet page
-  if(aReason != ADDON_UPGRADE && aReason != ADDON_DOWNGRADE)
+  if (aReason != ADDON_UPGRADE && aReason != ADDON_DOWNGRADE)
     refreshTabs(true); // uninstall
   //FIXME: close preferences dialogs and others opened by this addon
 }
 
-function install(aData, aReason) {
-}
+function install(aData, aReason) {}
 
-function uninstall(aData, aReason) {
-}
+function uninstall(aData, aReason) {}
 

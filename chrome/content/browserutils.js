@@ -16,6 +16,7 @@ function BrowserUtils(listener) {
     this.e10sEnabled = Services.appinfo.processType ===
         Services.appinfo.PROCESS_TYPE_CONTENT;
 
+    this.uaoConv = listener.global.uaoConv;
     this.storage = null;
     this.menu = null;
     this.socket = null;
@@ -88,19 +89,10 @@ BrowserUtils.prototype = {
     },
 
     setConverter: function(callback) {
-        if (!callback)
-            return Cu.unload("resource://pcmanfx2/uao.js", this);
-        if (typeof(this.uaoConv) == 'undefined')
-            Cu.import("resource://pcmanfx2/uao.js", this);
         this.listener.view.conv = this.uaoConv;
         this.listener.conn.oconv = this.uaoConv;
         if (callback)
             callback();
-    },
-
-    setFocus: function() {
-        this.listener.view.input.focus();
-        this.document.onfocus = this.menu.eventHandler;
     },
 
     dispatchCopyEvent: function(target) {

@@ -2,6 +2,12 @@
 
 var pcman = null;
 
+if(typeof(Components) != 'undefined' && Components.utils) {
+    Components.utils.import("resource://pcmanfx2/RegisterModule.js");
+    RegisterModule.import(window);
+    Components.utils.unload("resource://pcmanfx2/RegisterModule.js");
+}
+
 function eventHandler(event, target) {
     var targetId = '';
     if (event.target == document || target == window) targetId = 'topwin';
@@ -11,23 +17,23 @@ function eventHandler(event, target) {
         case 'topwin':
             switch (event.type) {
                 case 'load':
-                    //modules.import();
                     pcman = new PCMan(window);
                     return;
                 case 'unload':
                     pcman.close();
                     pcman = null;
-                    //modules.unload();
                     return;
                 case 'resize':
                     return pcman.view.onResize();
                 case 'contextmenu':
                     return pcman.ui.menu.onMenuPopupShowing();
+                case 'keydown':
+                    return pcman.view.onkeyDown(event);
                 case 'focus':
                 case 'mousedown':
                 case 'mouseup':
                 default:
-                    return pcman.view.input.focus();
+                    return document.getElementById('input_proxy').focus();
             }
             break;
         case 'box1':
@@ -45,6 +51,17 @@ function eventHandler(event, target) {
                 default:
             }
             break;
+        case 'input_proxy':
+            switch (event.type) {
+                case 'compositionstart':
+                    return pcman.view.onCompositionStart(event);
+                case 'compositionend':
+                    return pcman.view.onCompositionEnd(event);
+                case 'input':
+                    return pcman.view.onTextInput(event);
+                default:
+            }
+            break;
         case 'popup-copy': // event.type == 'command'
             return pcman.copy();
         case 'popup-paste': // event.type == 'command'
@@ -53,43 +70,9 @@ function eventHandler(event, target) {
             return pcman.selAll();
         case 'sitePref': // event.type == 'command'
             return pcman.ui.sitePref();
-        default: // !targetId
+        default:
             if (event.type == 'command') // event.target == searchmenu
                 return pcman.ui.menu.onSearchItemCommand(event);
     }
 }
-
-/*var modules = {
-    import: function() {
-        Components.utils.import("chrome://pcmanfx2/content/browserutils.js");
-        Components.utils.import("chrome://pcmanfx2/content/browserstorage.js");
-        Components.utils.import("chrome://pcmanfx2/content/browsermenus.js");
-        Components.utils.import("chrome://pcmanfx2/content/browsersocket.js");
-        Components.utils.import("chrome://pcmanfx2/content/prefdefault.js");
-        Components.utils.import("chrome://pcmanfx2/content/preferences.js");
-        Components.utils.import("chrome://pcmanfx2/content/prefhandler.js");
-        Components.utils.import("chrome://pcmanfx2/content/conn.js");
-        Components.utils.import("chrome://pcmanfx2/content/termview.js");
-        Components.utils.import("chrome://pcmanfx2/content/termsel.js");
-        Components.utils.import("chrome://pcmanfx2/content/inputHandler.js");
-        Components.utils.import("chrome://pcmanfx2/content/termbuf.js");
-        Components.utils.import("chrome://pcmanfx2/content/ansiparser.js");
-    },
-
-    unload: function() {
-        Components.utils.unload("chrome://pcmanfx2/content/browserutils.js");
-        Components.utils.unload("chrome://pcmanfx2/content/browserstorage.js");
-        Components.utils.unload("chrome://pcmanfx2/content/browsermenus.js");
-        Components.utils.unload("chrome://pcmanfx2/content/browsersocket.js");
-        Components.utils.unload("chrome://pcmanfx2/content/prefdefault.js");
-        Components.utils.unload("chrome://pcmanfx2/content/preferences.js");
-        Components.utils.unload("chrome://pcmanfx2/content/prefhandler.js");
-        Components.utils.unload("chrome://pcmanfx2/content/conn.js");
-        Components.utils.unload("chrome://pcmanfx2/content/termview.js");
-        Components.utils.unload("chrome://pcmanfx2/content/termsel.js");
-        Components.utils.unload("chrome://pcmanfx2/content/inputHandler.js");
-        Components.utils.unload("chrome://pcmanfx2/content/termbuf.js");
-        Components.utils.unload("chrome://pcmanfx2/content/ansiparser.js");
-    }
-};*/
 

@@ -24,7 +24,6 @@ PCMan.prototype = {
         this.conn = new Conn(this);
         this.view = new TermView(this);
         this.view.selection = new TermSel(this.view);
-        this.view.inputHandler = new InputHandler(this.view);
         this.buf = new TermBuf(this);
         this.parser = new AnsiParser(this.buf);
 
@@ -42,7 +41,6 @@ PCMan.prototype = {
         this.conn.connect(parts[0], port);
 
         this.ui.updateTabTitle();
-        this.ui.setFocus();
         this.view.onResize();
 
         var temp = this;

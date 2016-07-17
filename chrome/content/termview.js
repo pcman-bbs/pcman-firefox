@@ -46,7 +46,8 @@ function TermView(listener) {
 
     // Process the input events
     this.input = listener.ui.getElementById("input_proxy");
-    this.inputHandler = null;
+    this.input.focus();
+    this.isComposing = false; // Fix for FX 12+
 
     // initialize
     var ctx = this.ctx;
@@ -317,9 +318,14 @@ TermView.prototype = {
             this.showCursor();
     },
 
-    onTextInput: function(text) {
+    onTextInput: function(e) {
+        if (this.isComposing) // Fix for FX 12+; use e.isComposing in FX 31+
+            return;
+        if (!e.target.value)
+            return;
         var charset = this.listener.prefs.get('Encoding');
-        this.listener.conn.convSend(text, charset);
+        this.listener.conn.convSend(e.target.value, charset);
+        e.target.value = '';
     },
 
     onkeyDown: function(e) {
@@ -430,7 +436,7 @@ TermView.prototype = {
         ctx.font = font;
         ctx.textBaseline = 'top';
 
-        var m = ctx.measureText('　'); //全形空白
+        var m = ctx.measureText('\u3000'); //全形空白
         this.chw = Math.round(m.width / 2);
 
         // if overflow, resize canvas again
@@ -499,10 +505,15 @@ TermView.prototype = {
         var top = (this.buf.curY + 1) * this.chh;
         this.input.style.top = (this.canvas.offsetTop + (top + this.input.clientHeight > this.canvas.clientHeight ? top - this.input.clientHeight : top)) + 'px';
         this.input.style.left = (this.canvas.offsetLeft + this.buf.curX * this.chw) + 'px';
+        this.isComposing = true; // Fix for FX 12+
     },
 
     onCompositionEnd: function(e) {
         this.input.style.top = '-100px';
+        this.isComposing = false; // Fix for FX 12+
+
+        // For compatibility of FX 10 and before
+        this.onTextInput(e);
     },
 
     onBlink: function() {
@@ -734,7 +745,7 @@ TermView.prototype = {
     },
 
     removeEventListener: function() {
-        this.inputHandler.unload();
+        this.onCompositionEnd({ target: {} }); // Hide the input proxy
     }
 };
 

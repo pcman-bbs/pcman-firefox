@@ -14,10 +14,10 @@ var uaoConv = {
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
             .getService(Components.interfaces.nsIIOService);
         // load from resource:// instead of file path
-        //var channel = ioService.newChannel('resource://pcmanfx2/' + type + '.tab', null, null);
+        //var channel = ioService.newChannel('chrome://pcmanfx2/content/uao/' + type + '.tab', null, null);
         var channel = ioService.newChannel2(
-            'resource://pcmanfx2/' + type + '.tab', //aSpec
-            null, //aOriginCharset
+            'chrome://pcmanfx2/content/uao/' + type + '.tab', //aSpec
+            null, //aOriginCharse
             null, //aBaseURI
             null, //aLoadingNode
             Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService(Components.interfaces.nsIScriptSecurityManager).getSystemPrincipal(), //aLoadingPrincipal

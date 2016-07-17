@@ -7,6 +7,8 @@
     onunload="eventHandler(event,this);"
     onresize="eventHandler(event,this);"
     onmousedown="eventHandler(event,this);"
+    onkeydown="eventHandler(event,this);"
+    onfocus="eventHandler(event,this);"
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     pack="center"
@@ -15,6 +17,7 @@
     >
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
+    <!--
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserstorage.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsermenus.js" />
@@ -28,7 +31,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/eventHandler.js" />
+    -->
     <vbox align="center" id='box1'
         onmousedown="eventHandler(event,this);"
         onmousemove="eventHandler(event,this);"
@@ -39,7 +42,10 @@
       </html:canvas>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
-        <textbox id="input_proxy"/>
+        <textbox id="input_proxy"
+            oncompositionstart="eventHandler(event,this);"
+            oncompositionend="eventHandler(event,this);"
+            oninput="eventHandler(event,this);"/>
         <label value="&input_proxy_description.label;"/>
       </hbox>
       <html:div id="selection" title=" "/>
@@ -51,15 +57,17 @@
 
     <popupset>
       <menupopup id="popup-menu">
-        <menuitem label="&menu_copy.label;" id="popup-copy" />
-        <menuitem label="&menu_paste.label;" id="popup-paste" />
-        <menuitem label="&menu_selAll.label;" id="popup-selAll" />
+        <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="eventHandler(event,this);"/>
+        <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="eventHandler(event,this);"/>
+        <menuitem label="&menu_selAll.label;" id="popup-selAll" oncommand="eventHandler(event,this);"/>
         <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
         </menu>
-        <menuitem label="&menu_sitepref.label;" id="sitePref"/>
+        <menuitem label="&menu_sitepref.label;" id="sitePref" oncommand="eventHandler(event,this);"/>
       </menupopup>
     </popupset>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/eventHandler.js" />
 
 </window>
 

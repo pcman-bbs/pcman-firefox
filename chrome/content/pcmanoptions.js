@@ -39,8 +39,11 @@ PCManOptions.prototype = {
         this.ui.getElementById('_' + this.siteList.selectedIndex).className = 'tabs';
 
         var url = this.siteList.options[this.siteList.selectedIndex].value;
-        if (url == this.siteList.options[0].value)
+        if (url == this.siteList.options[0].value) {
             url = this.ui.getSearch('url');
+            if (this.getSite(url) > 0)
+                url = '';
+        }
         this.ui.getElementById('siteAddr').value = url ? url : '';
     },
 
