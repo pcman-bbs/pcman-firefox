@@ -36,7 +36,7 @@ BrowserMenus.prototype = {
         isCommandEnabled: function(cmd) {
             switch (cmd) {
                 case "cmd_copy":
-                    return this.listener.view.selection.hasSelection();
+                    return this.listener.view ? this.listener.view.selection.hasSelection() : false;
                 case "cmd_paste":
                     return true;
                 case "cmd_selectAll":

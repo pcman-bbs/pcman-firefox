@@ -21,6 +21,7 @@ var RegisterModule = {
     Components.utils.import(this.path + "termsel.js", target);
     Components.utils.import(this.path + "termbuf.js", target);
     Components.utils.import(this.path + "ansiparser.js", target);
+    Components.utils.import(this.path + "ssh.js", target);
   },
 
   unload: function(target) {
@@ -37,6 +38,7 @@ var RegisterModule = {
     Components.utils.unload(this.path + "termsel.js", target);
     Components.utils.unload(this.path + "termbuf.js", target);
     Components.utils.unload(this.path + "ansiparser.js", target);
+    Components.utils.unload(this.path + "ssh.js", target);
   }
 };
 

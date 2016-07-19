@@ -22,6 +22,7 @@ PCMan.prototype = {
         this.ui.menu = new BrowserMenus(this.ui);
         this.ui.socket = new BrowserSocket(this.ui);
         this.conn = new Conn(this);
+        this.conn.ssh = new SSH(this.conn);
         this.view = new TermView(this);
         this.view.selection = new TermSel(this.view);
         this.buf = new TermBuf(this);

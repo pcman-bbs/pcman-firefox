@@ -53,6 +53,7 @@ function Conn(listener) {
     this.iac_sb = '';
 
     this.socket = listener.ui.socket;
+    this.ssh = null;
 }
 
 Conn.prototype = {
@@ -65,6 +66,41 @@ Conn.prototype = {
         }
         this.isConnected = false;
 
+        //TODO: use prefs to setting the login and password
+        this.ssh.host = this.host;
+        this.ssh.port = this.port;
+        if (port == 22) {
+            switch (host) {
+                case 'ptt.cc':
+                case 'ptt2.cc':
+                case 'ptt3.cc':
+                    this.ssh.login = 'bbs';
+                    this.ssh.password = 'bbs';
+                    break;
+                default:
+            }
+        }
+        this.ssh.width = this.listener.buf.cols;
+        this.ssh.height = this.listener.buf.rows;
+        var _this = this;
+        this.ssh.callback = function(status, message) {
+            switch (status) {
+                case 'onConnected':
+                case 'loginAccepted':
+                case 'loginDenied':
+                    break;
+                case 'onDisconnect':
+                    _this.close();
+                    break;
+                case 'recv':
+                    _this.onDataAvailable(message);
+                    break;
+                case 'send':
+                default:
+                    _this.send(message);
+            }
+        };
+
         this.socket.connect(this, host, port);
 
         this.connectTime = Date.now();
@@ -76,6 +112,8 @@ Conn.prototype = {
             return;
 
         this.socket.onunload();
+
+        this.ssh.close(this.listener.abnormalClose);
 
         if (this.listener.abnormalClose)
             return;
@@ -123,6 +161,10 @@ Conn.prototype = {
     onDataAvailable: function(content) {
         var data = '';
         var n = content.length;
+        if (this.ssh.enable) { // use SSH
+            data = this.ssh.input(content);
+            n = 0; // bypass IAC
+        }
         for (var i = 0; i < n; ++i) {
             var ch = content[i];
             switch (this.state) {
@@ -214,7 +256,7 @@ Conn.prototype = {
         var rows = 24;
         var nawsStr = String.fromCharCode(cols >> 8, cols % 256, rows >> 8, rows % 256).replace(/(\xff)/g, '\xff\xff');
         var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
-        this.send(rep);
+        this.send(this.ssh.sendNaws(rep));
     },
 
     send: function(str) {
@@ -223,6 +265,8 @@ Conn.prototype = {
             return;
 
         this.idleTimeout.cancel();
+
+        str = this.ssh.output(str);
 
         if (str)
             this.socket.send(str)

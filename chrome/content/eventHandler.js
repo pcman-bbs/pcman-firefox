@@ -2,7 +2,7 @@
 
 var pcman = null;
 
-if(typeof(Components) != 'undefined' && Components.utils) {
+if (typeof(Components) != 'undefined' && Components.utils) {
     Components.utils.import("resource://pcmanfx2/RegisterModule.js");
     RegisterModule.import(window);
     Components.utils.unload("resource://pcmanfx2/RegisterModule.js");

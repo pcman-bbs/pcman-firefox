@@ -31,7 +31,62 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/ssh.js" />
     -->
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/_compatibility.js"/>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/kryptos.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Cipher/AES.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Cipher/Blowfish.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Cipher/DES3.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Cipher/ARC4.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Hash/baseHash.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Hash/SHA.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Hash/SHA256.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Hash/MD5.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Hash/HMAC.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/PublicKey/RSA.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/PublicKey/DSA.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Random/_UserFriendlyRNG.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Random/Fortuna/SHAd256.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Random/Fortuna/FortunaAccumulator.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Random/Fortuna/FortunaGenerator.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kryptos/Random/OSRNG/browser.js"/>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/common.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/python_shim.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/BigInteger.js"/>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/agent.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/auth_handler.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/ber.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/channel.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/client.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/compress.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/dsskey.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/file.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/hostkeys.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kex_gex.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kex_group1.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/kex_group14.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/message.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/packet.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/pkey.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/rsakey.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/sftp_attr.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/sftp_client.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/sftp_file.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/sftp.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/ssh_exception.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/transport.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/unknown_key.js"/>
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/util.js"/>
+    <!-- <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/win_pageant.js"/> -->
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/_win_pageant.js"/>
+
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/_log.js"/>
+
     <vbox align="center" id='box1'
         onmousedown="eventHandler(event,this);"
         onmousemove="eventHandler(event,this);"

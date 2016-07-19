@@ -95,6 +95,15 @@ BrowserUtils.prototype = {
             callback();
     },
 
+    getLocalFilePath: function(name) {
+        if (this.e10sEnabled)
+            return ''; // stop loading file in paramikojs
+        var file = Cc["@mozilla.org/file/directory_service;1"]
+            .createInstance(Ci.nsIProperties).get("ProfD", Ci.nsILocalFile);
+        file.append(name);
+        return file.path;
+    },
+
     dispatchCopyEvent: function(target) {
         var evt = this.document.createEvent("HTMLEvents");
         evt.initEvent('copy', true, true);
@@ -175,12 +184,22 @@ BrowserUtils.prototype = {
     },
 
     setTimer: function(repeat, func, timelimit) {
-        var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        timer.initWithCallback({ notify: function(timer) { func(); } },
-            timelimit,
-            repeat ? Ci.nsITimer.TYPE_REPEATING_SLACK :
-            Ci.nsITimer.TYPE_ONE_SHOT);
-        return timer;
+        var _this = this;
+        if (repeat) {
+            return {
+                timer: _this.listener.global.setInterval(func, timelimit),
+                cancel: function() {
+                    _this.listener.global.clearInterval(this.timer);
+                }
+            };
+        } else {
+            return {
+                timer: _this.listener.global.setTimeout(func, timelimit),
+                cancel: function() {
+                    _this.listener.global.clearTimeout(this.timer);
+                }
+            };
+        }
     },
 
     debug: function(text) {
