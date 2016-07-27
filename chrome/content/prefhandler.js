@@ -20,7 +20,7 @@ PrefHandler.prototype = {
         switch (key) {
             case 'Encoding':
                 if (value == 'system') {
-                    var language = this.listener.global.navigator.language;
+                    var language = this.listener.ui.l10n();
                     value = (language == 'zh-CN' ? 'gb2312' : 'big5');
                 }
                 // fall through

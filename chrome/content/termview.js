@@ -31,6 +31,7 @@ var termColors = [
 function TermView(listener) {
     this.listener = listener;
     this.topwin = listener.ui.getElementById("topwin");
+    this.container = listener.ui.getElementById("box1");
     this.canvas = listener.ui.getElementById("canvas");
     this.ctx = this.canvas.getContext("2d");
     this.buf = null;
@@ -332,7 +333,7 @@ TermView.prototype = {
         var conn = this.listener.conn;
 
         // give keypress control back to Firefox
-        if (!conn.socket.ws)
+        if (!conn.isConnected)
             return;
 
         // Don't handle Shift Ctrl Alt keys for speed
@@ -429,14 +430,25 @@ TermView.prototype = {
     },
 
     onResize: function() {
+        this.topwin.style.height = this.listener.global.innerHeight + 'px';
         this.canvas.height = this.topwin.clientHeight;
         var ctx = this.ctx;
         this.chh = Math.floor(this.canvas.height / 24);
-        var font = this.chh + 'px monospace';
+        var fontFamily = 'monospace';
+        var font = this.chh + 'px ' + fontFamily;
         ctx.font = font;
-        ctx.textBaseline = 'top';
+        var textBaseline = 'top';
+        ctx.textBaseline = textBaseline;
 
-        var m = ctx.measureText('\u3000'); //全形空白
+        // test whether the monospace font is suitable for BBS
+        var m = ctx.measureText('\u25cf'); //black circle
+        if (m.width < 0.75 * this.chh) { // Not a chinese font
+            fontFamily = 'MingLiU, ' + fontFamily; //FIXME: font in non-Windows
+            font = this.chh + 'px ' + fontFamily;
+            ctx.font = font;
+        }
+
+        m = ctx.measureText('\u3000'); //全形空白
         this.chw = Math.round(m.width / 2);
 
         // if overflow, resize canvas again
@@ -445,22 +457,27 @@ TermView.prototype = {
             this.canvas.width = this.topwin.clientWidth;
             this.chw = Math.floor(this.canvas.width / 80);
             this.chh = this.chw * 2; // is it necessary to measureText?
-            font = this.chh + 'px monospace';
+            font = this.chh + 'px ' + fontFamily;
             ctx.font = font;
             this.canvas.height = this.chh * 24;
+
+            // Fix the selection when vertical mouse position is out of canvas
+            var padding = this.topwin.clientHeight - this.canvas.height;
+            this.container.style.paddingTop = (padding / 2) + 'px';
+            this.container.style.paddingBottom = (padding / 2) + 'px';
         }
 
         if (this.buf) {
             this.canvas.width = this.chw * this.buf.cols;
             // font needs to be reset after resizing canvas
             ctx.font = font;
-            ctx.textBaseline = 'top';
+            ctx.textBaseline = textBaseline;
             this.redraw(true);
         } else {
             this.canvas.width = this.chw * 80;
             // font needs to be reset after resizing canvas
             ctx.font = font;
-            ctx.textBaseline = 'top';
+            ctx.textBaseline = textBaseline;
         }
 
         var visible = this.cursorVisible;

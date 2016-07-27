@@ -4,22 +4,36 @@
 
 var EXPORTED_SYMBOLS = ["BrowserUtils"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+if (typeof(Components) == 'undefined')
+    var Components = null;
+
+const Cc = Components ? Components.classes : null;
+const Ci = Components ? Components.interfaces : null;
+const Cu = Components ? Components.utils : null;
 
 function BrowserUtils(listener) {
     this.listener = listener;
     this.document = listener.global.document;
 
-    Cu.import("resource://gre/modules/Services.jsm");
-    this.e10sEnabled = Services.appinfo.processType ===
-        Services.appinfo.PROCESS_TYPE_CONTENT;
+    if (Cu) {
+        Cu.import("resource://gre/modules/Services.jsm");
+        this.e10sEnabled = Services.appinfo.processType ===
+            Services.appinfo.PROCESS_TYPE_CONTENT;
+    } else {
+        this.e10sEnabled = true;
+    }
 
     this.uaoConv = listener.global.uaoConv;
     this.storage = null;
     this.menu = null;
     this.socket = null;
+
+    this.cont = '';
+    this.skin = 'skin/'
+    this.getPath();
+
+    if (!Cc) // not in firefox extension
+        return;
 
     // XXX: UNUSED AND UNTESTED
     this.__defineGetter__('_prefBranch', function() {
@@ -43,7 +57,9 @@ BrowserUtils.prototype = {
     },
 
     getUrl: function() {
-        return this.document.location.host;
+        var loc = this.document.location;
+        var url = Cc ? loc.host : loc.hash.substr(1); // web pages use hash
+        return url || 'ptt.cc';
     },
 
     getSearch: function(key) {
@@ -59,14 +75,56 @@ BrowserUtils.prototype = {
     },
 
     getVersion: function(callback) {
-        Cu.import("resource://gre/modules/AddonManager.jsm");
-        AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
-            callback(addon.version);
-        });
+        if (Cu) { // in firefox extension
+            Cu.import("resource://gre/modules/AddonManager.jsm");
+            AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
+                callback(addon.version);
+            });
+        } else { // normal web pages
+            var req = new XMLHttpRequest();
+            req.open('GET', '/version', true);
+            req.onreadystatechange = function(event) {
+                if (req.readyState != 4 || req.status != 200)
+                    return;
+                callback(req.response);
+            };
+            req.send();
+        }
+    },
+
+    getPath: function() {
+        var link = this.document.querySelector("link[rel~='icon']");
+        var url = link.getAttribute("href");
+        this.skin = url.substr(0, url.lastIndexOf('/') + 1);
+        var scripts = this.document.getElementsByTagName('script');
+        for (var i = 0; i < scripts.length; ++i) {
+            url = scripts[i].getAttribute("src");
+            if (url.search(/pcman\w*\.js/) > -1)
+                this.cont = url.substr(0, url.lastIndexOf('/') + 1);
+        }
     },
 
     l10n: function(str) {
-        this.getElementById("pcman-string-bundle").getString(str);
+        var global = this.listener.global;
+        if (!str)
+            return global.navigator.language;
+        var stringbundle = this.getElementById("pcman-string-bundle");
+        if (stringbundle) {
+            try {
+                return stringbundle.getString(str);
+            } catch (e) { // str is not found in stringbundle
+                return '';
+            }
+        }
+        switch (global.navigator.language) { // normal web page
+            case 'zh-TW':
+                if (global.locale_zh_TW && global.locale_zh_TW[str])
+                    return global.locale_zh_TW[str].message;
+            default:
+                if (global.locale_en_US && global.locale_en_US[str])
+                    return global.locale_en_US[str].message;
+        }
+        return '';
     },
 
     findBookmarkTitle: function(url) {
@@ -91,8 +149,19 @@ BrowserUtils.prototype = {
     setConverter: function(callback) {
         this.listener.view.conv = this.uaoConv;
         this.listener.conn.oconv = this.uaoConv;
-        if (callback)
+        if (!callback)
+            return;
+        if (this.uaoConv.buildCache) {
+            var uaoConv = this.uaoConv;
+            var Encoding = this.listener.prefs.get('Encoding');
+            uaoConv.buildCache('a2u', Encoding, function(b2ustatus) {
+                uaoConv.buildCache('u2a', Encoding, function(u2bstatus) {
+                    callback();
+                });
+            });
+        } else {
             callback();
+        }
     },
 
     getLocalFilePath: function(name) {
@@ -116,16 +185,16 @@ BrowserUtils.prototype = {
     },
 
     updateTabIcon: function(aStatus) {
-        var icon = 'chrome://pcmanfx2/skin/tab-connecting.png';
+        var icon = 'tab-connecting.png';
         switch (aStatus) {
             case 'connect':
-                icon = 'chrome://pcmanfx2/skin/tab-connect.png';
+                icon = 'tab-connect.png';
                 break;
             case 'disconnect':
-                icon = 'chrome://pcmanfx2/skin/tab-disconnect.png';
+                icon = 'tab-disconnect.png';
                 break;
             case 'idle': // Not used yet
-                icon = 'chrome://pcmanfx2/skin/tab-idle.png';
+                icon = 'tab-idle.png';
                 break;
             case 'connecting': // Not used yet
             default:
@@ -136,10 +205,10 @@ BrowserUtils.prototype = {
         if (!link) {
             link = this.document.createElement("link");
             link.setAttribute("rel", "icon");
-            link.setAttribute("href", icon);
+            link.setAttribute("href", this.skin + icon);
             this.document.head.appendChild(link);
         } else {
-            link.setAttribute("href", icon);
+            link.setAttribute("href", this.skin + icon);
         }
 
         if (this.e10sEnabled) return;
@@ -165,9 +234,10 @@ BrowserUtils.prototype = {
         }
     },
 
-    sitePref: function() {
-        var url = 'chrome://pcmanfx2/content/options.xhtml?url=' + this.getUrl();
-        this.openURI(url, true, null);
+    sitepref: function() {
+        var file = Cc ? 'options.xhtml' : 'options.htm'; // xhtml is for l10n
+        var url = this.cont + file + '?url=' + this.getUrl();
+        return this.openURI(url, true, null);
     },
 
     openURI: function(uri, activate, postData) {
@@ -181,6 +251,7 @@ BrowserUtils.prototype = {
             gBrowser.addTab(uri, gBrowser.currentURI);
         if (activate)
             gBrowser.selectedTab = tab;
+        return tab;
     },
 
     setTimer: function(repeat, func, timelimit) {
@@ -205,7 +276,8 @@ BrowserUtils.prototype = {
     debug: function(text) {
         if (typeof(Application) != 'undefined')
             return Application.console.log(text);
-        Cu.import("resource://gre/modules/Console.jsm");
+        if (Cu) // in firefox extension
+            Cu.import("resource://gre/modules/Console.jsm");
         return console.log(text);
     }
 };

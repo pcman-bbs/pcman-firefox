@@ -9,11 +9,11 @@ function BrowserMenus(ui) {
     this.ui = ui;
     this.textboxControllers.listener = ui.listener;
     this.eventHandler = ui.listener.global.eventHandler;
-    ui.getElementById('input_proxy').controllers.insertControllerAt(0, this.textboxControllers); // to override default commands for inputbox
-    if (ui.e10sEnabled) {
+    if (!ui.e10sEnabled)
+        ui.getElementById('input_proxy').controllers.insertControllerAt(0, this.textboxControllers); // to override default commands for inputbox
+    else
         ui.getElementById('topwin').removeAttribute('context');
-        ui.getElementById('topwin').removeAttribute('oncontextmenu');
-    }
+    this.contextmenu = null;
 }
 
 BrowserMenus.prototype = {
@@ -70,7 +70,7 @@ BrowserMenus.prototype = {
         onEvent: function(e) {}
     },
 
-    onMenuPopupShowing: function() {
+    onMenuPopupShowing: function(event) {
         var hasSelection = this.listener.view.selection.hasSelection();
         this.ui.getElementById("popup-copy").disabled = !hasSelection;
         this.ui.getElementById("popup-search").disabled = !hasSelection;
@@ -78,7 +78,8 @@ BrowserMenus.prototype = {
     },
 
     onClose: function() {
-        this.ui.getElementById('input_proxy').controllers.removeController(this.textboxControllers);
+        if (!this.ui.e10sEnabled)
+            this.ui.getElementById('input_proxy').controllers.removeController(this.textboxControllers);
         this.createSearchMenu(this.ui.getElementById('search_menu'), true);
     },
 
@@ -110,6 +111,8 @@ BrowserMenus.prototype = {
         if (!submission) return;
 
         this.ui.openURI(submission.uri.spec, false, submission.postData);
+
+        this.listener.view.selection.cancelSel(true);
     },
 
     createSearchMenu: function(menu, clear) {
@@ -136,6 +139,72 @@ BrowserMenus.prototype = {
             item.addEventListener('command', this.eventHandler, false);
             menu.appendChild(item);
         }
+    },
+
+    search: function(engine) {
+        if (!this.listener.view.selection.hasSelection())
+            return;
+        var text = this.listener.view.selection.getText();
+
+        var search = "http://www.google.com/search?q=%s";
+        switch (engine) {
+            case 'Yahoo!':
+                search = "http://search.yahoo.com/search?ei=utf-8&fr=crmas&p=%s";
+                break;
+            case 'Bing':
+                search = "http://www.bing.com/search?setmkt=" + this.ui.l10n() + "&q=%s";
+                break;
+            default:
+        }
+        this.ui.openURI(search.replace(/%s/g, encodeURIComponent(text)), true);
+        this.listener.view.selection.cancelSel(true);
+    },
+
+    setContextMenu: function(menu) {
+        if (!this.ui.e10sEnabled || !menu.elem) // the key element is not found
+            return;
+        menu.initial();
+        this.contextmenu = menu;
+        var _this = this;
+        var set = function(items, id, func) {
+            if (items[id].elem.firstChild.tagName) { // not a text node
+                var value = _this.ui.l10n(id);
+                var elem = _this.ui.getElementById(id.replace('menu_', 'popup-'));
+                if (elem)
+                    value = elem.getAttribute('label');
+                items[id].elem.firstChild.textContent = value;
+            }
+            if (func)
+                items[id].action = func;
+        };
+        set(menu.items, 'menu_copy', function() {
+            _this.listener.copy();
+        });
+        set(menu.items, 'menu_paste', function() {
+            _this.listener.paste();
+        });
+        set(menu.items, 'menu_selAll', function() {
+            _this.listener.selAll();
+        });
+        set(menu.items, 'menu_search');
+        set(menu.items['menu_search'].menu.items, 'search_google', function() {
+            _this.search();
+        });
+        set(menu.items['menu_search'].menu.items, 'search_yahoo', function() {
+            _this.search('Yahoo!');
+        });
+        set(menu.items['menu_search'].menu.items, 'search_bing', function() {
+            _this.search('Bing');
+        });
+        set(menu.items, 'menu_sitepref', function() {
+            _this.ui.sitepref();
+        });
+
+        menu.oncontextmenu = function(event) {
+            var isSel = _this.listener.view.selection.hasSelection();
+            menu.items['menu_copy'].disable(!isSel);
+            menu.items['menu_search'].disable(!isSel);
+        };
     }
 };
 

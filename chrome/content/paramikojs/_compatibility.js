@@ -8,8 +8,9 @@ if (navigator.userAgent.indexOf('Firefox') > -1 && Components.classes) { // Mozi
     gRsaKeyWorkerJs = 'chrome://pcmanfx2/content/' + gRsaKeyWorkerJs;
 } else { // Chrome, etc
     var Components = null;
-    if (typeof(chrome) == 'undefined') { // normal web page
+    if (typeof(chrome) == 'undefined') // normal web page in IE and FX
         var chrome = {};
+    if (!chrome.storage) { // normal web page in GC
         chrome.storage = {
             local: {
                 set: function(data) {

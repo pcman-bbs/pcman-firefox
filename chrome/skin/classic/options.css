@@ -59,6 +59,10 @@ aside select {
 }
 
 /* Elements which are not parts of HTML5-TABS */
+input[type="submit"] {
+    margin: 10px;
+}
+
 input[type="number"] {
     width: 40px;
 }

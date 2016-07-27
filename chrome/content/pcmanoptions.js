@@ -22,6 +22,7 @@ PCManOptions.prototype = {
     // Initialize the prefwindow
     load: function(prefs) {
         if (prefs) this.prefs = prefs;
+        this.l10n();
         this.getVersion();
         for (var i = 0; i < this.prefs.sites.length; ++i) {
             this.createTabs(i, this.prefs.get('_url', i), 0);
@@ -88,6 +89,26 @@ PCManOptions.prototype = {
 
     // Finalize the prefwindow
     close: function() {},
+
+    // get i18n strings for UI
+    l10n: function() {
+        // Override the contents in certain tags with from &xxx.label;
+        var tags = ['label', 'option', 'header', 'title'];
+        for (var i = 0; i < tags.length; ++i) {
+            var elems = this.ui.document.getElementsByTagName(tags[i]);
+            for (var j = 0; j < elems.length; ++j) {
+                var textContent = elems[j].textContent;
+                if (textContent.charAt(0) == '&') // substr(-7) == '.label;'
+                    elems[j].textContent = this.ui.l10n(textContent.slice(1, -7));
+            }
+        }
+        var downloads = this.ui.document.getElementsByTagName('a');
+        for (var i = 0; i < downloads.length; ++i) {
+            var href = downloads[i].getAttribute('href');
+            if (href.charAt(0) == '&') // substr(-7) == '.label;'
+                downloads[i].setAttribute('href', this.ui.l10n(href.slice(1, -7)));
+        }
+    },
 
     // get version info for ABOUT page
     getVersion: function() {

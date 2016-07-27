@@ -20,7 +20,8 @@ PCMan.prototype = {
         if (prefs) this.prefs = prefs;
         this.prefs.handler = new PrefHandler(this.prefs);
         this.ui.menu = new BrowserMenus(this.ui);
-        this.ui.socket = new BrowserSocket(this.ui);
+        this.ui.menu.setContextMenu(new ContextMenu(this.ui.menu));
+        this.ui.socket = new BrowserComm(this.ui);
         this.conn = new Conn(this);
         this.conn.ssh = new SSH(this.conn);
         this.view = new TermView(this);
@@ -51,7 +52,7 @@ PCMan.prototype = {
     },
 
     close: function() {
-        if (this.conn.socket.ws) {
+        if (this.conn.isConnected) {
             this.abnormalClose = true;
             this.conn.close();
         }

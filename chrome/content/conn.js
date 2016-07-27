@@ -108,7 +108,7 @@ Conn.prototype = {
     },
 
     close: function() {
-        if (!this.socket.ws)
+        if (!this.isConnected)
             return;
 
         this.socket.onunload();
@@ -156,6 +156,9 @@ Conn.prototype = {
     onStopRequest: function() {
         this.close();
         this.listener.onClose(this);
+        if (this.isConnected) {
+            this.isConnected = false;
+        }
     },
 
     onDataAvailable: function(content) {
@@ -261,7 +264,7 @@ Conn.prototype = {
 
     send: function(str) {
         // added by Hemiola SUN
-        if (!this.socket.ws)
+        if (!this.isConnected)
             return;
 
         this.idleTimeout.cancel();

@@ -2,77 +2,95 @@
 
 var pcman = null;
 
-if (typeof(Components) != 'undefined' && Components.utils) {
+if (Components && Components.utils) {
     Components.utils.import("resource://pcmanfx2/RegisterModule.js");
     RegisterModule.import(window);
     Components.utils.unload("resource://pcmanfx2/RegisterModule.js");
 }
 
-function eventHandler(event, target) {
-    var targetId = '';
-    if (event.target == document || target == window) targetId = 'topwin';
-    else if (!target) targetId = event.target.id;
-    else targetId = target.id;
-    switch (targetId) {
-        case 'topwin':
-            switch (event.type) {
-                case 'load':
-                    pcman = new PCMan(window);
+function eventHandler(event) {
+    switch (event.type) {
+        case 'load':
+            pcman = new PCMan(window);
+            pcman.view.input.addEventListener('compositionstart', eventHandler, false);
+            pcman.view.input.addEventListener('compositionend', eventHandler, false);
+            return;
+        case 'unload':
+            pcman.view.input.removeEventListener('compositionstart', eventHandler, false);
+            pcman.view.input.removeEventListener('compositionend', eventHandler, false);
+            pcman.close();
+            pcman = null;
+            return;
+        case 'focus':
+            return document.getElementById('input_proxy').focus();
+        case 'resize':
+            return pcman.view.onResize(event);
+        case 'keydown':
+            return pcman.view.onkeyDown(event);
+        case 'compositionstart':
+            return pcman.view.onCompositionStart(event);
+        case 'compositionend':
+            return pcman.view.onCompositionEnd(event);
+        case 'input':
+            return pcman.view.onTextInput(event);
+        case 'contextmenu':
+            if (pcman.ui.menu.contextmenu)
+                return pcman.ui.menu.contextmenu.observer(event);
+            return pcman.ui.menu.onMenuPopupShowing(event);
+        case 'mousedown':
+            if (this.id == 'box1') {
+                if (pcman.ui.menu.contextmenu && pcman.ui.menu.contextmenu.onclick(event))
                     return;
-                case 'unload':
-                    pcman.close();
-                    pcman = null;
+                return pcman.view.onMouseDown(event);
+            }
+            return document.getElementById('input_proxy').focus();
+        case 'mousemove':
+            return pcman.view.onMouseMove(event);
+        case 'mouseup':
+            if (this.id == 'box1') {
+                if (pcman.ui.menu.contextmenu && pcman.ui.menu.contextmenu.onclick(event))
                     return;
-                case 'resize':
-                    return pcman.view.onResize();
-                case 'contextmenu':
-                    return pcman.ui.menu.onMenuPopupShowing();
-                case 'keydown':
-                    return pcman.view.onkeyDown(event);
-                case 'focus':
-                case 'mousedown':
-                case 'mouseup':
-                default:
-                    return document.getElementById('input_proxy').focus();
+                return pcman.view.onMouseUp(event);
             }
-            break;
-        case 'box1':
-            switch (event.type) {
-                case 'mousedown':
-                    return pcman.view.onMouseDown(event);
-                case 'mousemove':
-                    return pcman.view.onMouseMove(event);
-                case 'mouseup':
-                    return pcman.view.onMouseUp(event);
-                case 'click':
-                    return pcman.view.onClick(event);
-                case 'dblclick':
-                    return pcman.view.onDblClick(event);
-                default:
+            return document.getElementById('input_proxy').focus();
+        case 'click':
+            if (pcman.ui.menu.contextmenu && pcman.ui.menu.contextmenu.onclick(event))
+                return;
+            return pcman.view.onClick(event);
+        case 'dblclick':
+            return pcman.view.onDblClick(event);
+        case 'command':
+            switch (event.target.id) {
+                case 'popup-copy': // this == window in xul
+                    return pcman.copy();
+                case 'popup-paste': // this == window in xul
+                    return pcman.paste();
+                case 'popup-selAll': // this == window in xul
+                    return pcman.selAll();
+                case 'popup-sitepref': // this == window in xul
+                    return pcman.ui.sitepref();
+                default: // event.target == searchmenu
+                    return pcman.ui.menu.onSearchItemCommand(event);
             }
-            break;
-        case 'input_proxy':
-            switch (event.type) {
-                case 'compositionstart':
-                    return pcman.view.onCompositionStart(event);
-                case 'compositionend':
-                    return pcman.view.onCompositionEnd(event);
-                case 'input':
-                    return pcman.view.onTextInput(event);
-                default:
-            }
-            break;
-        case 'popup-copy': // event.type == 'command'
-            return pcman.copy();
-        case 'popup-paste': // event.type == 'command'
-            return pcman.paste();
-        case 'popup-selAll': // event.type == 'command'
-            return pcman.selAll();
-        case 'sitePref': // event.type == 'command'
-            return pcman.ui.sitePref();
         default:
-            if (event.type == 'command') // event.target == searchmenu
-                return pcman.ui.menu.onSearchItemCommand(event);
     }
 }
+
+// event.target is shown in comments
+window.onload = eventHandler; // document
+window.onunload = eventHandler; // document
+window.onresize = eventHandler; // window
+window.onmousedown = eventHandler; // topwin/box1/canvas
+window.onmouseup = eventHandler; // topwin/box1/canvas
+window.onkeydown = eventHandler; // input_proxy
+window.oncontextmenu = eventHandler; // topwin/box1/canvas
+document.onfocus = eventHandler; // document
+
+document.getElementById('box1').onmousedown = eventHandler; // box1/canvas
+document.getElementById('box1').onmousemove = eventHandler; // box1/canvas
+document.getElementById('box1').onmouseup = eventHandler; // box1/canvas
+document.getElementById('box1').onclick = eventHandler; // box1/canvas
+document.getElementById('box1').ondblclick = eventHandler; // box1/canvas
+
+document.getElementById('input_proxy').oninput = eventHandler;
 

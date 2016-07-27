@@ -1,19 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://pcmanfx2/skin/pcman.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pcmanfx2/skin/contextmenu.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://pcmanfx2/locale/pcman.dtd">
 <window id="topwin"
-    onload="eventHandler(event,this);"
-    onunload="eventHandler(event,this);"
-    onresize="eventHandler(event,this);"
-    onmousedown="eventHandler(event,this);"
-    onkeydown="eventHandler(event,this);"
-    onfocus="eventHandler(event,this);"
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     pack="center"
     context="popup-menu"
-    oncontextmenu="eventHandler(event,this);"
     >
     <box><html:link rel="icon" href="chrome://pcmanfx2/skin/PCMan.png" style="display: block;"/></box>
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/pcman.js" />
@@ -21,14 +15,14 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserutils.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browserstorage.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsermenus.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsersocket.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/contextmenu.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/browsercomm.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefdefault.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/preferences.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/prefhandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/conn.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termview.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
-    <script type="application/x-javascript" src="chrome://pcmanfx2/content/inputHandler.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ssh.js" />
@@ -87,20 +81,12 @@
 
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/_log.js"/>
 
-    <vbox align="center" id='box1'
-        onmousedown="eventHandler(event,this);"
-        onmousemove="eventHandler(event,this);"
-        onmouseup="eventHandler(event,this);"
-        onclick="eventHandler(event,this);"
-        ondblclick="eventHandler(event,this);">
+    <vbox align="center" id='box1'>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" ">
       </html:canvas>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
-        <textbox id="input_proxy"
-            oncompositionstart="eventHandler(event,this);"
-            oncompositionend="eventHandler(event,this);"
-            oninput="eventHandler(event,this);"/>
+        <textbox id="input_proxy"/>
         <label value="&input_proxy_description.label;"/>
       </hbox>
       <html:div id="selection" title=" "/>
@@ -112,15 +98,30 @@
 
     <popupset>
       <menupopup id="popup-menu">
-        <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="eventHandler(event,this);"/>
-        <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="eventHandler(event,this);"/>
-        <menuitem label="&menu_selAll.label;" id="popup-selAll" oncommand="eventHandler(event,this);"/>
+        <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="eventHandler(event);"/>
+        <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="eventHandler(event);"/>
+        <menuitem label="&menu_selAll.label;" id="popup-selAll" oncommand="eventHandler(event);"/>
         <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
         </menu>
-        <menuitem label="&menu_sitepref.label;" id="sitePref" oncommand="eventHandler(event,this);"/>
+        <menuitem label="&menu_sitepref.label;" id="popup-sitepref" oncommand="eventHandler(event);"/>
       </menupopup>
     </popupset>
+
+    <vbox class="menupopup" id="contextmenu">
+      <vbox class="menuitem" id="menu_copy"><label/></vbox>
+      <vbox class="menuitem" id="menu_paste"><label/></vbox>
+      <vbox class="menuitem" id="menu_selAll"><label/></vbox>
+      <vbox class="submenu" id="menu_search"><label/>
+        <vbox class="menupopup" id="searchmenu">
+          <vbox class="menuitem" id="search_google">Google</vbox>
+          <vbox class="menuitem" id="search_yahoo">Yahoo!</vbox>
+          <vbox class="menuitem" id="search_bing">Bing</vbox>
+        </vbox>
+      </vbox>
+      <vbox class="menuseparator"></vbox>
+      <vbox class="menuitem" id="menu_sitepref"><label/></vbox>
+    </vbox>
 
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/eventHandler.js" />
 

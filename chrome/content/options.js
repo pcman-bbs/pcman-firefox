@@ -2,38 +2,33 @@
 
 var pcmanOptions = null;
 
-if (typeof(Components) != 'undefined' && Components.utils) {
+if (Components && Components.utils) {
     Components.utils.import("resource://pcmanfx2/RegisterModule.js");
     RegisterModule.import(window);
     Components.utils.unload("resource://pcmanfx2/RegisterModule.js");
 }
 
-function eventHandler(event, target) {
-    var targetId = '';
-    if (event.target == document || target == window) targetId = 'topwin';
-    else if (!target) targetId = event.target.id;
-    else targetId = target.id;
-    switch (targetId) {
-        case 'topwin':
-            switch (event.type) {
-                case 'load':
-                    pcmanOptions = new PCManOptions(window);
-                    return;
-                case 'unload':
-                    pcmanOptions.close();
-                    pcmanOptions = null;
-                    return;
+function eventHandler(event) {
+    switch (event.type) {
+        case 'load':
+            pcmanOptions = new PCManOptions(window);
+            return;
+        case 'unload':
+            pcmanOptions.close();
+            pcmanOptions = null;
+            return;
+        case 'change': // this.id: 'siteList'
+            return pcmanOptions.siteChanged();
+        case 'click':
+            switch (this.id) {
+                case 'addSite':
+                    return pcmanOptions.addSite();
+                case 'delSite':
+                    return pcmanOptions.delSite();
+                case 'submit':
+                    return pcmanOptions.save();
                 default:
             }
-            break;
-        case 'siteList': // event.type == 'change'
-            return pcmanOptions.siteChanged();
-        case 'addSite': // event.type == 'click'
-            return pcmanOptions.addSite();
-        case 'delSite': // event.type == 'click'
-            return pcmanOptions.delSite();
-        case 'submit': // event.type == 'click'
-            return pcmanOptions.save();
         default:
     }
 }

@@ -2,20 +2,20 @@
 
 'use strict';
 
-var EXPORTED_SYMBOLS = ["BrowserSocket"];
+var EXPORTED_SYMBOLS = ["BrowserComm"];
 
-function BrowserSocket(ui) {
+function BrowserComm(ui) {
     this.listener = ui.listener;
     this.ws = null;
     this.onload();
 }
 
-BrowserSocket.prototype.onload = function() {
+BrowserComm.prototype.onload = function() {
     if (this.ws)
         this.onunload();
 };
 
-BrowserSocket.prototype.connect = function(conn, host, port) {
+BrowserComm.prototype.connect = function(conn, host, port) {
     if (this.ws)
         this.onunload();
 
@@ -60,14 +60,14 @@ BrowserSocket.prototype.connect = function(conn, host, port) {
     this.ws.ipump = pump;
 };
 
-BrowserSocket.prototype.send = function(output) {
+BrowserComm.prototype.send = function(output) {
     if (!this.ws)
         return;
     this.ws.outs.write(output, output.length);
     this.ws.outs.flush();
 };
 
-BrowserSocket.prototype.onunload = function() {
+BrowserComm.prototype.onunload = function() {
     if (!this.ws)
         return;
     this.ws.ins.close();
@@ -75,7 +75,7 @@ BrowserSocket.prototype.onunload = function() {
     this.ws = null;
 };
 
-BrowserSocket.prototype.copy = function(text, callback) {
+BrowserComm.prototype.copy = function(text, callback) {
     /*if(!this.ws)
         return;*/
     var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
@@ -89,7 +89,7 @@ BrowserSocket.prototype.copy = function(text, callback) {
         callback();
 };
 
-BrowserSocket.prototype.paste = function(callback) {
+BrowserComm.prototype.paste = function(callback) {
     /*if(!this.ws)
         return;*/
     // From: https://developer.mozilla.org/en/Using_the_Clipboard

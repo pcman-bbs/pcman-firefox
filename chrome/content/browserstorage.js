@@ -13,6 +13,11 @@ function BrowserStorage(ui) {
 
 BrowserStorage.prototype = {
     initial: function(global) {
+        if (!Components || !Components.classes) {
+            this.area = global.localStorage;
+            this.global = global;
+            return;
+        }
         // share the same prefs of pcman-chrome
         //FIXME: get storage event from other origin
         /*var url = "http://127.0.0.1";
