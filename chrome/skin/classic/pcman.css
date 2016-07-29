@@ -2,23 +2,16 @@
   -moz-appearance: none;
   background-color:#000;
   overflow:hidden;
-  border:none;
-  padding:0;
   margin:0;
 }
 #canvas {
+  position:fixed;
   background-color:#000;
-  border:none;
-  padding:0;
-  margin:0;
 }
 #box3 {
   position:fixed;
   top:-100px;
   background:#fff;
-  border:none;
-  padding:0;
-  margin:0;
 }
 #input_proxy {
   -moz-appearance:none;
@@ -37,7 +30,6 @@
   opacity:.6;
   background-color:Highlight;
   color:HighlightText;
-  border:none;
   padding:0;
   margin:0;
 }

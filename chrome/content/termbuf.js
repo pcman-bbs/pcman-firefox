@@ -526,6 +526,61 @@ TermBuf.prototype = {
                     return c.ch;
             }
         }).join('');
+    },
+
+    onResize: function() {
+        var newcols = this.listener.prefs.get('Cols');
+        var newrows = this.listener.prefs.get('Rows');
+        if (newrows < this.rows) {
+            for (var row = this.rows - 1;
+                (row > newrows - 1 && row > this.curY); --row)
+                this.lines.pop();
+            for (row = 0; row < this.curY - newrows + 1; ++row)
+                this.lines.shift();
+            if (this.cursorSaved) {
+                if (this.savedCurY < this.curY - newrows + 1) this.savedCurY = 0;
+                else if (this.curY > newrows - 1)
+                    this.savedCurY -= this.curY - newrows + 1;
+                if (this.savedCurY >= newrows) this.savedCurY = newrows - 1;
+            }
+            if (this.curY >= newrows) this.curY = newrows - 1;
+        } else {
+            for (var row = this.rows - 1; row < newrows - 1; ++row) {
+                var line = new Array(this.cols);
+                for (var col = 0; col < this.cols; ++col)
+                    line[col] = new TermChar(' ');
+                this.lines.push(line);
+            }
+        }
+        if (newcols < this.cols) {
+            if (this.curX > newcols) this.curX = newcols - 1;
+            if (this.cursorSaved && this.savedCurX > newcols)
+                this.savedCurX = newcols - 1;
+            for (var row = 0; row < newrows; ++row) {
+                for (var col = this.cols - 1; col > newcols - 1; --col)
+                    this.lines[row].pop();
+                if (this.lines[row][newcols - 1].isLeadByte)
+                    this.lines[row][newcols - 1].copyFrom(this.newChar);
+                // force the url to be updated
+                this.lines[row][newcols - 1].needUpdate = true;
+                if (this.lines[row][newcols - 2].isLeadByte)
+                    this.lines[row][newcols - 2].needUpdate = true;
+            }
+        } else {
+            for (var row = 0; row < newrows; ++row) {
+                for (var col = this.cols - 1; col < newcols - 1; ++col) {
+                    var ch = new TermChar(' ');
+                    this.lines[row].push(ch);
+                }
+            }
+        }
+        if (this.bottom == this.rows - 1) this.bottom = newrows - 1;
+        this.cols = newcols;
+        this.rows = newrows;
+        this.listener.conn.sendNaws();
+        // url may need to be updated to aviod url range overflow
+        this.updateCharAttr();
+        this.listener.view.onResize();
     }
 };
 

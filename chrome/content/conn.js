@@ -255,8 +255,8 @@ Conn.prototype = {
     },
 
     sendNaws: function() {
-        var cols = 80;
-        var rows = 24;
+        var cols = this.listener.buf.cols;
+        var rows = this.listener.buf.rows;
         var nawsStr = String.fromCharCode(cols >> 8, cols % 256, rows >> 8, rows % 256).replace(/(\xff)/g, '\xff\xff');
         var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
         this.send(this.ssh.sendNaws(rep));

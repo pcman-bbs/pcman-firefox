@@ -38,6 +38,14 @@ PrefHandler.prototype = {
                     _this.listener.view.redraw(true);
                 });
                 break;
+            case 'Cols':
+            case 'Rows':
+                this.listener.buf.onResize();
+                break;
+            case 'HAlignCenter':
+            case 'VAlignCenter':
+                this.listener.view.onResize();
+                break;
             default:
         }
     }

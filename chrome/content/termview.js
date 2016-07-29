@@ -430,55 +430,56 @@ TermView.prototype = {
     },
 
     onResize: function() {
+        var cols = this.buf ? this.buf.cols : 80;
+        var rows = this.buf ? this.buf.rows : 24;
         this.topwin.style.height = this.listener.global.innerHeight + 'px';
+        this.container.style.height = this.topwin.style.height;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.canvas.height = this.topwin.clientHeight;
+        this.chh = Math.floor(this.canvas.height / rows);
         var ctx = this.ctx;
-        this.chh = Math.floor(this.canvas.height / 24);
         var fontFamily = 'monospace';
-        var font = this.chh + 'px ' + fontFamily;
-        ctx.font = font;
         var textBaseline = 'top';
+        ctx.font = this.chh + 'px ' + fontFamily;
         ctx.textBaseline = textBaseline;
 
         // test whether the monospace font is suitable for BBS
         var m = ctx.measureText('\u25cf'); //black circle
         if (m.width < 0.75 * this.chh) { // Not a chinese font
             fontFamily = 'MingLiU, ' + fontFamily; //FIXME: font in non-Windows
-            font = this.chh + 'px ' + fontFamily;
-            ctx.font = font;
+            ctx.font = this.chh + 'px ' + fontFamily;
         }
 
         m = ctx.measureText('\u3000'); //全形空白
         this.chw = Math.round(m.width / 2);
 
         // if overflow, resize canvas again
-        var overflowX = (this.chw * 80) - this.topwin.clientWidth;
-        if (overflowX > 0) {
+        if (this.chw * cols > this.topwin.clientWidth) {
             this.canvas.width = this.topwin.clientWidth;
-            this.chw = Math.floor(this.canvas.width / 80);
+            this.chw = Math.floor(this.canvas.width / cols);
             this.chh = this.chw * 2; // is it necessary to measureText?
-            font = this.chh + 'px ' + fontFamily;
-            ctx.font = font;
-            this.canvas.height = this.chh * 24;
-
-            // Fix the selection when vertical mouse position is out of canvas
-            var padding = this.topwin.clientHeight - this.canvas.height;
-            this.container.style.paddingTop = (padding / 2) + 'px';
-            this.container.style.paddingBottom = (padding / 2) + 'px';
+            ctx.font = this.chh + 'px ' + fontFamily;
         }
 
-        if (this.buf) {
-            this.canvas.width = this.chw * this.buf.cols;
-            // font needs to be reset after resizing canvas
-            ctx.font = font;
-            ctx.textBaseline = textBaseline;
+        // Fix the blur from page zooming partially and vertical word stretch
+        var ratio = this.listener.ui.getDevicePixelRatio();
+        var left = this.listener.prefs.get('HAlignCenter') ?
+            ((this.topwin.clientWidth - this.chw * cols) / 2) : 0;
+        this.canvas.width = this.chw * cols * ratio;
+        this.canvas.style.width = (this.chw * cols) + 'px';
+        this.canvas.style.left = left + 'px';
+        var top = this.listener.prefs.get('VAlignCenter') ?
+            ((this.topwin.clientHeight - this.chh * rows) / 2) : 0;
+        this.canvas.height = this.chh * rows * ratio;
+        this.canvas.style.height = (this.chh * rows) + 'px';
+        this.canvas.style.top = top + 'px';
+
+        // font needs to be reset after resizing canvas
+        ctx.font = this.chh + 'px ' + fontFamily;
+        ctx.textBaseline = textBaseline;
+        ctx.scale(ratio, ratio);
+        if (this.buf)
             this.redraw(true);
-        } else {
-            this.canvas.width = this.chw * 80;
-            // font needs to be reset after resizing canvas
-            ctx.font = font;
-            ctx.textBaseline = textBaseline;
-        }
 
         var visible = this.cursorVisible;
         if (visible)
