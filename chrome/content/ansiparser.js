@@ -13,6 +13,7 @@ const STATE_CSI = 2;
 
 function AnsiParser(termbuf) {
     this.termbuf = termbuf;
+    this.debug = termbuf.listener.ui.debug;
     this.state = STATE_TEXT;
     this.esc = '';
 }
@@ -180,7 +181,7 @@ AnsiParser.prototype = {
                                 term.restoreCursor();
                                 break;
                             default:
-                                dump('unknown CSI: ' + ch.charCodeAt(0) + '\n');
+                                this.debug('unknown CSI: ' + ch.charCodeAt(0) + '\n');
                         }
                         this.state = STATE_TEXT;
                         this.esc = '';
@@ -206,7 +207,7 @@ AnsiParser.prototype = {
                                     term.carriageReturn();
                                     break;
                                 default:
-                                    dump("C1 control char ESC " + ch + "is not handled\n");
+                                    this.debug("C1 control char ESC " + ch + "is not handled\n");
                                     break;
                             }
                         } else { // Other control chars
@@ -218,7 +219,7 @@ AnsiParser.prototype = {
                                     term.restoreCursor();
                                     break;
                                 default:
-                                    dump("Other control char ESC " + ch + "is not handled\n");
+                                    this.debug("Other control char ESC " + ch + "is not handled\n");
                                     break;
                             };
                         }

@@ -44,11 +44,6 @@ PCMan.prototype = {
 
         this.ui.updateTabTitle();
         this.view.onResize();
-
-        var temp = this;
-        this.conn.idleTimeout = this.ui.setTimer(false, function() {
-            temp.conn.sendIdleString();
-        }, 180000);
     },
 
     close: function() {
@@ -57,14 +52,9 @@ PCMan.prototype = {
             this.conn.close();
         }
 
-        this.view.removeEventListener();
+        this.view.onClose();
         this.ui.menu.onClose();
-        this.ui.setConverter();
         this.prefs.onChanged();
-
-        // added by Hemiola SUN 
-        this.view.blinkTimeout.cancel();
-        this.conn.idleTimeout.cancel();
     },
 
     onConnect: function(conn) {
@@ -79,7 +69,7 @@ PCMan.prototype = {
     onClose: function(conn) {
         if (this.abnormalClose) return;
 
-        this.ui.updateTabIcon('disconnect');
+        this.ui.updateTabIcon(this.conn.connectFailed ? 'fail' : 'disconnect');
     },
 
     copy: function() {
@@ -88,7 +78,7 @@ PCMan.prototype = {
         var text = this.view.selection.getText();
 
         var _this = this;
-        this.conn.socket.copy(text, function() {
+        this.conn.socket.copy(this.ui.formatCRLF('copy', text), function() {
             _this.ui.dispatchCopyEvent(_this.view.input);
         });
         this.view.selection.cancelSel(true);
@@ -98,7 +88,7 @@ PCMan.prototype = {
         var _this = this;
         this.conn.socket.paste(function(text) {
             var charset = _this.prefs.get('Encoding');
-            _this.conn.convSend(text, charset);
+            _this.conn.convSend(_this.ui.formatCRLF('paste', text), charset);
         });
     },
 

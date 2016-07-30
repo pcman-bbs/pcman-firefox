@@ -109,7 +109,7 @@ TermBuf.prototype = {
                     continue;
             }
             if (ch < ' ')
-                dump('Unhandled invisible char' + ch.charCodeAt(0) + '\n');
+                this.listener.ui.debug('Unhandled invisible char' + ch.charCodeAt(0) + '\n');
 
             if (this.curX >= cols) {
                 // next line
@@ -191,11 +191,9 @@ TermBuf.prototype = {
                     if (!uris) uris = new Array();
                     var uri = [res.index, res.index + res[0].length];
                     uris.push(uri);
-                    // dump('found URI: ' + res[0] + '\n');
                 }
                 if (uris) {
                     line.uris = uris;
-                    // dump(line.uris.length + "uris found\n");
                 }
             }
         }
@@ -444,8 +442,6 @@ TermBuf.prototype = {
     },
 
     gotoPos: function(x, y) {
-        // dump('gotoPos: ' + x + ', ' + y + '\n');
-
         // make sure the position is valid
         if (x < 0)
             x = 0;

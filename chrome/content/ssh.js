@@ -299,8 +299,13 @@ SSH.prototype = {
     close: function(legitClose) {
         if (!this.enable)
             return;
-        if (this.client)
+        if (this.client) {
             this.client.close(legitClose);
+            this.transport = null;
+            this.client = null;
+            this.shell = null;
+            this.bufferOut = '';
+        }
     }
 }
 

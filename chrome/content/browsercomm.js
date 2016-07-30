@@ -80,10 +80,6 @@ BrowserComm.prototype.copy = function(text, callback) {
         return;*/
     var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
         .getService(Components.interfaces.nsIClipboardHelper);
-    var os = Components.classes["@mozilla.org/xre/app-info;1"]
-        .getService(Components.interfaces.nsIXULRuntime).OS;
-    if (os == 'WINNT') // handle CRLF
-        text = text.replace(/\n/g, "\r\n");
     clipboardHelper.copyString(text);
     if (callback)
         callback();
@@ -110,8 +106,6 @@ BrowserComm.prototype.paste = function(callback) {
         return;
     var s = data.value.QueryInterface(Components.interfaces.nsISupportsString);
     s = s.data.substring(0, len.value / 2);
-    s = s.replace(/\r\n/g, '\r');
-    s = s.replace(/\n/g, '\r');
     if (callback)
         callback(s);
     else

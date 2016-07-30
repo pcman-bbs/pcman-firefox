@@ -322,11 +322,12 @@ TermView.prototype = {
     onTextInput: function(e) {
         if (this.isComposing) // Fix for FX 12+; use e.isComposing in FX 31+
             return;
-        if (!e.target.value)
+        if (!this.input.value)
             return;
         var charset = this.listener.prefs.get('Encoding');
-        this.listener.conn.convSend(e.target.value, charset);
-        e.target.value = '';
+        var value = this.listener.ui.formatCRLF('paste', this.input.value);
+        this.input.value = '';
+        this.listener.conn.convSend(value, charset);
     },
 
     onkeyDown: function(e) {
@@ -381,7 +382,7 @@ TermView.prototype = {
         } else if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
             switch (e.keyCode) {
                 case 8:
-                    conn.send('\b');
+                    conn.send(this.detectDBCS(true, '\b'));
                     break;
                 case 9:
                     conn.send('\t');
@@ -390,7 +391,8 @@ TermView.prototype = {
                     e.stopPropagation();
                     break;
                 case 13:
-                    conn.send('\r');
+                    if (this.input.tagName == 'textbox') //TODO: find better way
+                        conn.send('\r'); // only xul need it
                     break;
                 case 27: //ESC
                     conn.send('\x1b');
@@ -408,13 +410,13 @@ TermView.prototype = {
                     conn.send('\x1b[1~');
                     break;
                 case 37: //Arrow Left
-                    conn.send('\x1b[D');
+                    conn.send(this.detectDBCS(true, '\x1b[D'));
                     break;
                 case 38: //Arrow Up
                     conn.send('\x1b[A');
                     break;
                 case 39: //Arrow Right
-                    conn.send('\x1b[C');
+                    conn.send(this.detectDBCS(false, '\x1b[C'));
                     break;
                 case 40: //Arrow Down
                     conn.send('\x1b[B');
@@ -423,10 +425,21 @@ TermView.prototype = {
                     conn.send('\x1b[2~');
                     break;
                 case 46: //DEL
-                    conn.send('\x1b[3~');
+                    conn.send(this.detectDBCS(false, '\x1b[3~'));
                     break;
             }
         }
+    },
+
+    detectDBCS: function(back, key) {
+        if (!this.listener.prefs.get('DetectDBCS') || !this.buf)
+            return key;
+        var line = this.buf.lines[this.buf.curY];
+        if (back && this.buf.curX > 1)
+            return line[this.buf.curX - 2].isLeadByte ? key + key : key;
+        if (!back && this.buf.curX < this.buf.cols)
+            return line[this.buf.curX].isLeadByte ? key + key : key;
+        return key;
     },
 
     onResize: function() {
@@ -530,8 +543,13 @@ TermView.prototype = {
         this.input.style.top = '-100px';
         this.isComposing = false; // Fix for FX 12+
 
-        // For compatibility of FX 10 and before
-        this.onTextInput(e);
+        // For compatibility of IE and FX 10-
+        if (!e)
+            return;
+        var _this = this;
+        this.listener.ui.setTimer(false, function() {
+            _this.onTextInput(e);
+        }, 100); // Make sure another onTextInput in GC clear this.input
     },
 
     onBlink: function() {
@@ -696,7 +714,7 @@ TermView.prototype = {
         for (var i = 0; i < uris.length; i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 this.canvas.style.cursor = "pointer";
-                return
+                return;
             }
         }
         this.canvas.style.cursor = "default";
@@ -762,8 +780,11 @@ TermView.prototype = {
             this.redraw(false);
     },
 
-    removeEventListener: function() {
-        this.onCompositionEnd({ target: {} }); // Hide the input proxy
+    onClose: function() {
+        // added by Hemiola SUN 
+        this.blinkTimeout.cancel();
+
+        this.onCompositionEnd(); // Hide the input proxy
     }
 };
 

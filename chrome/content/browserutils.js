@@ -178,6 +178,20 @@ BrowserUtils.prototype = {
         }
     },
 
+    formatCRLF: function(type, str) {
+        if (type == 'paste') {
+            str = str.replace(/\r\n/g, '\r').replace(/\n/g, '\r');
+            return str;
+        }
+        if (Cc) {
+            var os = Cc["@mozilla.org/xre/app-info;1"]
+                .getService(Ci.nsIXULRuntime).OS;
+            if (os == 'WINNT') // handle CRLF
+                return str.replace(/\n/g, '\r\n');
+        }
+        return str; // API of copy in web page will handle it automatically
+    },
+
     getLocalFilePath: function(name) {
         if (this.e10sEnabled)
             return ''; // stop loading file in paramikojs

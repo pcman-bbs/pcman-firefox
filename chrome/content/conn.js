@@ -101,13 +101,27 @@ Conn.prototype = {
             }
         };
 
-        this.socket.connect(this, host, port);
+        this.socket.connect(this, this.host, this.port);
 
         this.connectTime = Date.now();
         this.connectCount++;
+
+        var AntiIdleTime = this.listener.prefs.get('AntiIdleTime');
+        if (!AntiIdleTime)
+            return;
+        var _this = this;
+        this.idleTimeout = this.listener.ui.setTimer(false, function() {
+            _this.sendIdleString();
+        }, AntiIdleTime);
     },
 
     close: function() {
+        if (this.idleTimeout)
+            this.idleTimeout.cancel();
+
+        if (this.reconnectTimer)
+            this.reconnectTimer.cancel();
+
         if (!this.isConnected)
             return;
 
@@ -118,29 +132,25 @@ Conn.prototype = {
         if (this.listener.abnormalClose)
             return;
 
-        if (this.connectCount >= 100) {
-            this.connectFailed = true; //FIXME: show something on UI?
+        var ReconnectCount = this.listener.prefs.get('ReconnectCount');
+        if (ReconnectCount && this.connectCount >= ReconnectCount) {
+            this.connectFailed = true;
             return;
         }
 
-        // reconnect automatically if the site is disconnected in 15 seconds
-        var time = Date.now();
-        if (time - this.connectTime < 15000) {
+        // reconnect automatically if the site disconnects in a certain time
+        var ReconnectTime = this.listener.prefs.get('ReconnectTime');
+        if (ReconnectTime && (Date.now() - this.connectTime) < ReconnectTime) {
             this.listener.buf.clear(2);
             this.listener.buf.attr.resetAttr();
-            var connectDelay = 0;
-            if (this.reconnectTimer) {
-                this.reconnectTimer.cancel(); // wait for this reconnection
-                delete this.reconnectTimer;
-            }
+            var connectDelay = this.listener.prefs.get('ReconnectDelay');
             if (!connectDelay) {
                 this.connect();
             } else {
                 var _this = this;
                 this.reconnectTimer = this.listener.ui.setTimer(false, function() {
-                    delete _this.reconnectTimer;
                     _this.connect();
-                }, connectDelay * 1000);
+                }, connectDelay);
             }
         }
     },
@@ -151,6 +161,7 @@ Conn.prototype = {
             this.isConnected = true;
         }
         this.listener.onConnect(this);
+        this.connectFailed = false;
     },
 
     onStopRequest: function() {
@@ -267,17 +278,21 @@ Conn.prototype = {
         if (!this.isConnected)
             return;
 
-        this.idleTimeout.cancel();
+        if (this.idleTimeout)
+            this.idleTimeout.cancel();
 
         str = this.ssh.output(str);
 
         if (str)
             this.socket.send(str)
 
-        var temp = this;
+        var AntiIdleTime = this.listener.prefs.get('AntiIdleTime');
+        if (!AntiIdleTime)
+            return;
+        var _this = this;
         this.idleTimeout = this.listener.ui.setTimer(false, function() {
-            temp.sendIdleString();
-        }, 180000);
+            _this.sendIdleString();
+        }, AntiIdleTime);
     },
 
     convSend: function(unicode_str, charset) {
@@ -291,7 +306,7 @@ Conn.prototype = {
     },
 
     sendIdleString: function() {
-        this.send("\x1b[A\x1b[B"); // Arrow Up and Arrow Down
+        this.send(this.listener.prefs.get('AntiIdleStr'));
     }
 };
 
