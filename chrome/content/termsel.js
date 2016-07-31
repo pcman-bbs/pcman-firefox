@@ -88,10 +88,12 @@ TermSel.prototype = {
                 return;
             }
             this.selBlockTrim();
-            return;
+        } else {
+            this.selTrim();
         }
 
-        this.selTrim();
+        if (this.view.listener.prefs.get('CopyAfterSel'))
+            this.view.listener.copy();
     },
 
     selTrim: function() {
@@ -157,6 +159,15 @@ TermSel.prototype = {
 
     // Updating selection range just after termbuf changes
     refreshSel: function() {
+        if (this.view.listener.prefs.get('KeepSelAtBufUpd')) {
+            // Reset the startcol endcol to untrimmed ones
+            this.selUpdate(this.realEndCol, this.realEndRow);
+            // termview should be updated before trimming
+            this.view.updateSel(true);
+            // Trim the DBCS character again with the updated termbuf
+            this.selEnd(this.realEndCol, this.realEndRow);
+            return;
+        }
         this.cancelSel(false);
         this.view.updateSel(true); // force updating even if buf.changed == true
     },
@@ -236,6 +247,8 @@ TermSel.prototype = {
     },
 
     strStrip: function(str) {
+        if (!this.view.listener.prefs.get('TrimTail'))
+            return str;
         return str.replace(/ +$/, '');
     },
 

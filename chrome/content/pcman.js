@@ -46,6 +46,13 @@ PCMan.prototype = {
         this.view.onResize();
     },
 
+    onbeforeunload: function(event) {
+        if (this.prefs.get('AskForClose') && this.conn.isConnected) {
+            event.returnValue = this.conn.host + ':' + this.conn.port;
+            return event.returnValue;
+        }
+    },
+
     close: function() {
         if (this.conn.isConnected) {
             this.abnormalClose = true;
@@ -81,14 +88,24 @@ PCMan.prototype = {
         this.conn.socket.copy(this.ui.formatCRLF('copy', text), function() {
             _this.ui.dispatchCopyEvent(_this.view.input);
         });
-        this.view.selection.cancelSel(true);
+        if (this.prefs.get('ClearCopiedSel'))
+            this.view.selection.cancelSel(true);
     },
 
     paste: function() {
         var _this = this;
         this.conn.socket.paste(function(text) {
+            text = _this.ui.formatCRLF('paste', text);
+            var EnterKey = _this.prefs.get('EnterKey');
+            text = text.replace(/\r/g, EnterKey);
+            var LineWrap = _this.prefs.get('LineWrap');
+            if (text.indexOf('\x1b') > -1) // don't wrap ansi text
+                LineWrap = 0;
+            text = _this.prefs.handler.wrapText(text, LineWrap, EnterKey);
+            //FIXME: stop user from pasting DBCS words with 2-color
+            text = text.replace(/\x1b/g, _this.prefs.get('EscapeString'));
             var charset = _this.prefs.get('Encoding');
-            _this.conn.convSend(_this.ui.formatCRLF('paste', text), charset);
+            _this.conn.convSend(text, charset);
         });
     },
 

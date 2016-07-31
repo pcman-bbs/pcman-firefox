@@ -326,6 +326,7 @@ TermView.prototype = {
             return;
         var charset = this.listener.prefs.get('Encoding');
         var value = this.listener.ui.formatCRLF('paste', this.input.value);
+        value = value.replace('\r', this.listener.prefs.get('EnterKey'));
         this.input.value = '';
         this.listener.conn.convSend(value, charset);
     },
@@ -390,9 +391,9 @@ TermView.prototype = {
                     e.preventDefault();
                     e.stopPropagation();
                     break;
-                case 13:
+                case 13: //Enter, only xul need it
                     if (this.input.tagName == 'textbox') //TODO: find better way
-                        conn.send('\r'); // only xul need it
+                        conn.send(this.listener.prefs.get('EnterKey'));
                     break;
                 case 27: //ESC
                     conn.send('\x1b');
@@ -443,11 +444,14 @@ TermView.prototype = {
     },
 
     onResize: function() {
+        var visible = this.cursorVisible;
+        if (visible)
+            this.hideCursor();
+
         var cols = this.buf ? this.buf.cols : 80;
         var rows = this.buf ? this.buf.rows : 24;
         this.topwin.style.height = this.listener.global.innerHeight + 'px';
         this.container.style.height = this.topwin.style.height;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.canvas.height = this.topwin.clientHeight;
         this.chh = Math.floor(this.canvas.height / rows);
         var ctx = this.ctx;
@@ -493,10 +497,6 @@ TermView.prototype = {
         ctx.scale(ratio, ratio);
         if (this.buf)
             this.redraw(true);
-
-        var visible = this.cursorVisible;
-        if (visible)
-            this.hideCursor();
 
         this.updateCursorPos();
         // should we set cursor height according to chh?
@@ -686,6 +686,22 @@ TermView.prototype = {
         return { col: col, row: row };
     },
 
+    getURI: function(cursor) {
+        var col = cursor.col,
+            row = cursor.row;
+        var uris = this.buf.lines[row].uris;
+        if (!uris) return '';
+        for (var i = 0; i < uris.length; i++) {
+            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
+                var uri = '';
+                for (var j = uris[i][0]; j < uris[i][1]; j++)
+                    uri += this.buf.lines[row][j].ch;
+                return uri;
+            }
+        }
+        return '';
+    },
+
     onMouseDown: function(event) {
         if (event.button == 0) { // left button
             var cursor = this.mouseToColRow(event.pageX, event.pageY);
@@ -704,28 +720,21 @@ TermView.prototype = {
             this.selection.selUpdate(cursor.col, cursor.row);
 
         // handle cursors for hyperlinks
-        var col = cursor.col,
-            row = cursor.row;
-        var uris = this.buf.lines[row].uris;
-        if (!uris) {
-            this.canvas.style.cursor = "default";
-            return;
-        }
-        for (var i = 0; i < uris.length; i++) {
-            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-                this.canvas.style.cursor = "pointer";
-                return;
-            }
-        }
-        this.canvas.style.cursor = "default";
+        var uri = this.getURI(cursor);
+        this.canvas.style.cursor = uri ? "pointer" : "default";
     },
 
     onMouseUp: function(event) {
+        var cursor = this.mouseToColRow(event.pageX, event.pageY);
+        if (!cursor) return;
         if (event.button == 0) { // left button
-            var cursor = this.mouseToColRow(event.pageX, event.pageY);
-            if (!cursor) return;
             if (this.selection.isSelecting)
                 this.selection.selEnd(cursor.col, cursor.row);
+        } else if (event.button == 1) { // middle button
+            if (this.getURI(cursor))
+                return; // let onClick handle it
+            if (this.listener.prefs.get('PasteAsMidClick'))
+                this.listener.paste();
         }
     },
 
@@ -737,18 +746,9 @@ TermView.prototype = {
         // For a common click, previous selection always collapses in mouseup
         if (this.selection.hasSelection()) return;
 
-        var col = cursor.col,
-            row = cursor.row;
-        var uris = this.buf.lines[row].uris;
-        if (!uris) return;
-        for (var i = 0; i < uris.length; i++) {
-            if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
-                var uri = "";
-                for (var j = uris[i][0]; j < uris[i][1]; j++)
-                    uri = uri + this.buf.lines[row][j].ch;
-                this.listener.ui.openURI(uri);
-            }
-        }
+        var uri = this.getURI(cursor);
+        if (uri)
+            this.listener.ui.openURI(uri, this.listener.prefs.get('NewTab'));
     },
 
     onDblClick: function(event) {

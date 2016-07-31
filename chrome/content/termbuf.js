@@ -113,7 +113,8 @@ TermBuf.prototype = {
 
             if (this.curX >= cols) {
                 // next line
-                this.lineFeed(); // some poor-designed bbs don't need it
+                if (this.listener.prefs.get('LineFeed'))
+                    this.lineFeed(); // some poor-designed bbs don't need it
                 this.curX = 0;
                 line = lines[this.curY];
                 this.posChanged = true;

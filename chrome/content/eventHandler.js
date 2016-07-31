@@ -15,6 +15,8 @@ function eventHandler(event) {
             pcman.view.input.addEventListener('compositionstart', eventHandler, false);
             pcman.view.input.addEventListener('compositionend', eventHandler, false);
             return;
+        case 'beforeunload':
+            return pcman.onbeforeunload(event);
         case 'unload':
             pcman.view.input.removeEventListener('compositionstart', eventHandler, false);
             pcman.view.input.removeEventListener('compositionend', eventHandler, false);
@@ -78,6 +80,7 @@ function eventHandler(event) {
 
 // event.target is shown in comments
 window.onload = eventHandler; // document
+window.onbeforeunload = eventHandler; // document
 window.onunload = eventHandler; // document
 window.onresize = eventHandler; // window
 window.onmousedown = eventHandler; // topwin/box1/canvas

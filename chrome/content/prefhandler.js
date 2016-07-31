@@ -126,6 +126,40 @@ PrefHandler.prototype = {
             }
         }
         return result;
+    },
+
+    // Wrap text within maxLen without hyphenating English words,
+    // where the maxLen is generally the screen width.
+    wrapText: function(str, maxLen, enterChar) {
+        // Divide string into non-hyphenated groups
+        // classified as \r, \n, single full-width character, an English word,
+        // and space characters in the beginning of original line. (indent)
+        // Spaces next to a word group are merged into that group
+        // to ensure the start of each wrapped line is a word.
+        // FIXME: full-width punctuation marks aren't recognized
+        if (!maxLen)
+            return str;
+
+        var pattern = /\r|\n|([^\x00-\x7f][,.?!:;]?[\t ]*)|([\x00-\x08\x0b\x0c\x0e-\x1f\x21-\x7f]+[\t ]*)|[\t ]+/g;
+        var splited = str.match(pattern);
+
+        var result = '';
+        var len = 0;
+        for (var i = 0; i < splited.length; ++i) {
+            // Convert special characters to spaces with the same width
+            // and then we can get the width by the length of converted string
+            var grouplen = splited[i].replace(/[^\x00-\x7f]/g, "  ").replace(/\t/, "    ").replace(/\r|\n/, "").length;
+
+            if (splited[i] == '\r' || splited[i] == '\n')
+                len = 0;
+            if (len + grouplen > maxLen) {
+                result += enterChar;
+                len = 0;
+            }
+            result += splited[i];
+            len += grouplen;
+        }
+        return result;
     }
-}
+};
 

@@ -248,8 +248,8 @@ Conn.prototype = {
                         // end of sub negotiation
                         switch (this.iac_sb[0]) {
                             case TERM_TYPE:
-                                // FIXME: support other terminal types
-                                var rep = IAC + SB + TERM_TYPE + IS + 'VT100' + IAC + SE;
+                                var type = this.listener.prefs.get('TermType');
+                                var rep = IAC + SB + TERM_TYPE + IS + type + IAC + SE;
                                 this.send(rep);
                                 break;
                         }
@@ -281,6 +281,8 @@ Conn.prototype = {
         if (this.idleTimeout)
             this.idleTimeout.cancel();
 
+        if (this.ssh.enable && !this.ssh.client)
+            str = str.replace(this.listener.prefs.get('EnterKey'), '\r');
         str = this.ssh.output(str);
 
         if (str)

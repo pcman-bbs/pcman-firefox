@@ -307,5 +307,5 @@ SSH.prototype = {
             this.bufferOut = '';
         }
     }
-}
+};
 
