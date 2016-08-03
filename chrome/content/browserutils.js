@@ -301,6 +301,55 @@ BrowserUtils.prototype = {
         }
     },
 
+    load: function(files, callback) {
+        if (files.length == 0)
+            return;
+
+        // http://stackoverflow.com/questions/31391207/javascript-readasbinarystring-function-on-e11
+        if (!FileReader.prototype.readAsBinaryString) { // for IE
+            FileReader.prototype.readAsBinaryString = function(fileData) {
+                var _this = this;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    _this.onloadend(String.fromCharCode.apply(null, new Uint8Array(reader.result)));
+                }
+                reader.readAsArrayBuffer(fileData);
+            }
+        }
+
+        var reader = new FileReader();
+        reader.onloadend = function(event) {
+            if (typeof(event) == 'string')
+                return callback(event);
+            if (reader.readyState != FileReader.DONE)
+                return;
+            if (reader.result)
+                callback(reader.result);
+        }
+        reader.readAsBinaryString(files[0]);
+    },
+
+    save: function(filename, data) {
+        var URL = this.listener.global.URL || this.listener.global.webkitURL;
+
+        var ia = new Uint8Array(data.length);
+        for (var i = 0; i < data.length; ++i) {
+            ia[i] = data.charCodeAt(i);
+        }
+        var Blob = this.listener.global.Blob;
+        var bb = new Blob([ia], { "type": "application/octet-stream" });
+
+        if (this.listener.global.navigator.msSaveOrOpenBlob) // for IE
+            return this.listener.global.navigator.msSaveOrOpenBlob(bb, filename);
+        var downloader = this.getElementById('downloader');
+        downloader.download = filename; // for GC 14+, FX 20+, and Edge 13+
+        downloader.href = URL.createObjectURL(bb);
+        downloader.click();
+        this.setTimer(false, function() {
+            URL.revokeObjectURL(downloader.href);
+        }, 1000); //XXX: how long it takes to download completely?
+    },
+
     debug: function(text) {
         if (typeof(Application) != 'undefined')
             return Application.console.log(text);

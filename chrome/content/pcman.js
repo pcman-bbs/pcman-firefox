@@ -79,10 +79,10 @@ PCMan.prototype = {
         this.ui.updateTabIcon(this.conn.connectFailed ? 'fail' : 'disconnect');
     },
 
-    copy: function() {
+    copy: function(ansi) {
         if (!this.view.selection.hasSelection())
             return;
-        var text = this.view.selection.getText();
+        var text = this.view.selection.getText(ansi);
 
         var _this = this;
         this.conn.socket.copy(this.ui.formatCRLF('copy', text), function() {
@@ -95,15 +95,6 @@ PCMan.prototype = {
     paste: function() {
         var _this = this;
         this.conn.socket.paste(function(text) {
-            text = _this.ui.formatCRLF('paste', text);
-            var EnterKey = _this.prefs.get('EnterKey');
-            text = text.replace(/\r/g, EnterKey);
-            var LineWrap = _this.prefs.get('LineWrap');
-            if (text.indexOf('\x1b') > -1) // don't wrap ansi text
-                LineWrap = 0;
-            text = _this.prefs.handler.wrapText(text, LineWrap, EnterKey);
-            //FIXME: stop user from pasting DBCS words with 2-color
-            text = text.replace(/\x1b/g, _this.prefs.get('EscapeString'));
             var charset = _this.prefs.get('Encoding');
             _this.conn.convSend(text, charset);
         });
@@ -111,6 +102,31 @@ PCMan.prototype = {
 
     selAll: function() {
         this.view.selection.selectAll();
+    },
+
+    load: function(event) {
+        var _this = this;
+        this.ui.load(event.target.files, function(data) {
+            if (!data) return;
+            var text = _this.ui.formatCRLF('paste', data);
+            text = text.replace(/\r/g, _this.prefs.get('EnterKey'));
+            text = text.replace(/\x1b/g, _this.prefs.get('EscapeString'));
+            _this.conn.send(text);
+        });
+    },
+
+    save: function(type) {
+        if (!this.view.selection.hasSelection())
+            return; //TODO: trigger downloading article
+
+        var text = this.view.selection.getText(!!type).replace(/\n/g, '\r\n');
+        this.conn.oconv.charset = this.prefs.get('Encoding');
+        var b5str = this.conn.oconv.ConvertFromUnicode(text);
+        b5str = type ? this.buf.fromMyFormat(b5str) : b5str;
+        this.ui.save(type ? 'newansi.ans' : 'newtext.txt', b5str);
+
+        if (this.prefs.get('ClearCopiedSel'))
+            this.view.selection.cancelSel(true);
     }
 };
 

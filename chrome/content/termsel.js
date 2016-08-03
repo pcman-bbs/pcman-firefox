@@ -252,29 +252,29 @@ TermSel.prototype = {
         return str.replace(/ +$/, '');
     },
 
-    getText: function() {
+    getText: function(ansi) {
         if (!this.hasSelection())
             return null;
 
         if (this.blockMode)
-            return this.getBlockText();
+            return this.getBlockText(ansi);
 
         var buf = this.view.buf;
         var endCol = (this.endCol < buf.cols) ? this.endCol : (buf.cols - 1);
         var ret = '';
 
         if (this.startRow == this.endRow) // only one line is selected
-            return this.strStrip(buf.getRowText(this.startRow, this.startCol, endCol + 1));
+            return this.strStrip(buf.getRowText(this.startRow, this.startCol, endCol + 1, ansi));
 
-        ret = this.strStrip(buf.getRowText(this.startRow, this.startCol, buf.cols)) + '\n';
+        ret = this.strStrip(buf.getRowText(this.startRow, this.startCol, buf.cols, ansi)) + '\n';
         for (var row = this.startRow + 1; row < this.endRow; ++row)
-            ret += this.strStrip(buf.getRowText(row, 0, buf.cols)) + '\n';
-        ret += this.strStrip(buf.getRowText(this.endRow, 0, endCol + 1));
+            ret += this.strStrip(buf.getRowText(row, 0, buf.cols, ansi)) + '\n';
+        ret += this.strStrip(buf.getRowText(this.endRow, 0, endCol + 1, ansi));
 
         return ret;
     },
 
-    getBlockText: function() {
+    getBlockText: function(ansi) {
         if (this.startCol == this.endCol)
             return null;
         var buf = this.view.buf;
@@ -292,7 +292,7 @@ TermSel.prototype = {
             }
             if (line[endCol].isLeadByte)
                 endCol++;
-            ret += this.strStrip(buf.getRowText(row, startCol, endCol + 1));
+            ret += this.strStrip(buf.getRowText(row, startCol, endCol + 1, ansi));
             ret += (row < this.endRow ? '\n' : '');
         }
 

@@ -73,6 +73,7 @@ BrowserMenus.prototype = {
     onMenuPopupShowing: function(event) {
         var hasSelection = this.listener.view.selection.hasSelection();
         this.ui.getElementById("popup-copy").disabled = !hasSelection;
+        this.ui.getElementById("popup-coloredCopy").disabled = !hasSelection;
         this.ui.getElementById("popup-search").disabled = !hasSelection;
         this.createSearchMenu(this.ui.getElementById('search_menu'));
     },
@@ -180,6 +181,9 @@ BrowserMenus.prototype = {
         set(menu.items, 'menu_copy', function() {
             _this.listener.copy();
         });
+        set(menu.items, 'menu_coloredCopy', function() {
+            _this.listener.copy(true);
+        });
         set(menu.items, 'menu_paste', function() {
             _this.listener.paste();
         });
@@ -196,6 +200,16 @@ BrowserMenus.prototype = {
         set(menu.items['menu_search'].menu.items, 'search_bing', function() {
             _this.search('Bing');
         });
+        set(menu.items, 'menu_loadfile', function() {
+            _this.ui.getElementById('filepicker').click();
+        });
+        set(menu.items, 'menu_savefile');
+        set(menu.items['menu_savefile'].menu.items, 'save_txt', function() {
+            _this.listener.save();
+        });
+        set(menu.items['menu_savefile'].menu.items, 'save_ans', function() {
+            _this.listener.save('ansi');
+        });
         set(menu.items, 'menu_sitepref', function() {
             _this.ui.sitepref();
         });
@@ -203,6 +217,7 @@ BrowserMenus.prototype = {
         menu.oncontextmenu = function(event) {
             var isSel = _this.listener.view.selection.hasSelection();
             menu.items['menu_copy'].disable(!isSel);
+            menu.items['menu_coloredCopy'].disable(!isSel);
             menu.items['menu_search'].disable(!isSel);
         };
     }

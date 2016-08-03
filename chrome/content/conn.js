@@ -298,10 +298,20 @@ Conn.prototype = {
     },
 
     convSend: function(unicode_str, charset) {
-        var s;
+        var text = this.listener.ui.formatCRLF('paste', unicode_str);
+        var EnterKey = this.listener.prefs.get('EnterKey');
+        text = text.replace(/\r/g, EnterKey);
+        var LineWrap = this.listener.prefs.get('LineWrap');
+        if (text.indexOf('\x1b') > -1) // don't wrap ansi text
+            LineWrap = 0;
+        text = this.wrapText(text, LineWrap, EnterKey);
 
         this.oconv.charset = charset;
-        s = this.oconv.ConvertFromUnicode(unicode_str);
+        var s = this.oconv.ConvertFromUnicode(text);
+
+        s = this.listener.buf.fromMyFormat(s);
+        //FIXME: stop user from pasting DBCS words with 2-color
+        s = s.replace(/\x1b/g, this.listener.prefs.get('EscapeString'));
 
         if (s)
             this.send(s);
@@ -309,6 +319,40 @@ Conn.prototype = {
 
     sendIdleString: function() {
         this.send(this.listener.prefs.get('AntiIdleStr'));
+    },
+
+    // Wrap text within maxLen without hyphenating English words,
+    // where the maxLen is generally the screen width.
+    wrapText: function(str, maxLen, enterChar) {
+        // Divide string into non-hyphenated groups
+        // classified as \r, \n, single full-width character, an English word,
+        // and space characters in the beginning of original line. (indent)
+        // Spaces next to a word group are merged into that group
+        // to ensure the start of each wrapped line is a word.
+        // FIXME: full-width punctuation marks aren't recognized
+        if (!maxLen)
+            return str;
+
+        var pattern = /\r|\n|([^\x00-\x7f][,.?!:;]?[\t ]*)|([\x00-\x08\x0b\x0c\x0e-\x1f\x21-\x7f]+[\t ]*)|[\t ]+/g;
+        var splited = str.match(pattern);
+
+        var result = '';
+        var len = 0;
+        for (var i = 0; i < splited.length; ++i) {
+            // Convert special characters to spaces with the same width
+            // and then we can get the width by the length of converted string
+            var grouplen = splited[i].replace(/[^\x00-\x7f]/g, "  ").replace(/\t/, "    ").replace(/\r|\n/, "").length;
+
+            if (splited[i] == '\r' || splited[i] == '\n')
+                len = 0;
+            if (len + grouplen > maxLen) {
+                result += enterChar;
+                len = 0;
+            }
+            result += splited[i];
+            len += grouplen;
+        }
+        return result;
     }
 };
 

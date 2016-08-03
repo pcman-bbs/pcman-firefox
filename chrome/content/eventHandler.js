@@ -61,19 +61,29 @@ function eventHandler(event) {
             return pcman.view.onClick(event);
         case 'dblclick':
             return pcman.view.onDblClick(event);
-        case 'command':
+        case 'command': // only xul use it
             switch (event.target.id) {
                 case 'popup-copy': // this == window in xul
                     return pcman.copy();
+                case 'popup-coloredCopy': // this == window in xul
+                    return pcman.copy(true);
                 case 'popup-paste': // this == window in xul
                     return pcman.paste();
                 case 'popup-selAll': // this == window in xul
                     return pcman.selAll();
+                case 'popup-loadfile': // this == window in xul
+                    return document.getElementById('filepicker').click();
+                case 'save-txt': // this == window in xul
+                    return pcman.save();
+                case 'save-ans': // this == window in xul
+                    return pcman.save('ansi');
                 case 'popup-sitepref': // this == window in xul
                     return pcman.ui.sitepref();
                 default: // event.target == searchmenu
                     return pcman.ui.menu.onSearchItemCommand(event);
             }
+        case 'change': // this == filepicker
+            return pcman.load(event);
         default:
     }
 }
@@ -96,4 +106,5 @@ document.getElementById('box1').onclick = eventHandler; // box1/canvas
 document.getElementById('box1').ondblclick = eventHandler; // box1/canvas
 
 document.getElementById('input_proxy').oninput = eventHandler;
+document.getElementById('filepicker').onchange = eventHandler;
 

@@ -325,10 +325,8 @@ TermView.prototype = {
         if (!this.input.value)
             return;
         var charset = this.listener.prefs.get('Encoding');
-        var value = this.listener.ui.formatCRLF('paste', this.input.value);
-        value = value.replace('\r', this.listener.prefs.get('EnterKey'));
+        this.listener.conn.convSend(this.input.value, charset);
         this.input.value = '';
-        this.listener.conn.convSend(value, charset);
     },
 
     onkeyDown: function(e) {

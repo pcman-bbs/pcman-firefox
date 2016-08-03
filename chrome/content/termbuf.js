@@ -499,7 +499,7 @@ TermBuf.prototype = {
         }
     },
 
-    getRowText: function(row, colStart, colEnd) {
+    getRowText: function(row, colStart, colEnd, ansi) {
         var text = this.lines[row];
         // always start from leadByte, and end at second-byte of DBCS.
         // Note: this might change colStart and colEnd. But currently we don't return these changes.
@@ -513,16 +513,56 @@ TermBuf.prototype = {
         text = text.slice(colStart, colEnd);
         var conv = this.listener.view.conv;
         var charset = this.listener.prefs.get('Encoding');
+        var newChar = this.newChar;
+        var _this = this;
         return text.map(function(c, col, line) {
+            var ret = (col == 0) ? _this.ansiCmp(ansi, newChar, c, true) : '';
             if (!c.isLeadByte) {
                 if (col >= 1 && line[col - 1].isLeadByte) { // second byte of DBCS char
                     var prevC = line[col - 1];
+                    if (col >= 2)
+                        ret += _this.ansiCmp(ansi, line[col - 2], prevC);
                     var b5 = prevC.ch + c.ch;
-                    return conv.convertStringToUTF8(b5, charset, true);
-                } else
-                    return c.ch;
+                    ret += conv.convertStringToUTF8(b5, charset, true);
+                    ret += _this.ansiCmp(ansi, prevC, c).replace(/m$/, ';50m');
+                } else {
+                    if (col >= 1)
+                        ret += _this.ansiCmp(ansi, line[col - 1], c);
+                    ret += c.ch;
+                }
             }
+            if (col == line.length - 1)
+                ret += _this.ansiCmp(ansi, c, newChar);
+            return ret;
         }).join('');
+    },
+
+    ansiCmp: function(active, preChar, thisChar, forceReset) {
+        if (!active)
+            return '';
+        var text = '';
+        var reset = forceReset ||
+            (preChar.bright && !thisChar.bright) ||
+            (preChar.underLine && !thisChar.underLine) ||
+            (preChar.blink && !thisChar.blink) ||
+            (preChar.invert && !thisChar.invert) ||
+            (preChar.fg != 7 && thisChar.fg == 7) ||
+            (preChar.bg != 0 && thisChar.bg == 0);
+        if (reset) text = ';';
+        if ((reset || !preChar.bright) && thisChar.bright) text += '1;';
+        if ((reset || !preChar.underLine) && thisChar.underLine) text += '4;';
+        if ((reset || !preChar.blink) && thisChar.blink) text += '5;';
+        if ((reset || !preChar.invert) && thisChar.invert) text += '7;';
+        if (thisChar.fg != (reset ? 7 : preChar.fg))
+            text += '3' + thisChar.fg + ';';
+        if (thisChar.bg != (reset ? 0 : preChar.bg))
+            text += '4' + thisChar.bg + ';';
+        if (!text) return '';
+        else return ('\x1b[' + text.replace(/;$/, 'm'));
+    },
+
+    fromMyFormat: function(b5str) {
+        return b5str.replace(/(.)(\x1b\[[0-9;]*);50m/g, "$2m$1");
     },
 
     onResize: function() {

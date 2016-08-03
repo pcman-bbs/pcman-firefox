@@ -99,10 +99,19 @@
     <popupset>
       <menupopup id="popup-menu">
         <menuitem label="&menu_copy.label;" id="popup-copy" oncommand="eventHandler(event);"/>
+        <menuitem label="&menu_coloredCopy.label;" id="popup-coloredCopy" oncommand="eventHandler(event);"/>
         <menuitem label="&menu_paste.label;" id="popup-paste" oncommand="eventHandler(event);"/>
         <menuitem label="&menu_selAll.label;" id="popup-selAll" oncommand="eventHandler(event);"/>
         <menu label="&menu_search.label;" id="popup-search">
           <menupopup id="search_menu" />
+        </menu>
+        <menuseparator/>
+        <menuitem label="&menu_loadfile.label;" id="popup-loadfile" oncommand="eventHandler(event);"/>
+        <menu label="&menu_savefile.label;" id="popup-savefile">
+          <menupopup>
+            <menuitem label="TXT" id="save-txt" oncommand="eventHandler(event);"/>
+            <menuitem label="ANS" id="save-ans" oncommand="eventHandler(event);"/>
+          </menupopup>
         </menu>
         <menuitem label="&menu_sitepref.label;" id="popup-sitepref" oncommand="eventHandler(event);"/>
       </menupopup>
@@ -110,6 +119,7 @@
 
     <vbox class="menupopup" id="contextmenu">
       <vbox class="menuitem" id="menu_copy"><label/></vbox>
+      <vbox class="menuitem" id="menu_coloredCopy"><label/></vbox>
       <vbox class="menuitem" id="menu_paste"><label/></vbox>
       <vbox class="menuitem" id="menu_selAll"><label/></vbox>
       <vbox class="submenu" id="menu_search"><label/>
@@ -120,6 +130,15 @@
         </vbox>
       </vbox>
       <vbox class="menuseparator"></vbox>
+      <vbox class="menuitem" id="menu_loadfile"><label/></vbox>
+      <html:input type="file" id="filepicker" class="hidden"/>
+      <vbox class="submenu" id="menu_savefile"><label/>
+        <vbox class="menupopup" id="savemenu">
+          <vbox class="menuitem" id="save_txt">TXT</vbox>
+          <vbox class="menuitem" id="save_ans">ANS</vbox>
+        </vbox>
+      </vbox>
+      <html:a id="downloader" class="hidden"></html:a>
       <vbox class="menuitem" id="menu_sitepref"><label/></vbox>
     </vbox>
 
