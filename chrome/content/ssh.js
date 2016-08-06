@@ -105,7 +105,7 @@ SSH.prototype = {
         if (!this.login) {
             if (!this.loginStr)
                 screen('\x1b[m\x1b[2Jlogin as: ');
-            switch (s) {
+            switch (s.charAt(0)) {
                 case '\r': // Enter
                     if (!this.loginStr) {
                         this.callback('onDisconnect');
@@ -114,26 +114,26 @@ SSH.prototype = {
                     this.login = this.loginStr;
                     this.loginStr = '';
                     screen('\r\n' + this.login + '@' + this.host + '\'s password:');
-                    return false;
+                    break;
                 case '\b': // Back
                     this.loginStr = this.loginStr.replace(/.$/, '');
                     screen('\b\x1b[K');
-                    return false;
+                    break;
                 default:
-                    if (s.search(/[^0-9A-z_a-z]/) > -1) // Not supported char
-                        return false;
-                    this.loginStr += s;
-                    screen(s);
-                    return false;
+                    if (s.charAt(0).search(/[^0-9A-z_a-z]/) > -1)
+                        return false; // Not supported char
+                    this.loginStr += s.charAt(0);
+                    screen(s.charAt(0));
             }
+            return s.charAt(1) ? this.isUserPassReady(s.substr(1)) : false;
         }
 
-        switch (s) {
+        switch (s.charAt(0)) {
             case '\r': // Enter
                 if (!this.passStr) {
                     this.login = '';
                     screen('\x1b[m\x1b[2Jlogin as: ');
-                    return false;
+                    break;
                 }
                 this.password = this.passStr;
                 this.passStr = '';
@@ -141,13 +141,13 @@ SSH.prototype = {
                 return true;
             case '\b': // Back
                 this.passStr = this.passStr.replace(/.$/, '');
-                return false;
+                break;
             default:
-                if (s.search(/[^0-9A-z_a-z]/) > -1) // Not supported char
-                    return false;
-                this.passStr += s;
-                return false;
+                if (s.charAt(0).search(/[^0-9A-z_a-z]/) > -1)
+                    return false; // Not supported char
+                this.passStr += s.charAt(0);
         }
+        return s.charAt(1) ? this.isUserPassReady(s.substr(1)) : false;
     },
 
     isSSH: function(str) {
@@ -301,6 +301,8 @@ SSH.prototype = {
             return;
         if (this.client) {
             this.client.close(legitClose);
+            this.login = '';
+            this.password = '';
             this.transport = null;
             this.client = null;
             this.shell = null;

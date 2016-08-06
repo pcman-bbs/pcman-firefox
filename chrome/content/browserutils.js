@@ -350,6 +350,81 @@ BrowserUtils.prototype = {
         }, 1000); //XXX: how long it takes to download completely?
     },
 
+    beep: function(msg) {
+        if (this.e10sEnabled) {
+            // https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_Web_Audio_API
+            // GC 10+, FX 25+, IE isn't supported
+            //FIXME: support different sound for received mail
+            var global = this.listener.global;
+            var audioContext = global.AudioContext || global.webkitAudioContext;
+            if (!audioContext) return;
+            var audioCtx = new audioContext();
+            var oscillator = audioCtx.createOscillator();
+            var gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 2500; // value in hertz
+            oscillator.start();
+            this.setTimer(false, function() { oscillator.stop(); }, 250);
+            return;
+        }
+        var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+        if (msg) {
+            sound.playEventSound(sound.EVENT_NEW_MAIL_RECEIVED);
+        } else {
+            sound.beep();
+        }
+        //FIXME: support custum sound:
+        //https://developer.mozilla.org/en/nsISound#play()
+    },
+
+    showPopups: function(msg) {
+        var column = msg.replace(/^ +/, "").split(" ");
+        var summary = this.document.title + " - " + column.shift();
+        var body = column.join(" ");
+        if (!Cc) {
+            var global = this.listener.global;
+            var Notification = global.Notification || global.webkitNotifications || global.navigator.mozNotification;
+            if (global.webkitNotifications) { // GC 5-21
+                if (global.webkitNotifications.checkPermission() == 0) {
+                    global.webkitNotifications.createNotification(
+                        this.skin + 'PCMan.png', summary, body
+                    ).show();
+                } else {
+                    global.webkitNotifications.requestPermission();
+                }
+            } else if (global.navigator.mozNotification) { // FX 4-21
+                if (global.navigator.mozNotification.permission == "granted") {
+                    global.navigator.mozNotification.createNotification(
+                        summary, body, this.skin + 'PCMan.png'
+                    ).show();
+                } else if (global.navigator.mozNotification.permission != 'denied') {
+                    global.navigator.mozNotification.requestPermission();
+                }
+            } else if (global.Notification) { // GC 22+, FX 22+
+                if (global.Notification.permission == "granted") {
+                    new global.Notification(summary, {
+                        body: body,
+                        icon: this.skin + 'PCMan.png'
+                    });
+                } else if (global.Notification.permission != 'denied') {
+                    global.Notification.requestPermission();
+                }
+            } else { // IE
+                global.alert(msg);
+            }
+            return;
+        }
+        //FIXME: PopupNotifications.jsm is an alternative but works only in FX4+
+        // nsIPromptService is more flexible but more coding is needed
+        Components.classes['@mozilla.org/alerts-service;1']
+            .getService(Components.interfaces.nsIAlertsService)
+            .showAlertNotification(null, summary, body, false, '', null);
+        //FIXME: Should we set the active tab as this page?
+        //https://developer.mozilla.org/En/NsIAlertsService
+    },
+
     debug: function(text) {
         if (typeof(Application) != 'undefined')
             return Application.console.log(text);

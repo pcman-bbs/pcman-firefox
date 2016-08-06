@@ -28,6 +28,7 @@ PCMan.prototype = {
         this.view.selection = new TermSel(this.view);
         this.buf = new TermBuf(this);
         this.parser = new AnsiParser(this.buf);
+        this.robot = new Robot(this);
 
         var _this = this;
         this.ui.setConverter(function() {
@@ -59,6 +60,7 @@ PCMan.prototype = {
             this.conn.close();
         }
 
+        this.robot.onClose();
         this.view.onClose();
         this.ui.menu.onClose();
         this.prefs.onChanged();
@@ -116,17 +118,22 @@ PCMan.prototype = {
     },
 
     save: function(type) {
-        if (!this.view.selection.hasSelection())
-            return; //TODO: trigger downloading article
+        var _this = this;
+        var doSave = function(text) {
+            text = text.replace(/\n/g, '\r\n');
+            _this.conn.oconv.charset = _this.prefs.get('Encoding');
+            var b5str = _this.conn.oconv.ConvertFromUnicode(text);
+            b5str = type ? _this.buf.fromMyFormat(b5str) : b5str;
+            _this.ui.save(type ? 'newansi.ans' : 'newtext.txt', b5str);
+        };
 
-        var text = this.view.selection.getText(!!type).replace(/\n/g, '\r\n');
-        this.conn.oconv.charset = this.prefs.get('Encoding');
-        var b5str = this.conn.oconv.ConvertFromUnicode(text);
-        b5str = type ? this.buf.fromMyFormat(b5str) : b5str;
-        this.ui.save(type ? 'newansi.ans' : 'newtext.txt', b5str);
-
-        if (this.prefs.get('ClearCopiedSel'))
-            this.view.selection.cancelSel(true);
+        if (!this.view.selection.hasSelection()) {
+            this.robot.downloadArticle.startDownload(!!type, doSave);
+        } else {
+            doSave(this.view.selection.getText(!!type));
+            if (this.prefs.get('ClearCopiedSel'))
+                this.view.selection.cancelSel(true);
+        }
     }
 };
 

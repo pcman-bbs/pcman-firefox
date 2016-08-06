@@ -336,6 +336,9 @@ TermView.prototype = {
         if (!conn.isConnected)
             return;
 
+        if (this.listener.robot.downloadArticle.stopDownload())
+            return;
+
         // Don't handle Shift Ctrl Alt keys for speed
         if (e.keyCode > 15 && e.keyCode < 19) return;
 

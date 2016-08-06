@@ -25,6 +25,7 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termsel.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/robot.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ssh.js" />
     -->
 

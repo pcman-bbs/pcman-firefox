@@ -66,11 +66,10 @@ Conn.prototype = {
         }
         this.isConnected = false;
 
-        //TODO: use prefs to setting the login and password
         this.ssh.host = this.host;
         this.ssh.port = this.port;
-        if (port == 22) {
-            switch (host) {
+        if (!this.listener.prefs.get('PreLogin') && this.port == 22) {
+            switch (this.host) {
                 case 'ptt.cc':
                 case 'ptt2.cc':
                 case 'ptt3.cc':
@@ -90,7 +89,7 @@ Conn.prototype = {
                 case 'loginDenied':
                     break;
                 case 'onDisconnect':
-                    _this.close();
+                    _this.onStopRequest();
                     break;
                 case 'recv':
                     _this.onDataAvailable(message);
@@ -102,6 +101,8 @@ Conn.prototype = {
         };
 
         this.socket.connect(this, this.host, this.port);
+
+        this.listener.robot.initialAutoLogin();
 
         this.connectTime = Date.now();
         this.connectCount++;

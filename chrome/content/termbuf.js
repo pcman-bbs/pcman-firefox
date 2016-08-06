@@ -93,7 +93,7 @@ TermBuf.prototype = {
             var ch = str[i];
             switch (ch) {
                 case '\x07':
-                    // FIXME: beep
+                    this.listener.robot.popupMsg.alert();
                     continue;
                 case '\b':
                     this.back();
@@ -196,6 +196,9 @@ TermBuf.prototype = {
                 if (uris) {
                     line.uris = uris;
                 }
+
+                if (this.listener.conn.isConnected)
+                    this.listener.robot.lineUpdated(row);
             }
         }
         if (this.listener.view.selection.hasSelection())
@@ -470,6 +473,8 @@ TermBuf.prototype = {
         } else { // at bottom of screen or scroll region
             this.scroll(false, 1);
         }
+
+        this.listener.robot.downloadArticle.lineFeed(); // get data
     },
 
     setScrollRegion: function(top, bottom) {
