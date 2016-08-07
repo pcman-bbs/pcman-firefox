@@ -69,6 +69,7 @@ TermView.prototype = {
         var buf = this.buf;
         if (buf.changed) { // content of TermBuf changed
             buf.updateCharAttr(); // prepare TermBuf
+            this.getURI(); // update the link hover
             this.redraw(false); // do the redraw
             buf.changed = false;
         }
@@ -688,19 +689,47 @@ TermView.prototype = {
     },
 
     getURI: function(cursor) {
-        var col = cursor.col,
-            row = cursor.row;
+        if (cursor)
+            this.cursor = cursor;
+        if (!this.cursor)
+            return;
+        var col = this.cursor.col;
+        var row = this.cursor.row;
         var uris = this.buf.lines[row].uris;
-        if (!uris) return '';
+        if (!uris) uris = [];
         for (var i = 0; i < uris.length; i++) {
             if (col >= uris[i][0] && col < uris[i][1]) { //@ < or <<
                 var uri = '';
                 for (var j = uris[i][0]; j < uris[i][1]; j++)
                     uri += this.buf.lines[row][j].ch;
+                this.setHover(row, uris[i][0], uris[i][1], uri);
                 return uri;
             }
         }
+        this.setHover(-1);
         return '';
+    },
+
+    setHover: function(row, colStart, colEnd, uri) { //FIXME: low performance
+        var hover = this.listener.ui.getElementById('linkhover');
+        if (row < 0) {
+            hover.style.display = 'none';
+            return;
+        }
+        if (!hover.onclick) {
+            hover.onclick = function(event) {
+                if (!event.ctrlKey && !event.altKey && !event.shiftKey)
+                    event.preventDefault(); // let this.onClick handle it
+                else
+                    event.stopPropagation(); // don't execute this.onClick
+            };
+        }
+        hover.style.display = 'block';
+        hover.style.left = (colStart * this.chw + this.canvas.offsetLeft) + 'px';
+        hover.style.top = (row * this.chh + this.canvas.offsetTop) + 'px';
+        hover.style.width = ((colEnd - colStart) * this.chw) + 'px';
+        hover.style.height = this.chh + 'px';
+        hover.href = uri;
     },
 
     onMouseDown: function(event) {
@@ -722,7 +751,9 @@ TermView.prototype = {
 
         // handle cursors for hyperlinks
         var uri = this.getURI(cursor);
-        this.canvas.style.cursor = uri ? "pointer" : "default";
+        //this.canvas.style.cursor = uri ? "pointer" : "default";
+
+        this.listener.mouseBrowsing.onMouseMove(cursor, uri);
     },
 
     onMouseUp: function(event) {
@@ -734,6 +765,8 @@ TermView.prototype = {
         } else if (event.button == 1) { // middle button
             if (this.getURI(cursor))
                 return; // let onClick handle it
+            else if (this.listener.mouseBrowsing.onMouseUp())
+                return; // let mouseBrowsing handle it
             if (this.listener.prefs.get('PasteAsMidClick'))
                 this.listener.paste();
         }
@@ -745,14 +778,25 @@ TermView.prototype = {
 
         // Event dispatching order: mousedown -> mouseup -> click
         // For a common click, previous selection always collapses in mouseup
-        if (this.selection.hasSelection()) return;
+        if (this.selection.hasSelection()) {
+            this.selection.isSelected = true;
+            return;
+        }
 
         var uri = this.getURI(cursor);
-        if (uri)
+        if (uri && event.button == 0)
             this.listener.ui.openURI(uri, this.listener.prefs.get('NewTab'));
+        else if (!uri && event.button == 0 && !this.selection.isSelected)
+            this.listener.mouseBrowsing.onClick();
+
+        //FIXME: malfunction if selection is canceled by javascript
+        this.selection.isSelected = false;
     },
 
     onDblClick: function(event) {
+        if (this.listener.mouseBrowsing.onDblClick(event.button))
+            return;
+
         var cursor = this.mouseToColRow(event.pageX, event.pageY);
         if (!cursor) return;
         this.selection.selectWordAt(cursor.col, cursor.row);

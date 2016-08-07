@@ -29,6 +29,9 @@ PCMan.prototype = {
         this.buf = new TermBuf(this);
         this.parser = new AnsiParser(this.buf);
         this.robot = new Robot(this);
+        this.mouseBrowsing = new MouseBrowsing(this);
+        if (MouseGestures)
+            this.gestures = new MouseGestures(this);
 
         var _this = this;
         this.ui.setConverter(function() {

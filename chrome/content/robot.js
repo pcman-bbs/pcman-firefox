@@ -21,8 +21,9 @@ function Robot(listener) {
     this.listener.ui.document.addEventListener("FireGesturesCommand", this.eventListener, false);
 }
 
-Robot.prototype={
+Robot.prototype = {
     onClose: function() {
+        this.listener.mouseBrowsing.onClose();
         if (this.listener.gestures)
             this.listener.gestures.removeEventListener();
         this.listener.ui.document.removeEventListener("FireGesturesCommand", this.eventListener, false);
@@ -42,7 +43,7 @@ Robot.prototype={
     hasAutoReply: function() {
         var prefs = this.listener.prefs;
         for (var i = 0; i < 5; ++i) {
-            if(prefs.get('ReplyPrompt' + i) && prefs.get('ReplyString' + i))
+            if (prefs.get('ReplyPrompt' + i) && prefs.get('ReplyString' + i))
                 return true;
         }
         return false;
@@ -145,66 +146,99 @@ Robot.prototype={
     execExtCommand: function(command) {
         var conn = this.listener.conn;
 
-        switch(command){
-        case "Page Up":
-            conn.send('\x1b[5~');
-            break;
-        case "Page Down":
-            conn.send('\x1b[6~');
-            break;
-        case "End":
-            conn.send('\x1b[4~');
-            break;
-        case "Home":
-            conn.send('\x1b[1~');
-            break;
-        case "Arrow Left":
-            conn.send(this.listener.view.detectDBCS(true, '\x1b[D'));
-            break;
-        case "Arrow Up":
-            conn.send('\x1b[A');
-            break;
-        case "Arrow Right":
-            conn.send(this.listener.view.detectDBCS(false, '\x1b[C'));
-            break;
-        case "Arrow Down":
-            conn.send('\x1b[B');
-            break;
-        case "Copy":
-            this.listener.copy();
-            break;
-        case "ColoredCopy":
-            this.listener.copy(true);
-            break;
-        case "Paste":
-            this.listener.paste();
-            break;
-        case "SelectAll":
-            this.listener.selAll();
-            break;
-        case "LoadFile":
-            //TODO: open filepicker
-            break;
-        case "SaveFile":
-            this.listener.save();
-            break;
-        case "SaveAnsiFile":
-            this.listener.save('ansi');
-            break;
-        case "Preference":
-            this.listener.ui.sitepref();
-            break;
-        default:
-            if(command.indexOf('CustomStr') == 0) {
-                var id = command.substr(9);
-                var str = this.listener.prefs.get('ReplyString' + id);
-                var Encoding = this.listener.prefs.get('Encoding');
-                if (str)
-                    conn.convSend(str, Encoding);
-            } else {
-                //XXX: arbitrary string is not supported for security
-            }
-            break;
+        switch (command) {
+            case "Page Up":
+                conn.send('\x1b[5~');
+                break;
+            case "Page Down":
+                conn.send('\x1b[6~');
+                break;
+            case "End":
+                conn.send('\x1b[4~');
+                break;
+            case "Home":
+                conn.send('\x1b[1~');
+                break;
+            case "Arrow Left":
+                conn.send(this.listener.view.detectDBCS(true, '\x1b[D'));
+                break;
+            case "Arrow Up":
+                conn.send('\x1b[A');
+                break;
+            case "Arrow Right":
+                conn.send(this.listener.view.detectDBCS(false, '\x1b[C'));
+                break;
+            case "Arrow Down":
+                conn.send('\x1b[B');
+                break;
+            case "Enter":
+                conn.send(this.listener.prefs.get('EnterKey'));
+                break;
+            case 'PreviousPost':
+                conn.send('[');
+                break;
+            case 'NextPost':
+                conn.send(']');
+                break;
+            case 'FirstPost':
+                conn.send('=');
+                break;
+            case 'Lastpost@list':
+                conn.send('\x1b[D\x1b[C\x1b[4~[]');
+                break;
+            case 'Lastpost@reading':
+                conn.send('\x1b[D\x1b[4~[]\x1b[C');
+                break;
+            case 'RefreshPost':
+                conn.send('\x1b[D\x1b[C\x1b[4~');
+                break;
+            case "Copy":
+                this.listener.copy();
+                break;
+            case "ColoredCopy":
+                this.listener.copy(true);
+                break;
+            case "Paste":
+                this.listener.paste();
+                break;
+            case "SelectAll":
+                this.listener.selAll();
+                break;
+            case "LoadFile":
+                //TODO: open filepicker
+                break;
+            case "SaveFile":
+                this.listener.save();
+                break;
+            case "SaveAnsiFile":
+                this.listener.save('ansi');
+                break;
+            case "Preference":
+                this.listener.ui.sitepref();
+                break;
+            default:
+                if (command.indexOf('CustomStr') == 0) {
+                    var id = command.substr(9);
+                    var str = this.listener.prefs.get('ReplyString' + id);
+                    var Encoding = this.listener.prefs.get('Encoding');
+                    if (str)
+                        conn.convSend(str, Encoding);
+                } else if (command.indexOf('Enter') == 0) {
+                    var count = parseInt(command.substr(5));
+                    var str = '';
+                    if (count >= 0) {
+                        for (var i = 0; i < count; ++i)
+                            str += '\x1b[A'; //Arrow Up
+                    } else {
+                        for (var i = 0; i > count; --i)
+                            str += '\x1b[B'; //Arrow Down
+                    }
+                    str += this.listener.prefs.get('EnterKey');
+                    conn.send(str);
+                } else {
+                    //XXX: arbitrary string is not supported for security
+                }
+                break;
         }
     }
 }
@@ -261,7 +295,7 @@ DownloadArticle.prototype = {
         if (downloaded != lastline) {
             var lastlastline = buf.getRowText(buf.rows - 4, 0, buf.cols, ansi);
             lastline = this.listener.view.selection.strStrip(lastline);
-            if(downloaded == lastlastline)
+            if (downloaded == lastlastline)
                 this.article.push(lastline);
         }
 
@@ -273,7 +307,7 @@ DownloadArticle.prototype = {
     // Modified from pcmanx-gtk2
     checkFinish: function() {
         var buf = this.listener.buf;
-        if (buf.getRowText(buf.rows-1, 0, buf.cols).indexOf("100%") < 0)
+        if (buf.getRowText(buf.rows - 1, 0, buf.cols).indexOf("100%") < 0)
             return false;
         var data = this.article.join('\n');
         this.stopDownload(true);
@@ -339,8 +373,8 @@ AlertsService.prototype = {
 
     getMsg: function() {
         var buf = this.listener.buf;
-        var text = buf.getRowText(buf.rows-1, 0, buf.cols);
-        return text.replace(/ +$/,""); // forced trimming
+        var text = buf.getRowText(buf.rows - 1, 0, buf.cols);
+        return text.replace(/ +$/, ""); // forced trimming
     },
 
     lineUpdated: function() {

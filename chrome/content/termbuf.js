@@ -144,13 +144,14 @@ TermBuf.prototype = {
         var cols = this.cols;
         var rows = this.rows;
         var lines = this.lines;
+        var needUpdate = [];
         for (var row = 0; row < rows; ++row) {
             var line = lines[row];
-            var needUpdate = false;
+            needUpdate[row] = false;
             for (var col = 0; col < cols; ++col) {
                 var ch = line[col];
                 if (ch.needUpdate)
-                    needUpdate = true;
+                    needUpdate[row] = true;
                 // all chars > ASCII code are regarded as lead byte of DBCS.
                 // FIXME: this is not correct, but works most of the times.
                 if (ch.ch.charCodeAt(0) > 128 && (col + 1) < cols) {
@@ -159,7 +160,7 @@ TermBuf.prototype = {
                     var ch0 = ch;
                     ch = line[col];
                     if (ch.needUpdate)
-                        needUpdate = true;
+                        needUpdate[row] = true;
                     // ensure simutaneous redraw of both bytes
                     if (ch0.needUpdate != ch.needUpdate) {
                         ch0.needUpdate = ch.needUpdate = true;
@@ -168,7 +169,7 @@ TermBuf.prototype = {
                 ch.isLeadByte = false;
             }
 
-            if (needUpdate) { // this line has been changed
+            if (needUpdate[row]) { // this line has been changed
                 // perform URI detection again
                 // remove all previously cached uri positions
                 if (line.uris) {
@@ -201,6 +202,8 @@ TermBuf.prototype = {
                     this.listener.robot.lineUpdated(row);
             }
         }
+        this.listener.mouseBrowsing.setPageState(needUpdate);
+
         if (this.listener.view.selection.hasSelection())
             this.listener.view.selection.refreshSel();
     },

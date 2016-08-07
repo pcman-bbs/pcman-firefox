@@ -16,7 +16,7 @@
 <!ENTITY options_haligncenter.label "畫面水平置中">
 <!ENTITY options_valigncenter.label "畫面垂直置中">
 <!ENTITY options_detectdbcs.label "自動偵測雙位元組字集文字">
-<!ENTITY options_showconntimer.label "顯示連線時間">
+<!ENTITY options_builtingestures.label "啟用內建滑鼠手勢">
 <!ENTITY options_mousebrowsing.label "滑鼠瀏覽">
 <!ENTITY options_disablemousebrowsing.label "停用">
 <!ENTITY options_simplemousebrowsing.label "簡易">

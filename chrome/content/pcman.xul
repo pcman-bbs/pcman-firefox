@@ -26,6 +26,8 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/termbuf.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ansiparser.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/robot.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/mousebrowsing.js" />
+    <script type="application/x-javascript" src="chrome://pcmanfx2/content/mousegestures.js" />
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/ssh.js" />
     -->
 
@@ -90,7 +92,7 @@
         <textbox id="input_proxy"/>
         <label value="&input_proxy_description.label;"/>
       </hbox>
-      <html:div id="selection" title=" "/>
+      <html:a id="linkhover"></html:a>
     </vbox>
 
     <stringbundleset id="pcman-stringbundleset">

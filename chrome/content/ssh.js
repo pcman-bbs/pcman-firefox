@@ -92,11 +92,15 @@ SSH.prototype = {
     },
 
     isUserPassReady: function(s) {
-        if (this.login && this.password)
+        if (this.login && this.password) {
+            this.bufferOut += s;
             return true;
+        }
 
         var _this = this;
         var screen = function(str) {
+            if (s.length > 1)
+                return;
             _this.recvRaw = true;
             _this.callback('recv', str);
             _this.recvRaw = false;
@@ -238,6 +242,9 @@ SSH.prototype = {
         // TODO: call this.recv() after a certain interval
         // Maybe the received data is splitted, but
         // the last part may flush this.shell.in_buffer
+
+        if (stdin && this.bufferOut) // client ready and buffer unflushed
+            this.callback('send', ''); // flush bufferOut
 
         return stdin ? stdin : '';
     },

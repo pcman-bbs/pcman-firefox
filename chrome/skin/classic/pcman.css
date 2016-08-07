@@ -24,7 +24,7 @@
   margin:0;
 }
 
-#selection {
+#linkhover {
   position:fixed;
   display:none;
   opacity:.6;

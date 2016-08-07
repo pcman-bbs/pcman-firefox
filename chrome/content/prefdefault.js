@@ -13,7 +13,7 @@ var PrefDefaults = {
     'HAlignCenter': true,
     'VAlignCenter': true,
     'DetectDBCS': true,
-    'ShowConnTimer': false,
+    'BuiltinGestures': false,
     'Beep': false,
     'Popup': true,
     'MouseBrowsing': 0,

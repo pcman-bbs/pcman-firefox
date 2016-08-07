@@ -23,6 +23,8 @@ var RegisterModule = {
     Components.utils.import(this.path + "termbuf.js", target);
     Components.utils.import(this.path + "ansiparser.js", target);
     Components.utils.import(this.path + "robot.js", target);
+    Components.utils.import(this.path + "mousebrowsing.js", target);
+    Components.utils.import(this.path + "mousegestures.js", target);
     Components.utils.import(this.path + "ssh.js", target);
   },
 
@@ -42,6 +44,8 @@ var RegisterModule = {
     Components.utils.unload(this.path + "termbuf.js", target);
     Components.utils.unload(this.path + "ansiparser.js", target);
     Components.utils.unload(this.path + "robot.js", target);
+    Components.utils.unload(this.path + "mousebrowsing.js", target);
+    Components.utils.unload(this.path + "mousegestures.js", target);
     Components.utils.unload(this.path + "ssh.js", target);
   }
 };

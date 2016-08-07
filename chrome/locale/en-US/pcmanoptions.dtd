@@ -16,7 +16,7 @@
 <!ENTITY options_haligncenter.label "Horizontally centerd">
 <!ENTITY options_valigncenter.label "Vertically centerd">
 <!ENTITY options_detectdbcs.label "Detect DBCS words">
-<!ENTITY options_showconntimer.label "Show connection time">
+<!ENTITY options_builtingestures.label "Enable built-in gestures">
 <!ENTITY options_mousebrowsing.label "Mouse browsing">
 <!ENTITY options_disablemousebrowsing.label "Disable">
 <!ENTITY options_simplemousebrowsing.label "Simple">
