@@ -718,7 +718,7 @@ TermView.prototype = {
         }
         if (!hover.onclick) {
             hover.onclick = function(event) {
-                if (!event.ctrlKey && !event.altKey && !event.shiftKey)
+                if (!event.ctrlKey && !event.altKey && !event.shiftKey && event.button != 1)
                     event.preventDefault(); // let this.onClick handle it
                 else
                     event.stopPropagation(); // don't execute this.onClick

@@ -40,7 +40,11 @@ MouseGestures.prototype = {
             RD: 'Page Down'
         };
 
-        return this.listener.prefs.get('BuiltinGestures');
+        if (!this.listener.prefs.get('BuiltinGestures')) {
+            this.hideMenu = false;
+            return false;
+        }
+        return true;
     },
 
     addEventListener: function() {
