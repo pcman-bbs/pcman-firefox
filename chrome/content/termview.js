@@ -4,30 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["TermView"];
 
-var uriColor = '#FF6600'; // color used to draw URI underline
-var selectedStyle = 'rgba(49, 106, 197, 0.6)';
-
-var termColors = [
-    // dark
-    '#000000', // black
-    '#800000', // red
-    '#008000', // green
-    '#808000', // yellow
-    '#000080', // blue
-    '#800080', // magenta
-    '#008080', // cyan
-    '#c0c0c0', // light gray
-    // bright
-    '#808080', // gray
-    '#ff0000', // red
-    '#00ff00', // green
-    '#ffff00', // yellow
-    '#0000ff', // blue
-    '#ff00ff', // magenta
-    '#00ffff', // cyan
-    '#ffffff' // white
-];
-
 function TermView(listener) {
     this.listener = listener;
     this.topwin = listener.ui.getElementById("topwin");
@@ -55,6 +31,64 @@ function TermView(listener) {
     ctx.fillStyle = "#c0c0c0";
     this.onResize();
 
+    this.complementary = false;
+    this.complementaryColor = this.complementary;
+    //TODO: set the colors in prefs system
+    this.colors = [
+        // dark
+        '#000000', // black
+        '#800000', // red
+        '#008000', // green
+        '#808000', // yellow
+        '#000080', // blue
+        '#800080', // magenta
+        '#008080', // cyan
+        '#c0c0c0', // light gray
+        // bright
+        '#808080', // gray
+        '#ff0000', // red
+        '#00ff00', // green
+        '#ffff00', // yellow
+        '#0000ff', // blue
+        '#ff00ff', // magenta
+        '#00ffff', // cyan
+        '#ffffff', // white
+
+        // complementary color
+        // dark
+        '#FFFFFF', // to black
+        '#7FFFFF', // to red
+        '#FF7FFF', // to green
+        '#7F7FFF', // to yellow
+        '#FFFF7F', // to blue
+        '#7FFF7F', // to magenta
+        '#FF7F7F', // to cyan
+        '#3F3F3F', // to light gray
+        // bright
+        '#7F7F7F', // to gray
+        '#00FFFF', // to red
+        '#FF00FF', // to green
+        '#0000FF', // to yellow
+        '#FFFF00', // to blue
+        '#00FF00', // to magenta
+        '#FF0000', // to cyan
+        '#000000', // to white
+
+        // preserved
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+
+        '#FF6600', // color used to draw URI underline
+        'rgba(49, 106, 197, 0.6)', // selectedStyle
+        '#008000' // highlightColor
+    ];
+
     var _this = this;
     this.blinkTimeout = listener.ui.setTimer(true, function() {
         _this.onBlink();
@@ -79,11 +113,38 @@ TermView.prototype = {
         }
     },
 
+    getFg: function(row, ch, ch2) {
+        var fg = ch2 ? ch2.getFg() : ch.getFg();
+        return (ch.isSelected && this.complementaryColor) ? fg + 16 : fg;
+    },
+
+    getBg: function(row, ch, ch2) {
+        if (row == this.listener.mouseBrowsing.nowHighlight)
+            return 42; // highlightColor
+        var bg = ch2 ? ch2.getBg() : ch.getBg();
+        return (ch.isSelected && this.complementaryColor) ? bg + 16 : bg;
+    },
+
     drawSelRect: function(ctx, x, y, w, h) {
         var tmp = ctx.fillStyle;
-        ctx.fillStyle = selectedStyle;
+        ctx.fillStyle = this.colors[41];
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = tmp;
+    },
+
+    drawHighlight: function(oldRow, row) {
+        if (oldRow >= 0) {
+            var line = this.buf.lines[oldRow];
+            for (var i = 0; i < this.buf.cols; ++i)
+                line[i].needUpdate = true;
+        }
+        if (row >= 0) {
+            var line = this.buf.lines[row];
+            for (var i = 0; i < this.buf.cols; ++i)
+                line[i].needUpdate = true;
+        }
+        if (!this.buf.changed)
+            this.redraw(false);
     },
 
     drawChar: function(row, col, x, y) {
@@ -187,8 +248,8 @@ TermView.prototype = {
                 ch = line[col];
             }
         }
-        var fg = ch.getFg();
-        var bg = ch.getBg();
+        var fg = this.getFg(row, ch);
+        var bg = this.getBg(row, ch);
         var ctx = this.ctx;
         ctx.save();
 
@@ -198,13 +259,13 @@ TermView.prototype = {
             if (col < cols) {
                 var ch2 = line[col]; // second byte of DBCS char
                 // draw background color
-                ctx.fillStyle = termColors[bg];
-                var bg2 = ch2.getBg();
+                ctx.fillStyle = this.colors[bg];
+                var bg2 = this.getBg(row, ch, ch2);
                 if (bg == bg2) { // two bytes has the same bg
                     ctx.fillRect(x, y, chw * 2, chh);
                 } else { // two bytes has different bg
                     ctx.fillRect(x, y, chw, chh); // lead byte
-                    ctx.fillStyle = termColors[bg2];
+                    ctx.fillStyle = this.colors[bg2];
                     ctx.fillRect(x + chw, y, chw, chh); // second byte
                 }
                 // draw text
@@ -219,45 +280,45 @@ TermView.prototype = {
                     var u = this.conv.convertStringToUTF8(b5, charset, true); // UTF-8
 
                     if (u) { // ch can be converted to valid UTF-8
-                        var fg2 = ch2.getFg(); // fg of second byte
+                        var fg2 = this.getFg(row, ch, ch2); // fg of second byte
                         if (fg == fg2) { // two bytes have the same fg
                             if (visible1) { // first half is visible
                                 if (visible2) // two bytes are all visible
-                                    this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw2, chh);
+                                    this.drawClippedChar(ctx, u, this.colors[fg], x, y, chw2, x, y, chw2, chh);
                                 else // only the first half is visible
-                                    this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                    this.drawClippedChar(ctx, u, this.colors[fg], x, y, chw2, x, y, chw, chh);
                             } else if (visible2) { // only the second half is visible
-                                this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x + chw, y, chw, chh);
+                                this.drawClippedChar(ctx, u, this.colors[fg], x, y, chw2, x + chw, y, chw, chh);
                             }
                         } else {
                             // draw first half
                             if (visible1)
-                                this.drawClippedChar(ctx, u, termColors[fg], x, y, chw2, x, y, chw, chh);
+                                this.drawClippedChar(ctx, u, this.colors[fg], x, y, chw2, x, y, chw, chh);
                             // draw second half
                             if (visible2)
-                                this.drawClippedChar(ctx, u, termColors[fg2], x, y, chw2, x + chw, y, chw, chh);
+                                this.drawClippedChar(ctx, u, this.colors[fg2], x, y, chw2, x + chw, y, chw, chh);
                         }
                     }
                 }
                 // TODO: draw underline
 
                 // draw selected color
-                if (ch.isSelected)
+                if (ch.isSelected && !this.complementaryColor)
                     this.drawSelRect(ctx, x, y, chw2, chh);
 
                 line[col].needUpdate = false;
             }
         } else {
-            ctx.fillStyle = termColors[bg];
+            ctx.fillStyle = this.colors[bg];
             ctx.fillRect(x, y, chw, chh);
             // only draw visible chars to speed up
             if (ch.ch > ' ' && (!ch.blink || this.blinkShow))
-                this.drawClippedChar(ctx, ch.ch, termColors[fg], x, y, chw, x, y, chw, chh);
+                this.drawClippedChar(ctx, ch.ch, this.colors[fg], x, y, chw, x, y, chw, chh);
 
             // TODO: draw underline
 
             // draw selected color
-            if (ch.isSelected)
+            if (ch.isSelected && !this.complementaryColor)
                 this.drawSelRect(ctx, x, y, chw, chh);
         }
         ctx.restore();
@@ -304,7 +365,7 @@ TermView.prototype = {
                 if (uris) {
                     for (var i = 0; i < uris.length; i++) {
                         ctx.save();
-                        ctx.strokeStyle = uriColor;
+                        ctx.strokeStyle = this.colors[40];
                         ctx.lineWidth = 2;
                         ctx.beginPath();
                         ctx.lineTo(uris[i][0] * chw, y + chh - 1);
@@ -630,7 +691,7 @@ TermView.prototype = {
                 var ch = line[col];
                 var fg = ch.getFg();
                 ctx.save();
-                ctx.fillStyle = termColors[fg];
+                ctx.fillStyle = this.colors[fg];
                 ctx.fillRect(this.cursorX, this.cursorY, this.cursorW, this.cursorH);
                 ctx.restore();
             } else {
@@ -650,7 +711,7 @@ TermView.prototype = {
                         var uri = line.uris[i];
                         if (uri[0] <= col && uri[1] > col) { // the char is part of a URI
                             // draw underline for URI.
-                            ctx.strokeStyle = uriColor;
+                            ctx.strokeStyle = this.colors[40];
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             var y = (row + 1) * this.chh - 1;
@@ -738,6 +799,7 @@ TermView.prototype = {
             if (!cursor) return;
             // FIXME: only handle left button
             this.selection.selStart(event.shiftKey, cursor.col, cursor.row);
+            this.complementaryColor = (this.complementary != event.ctrlKey);
         }
     },
 

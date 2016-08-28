@@ -47,9 +47,9 @@ TermChar.prototype = {
 function TermBuf(listener) {
     this.listener = listener;
     this.listener.view.buf = this;
-    var cols = 80;
-    var rows = 24;
     // numbers of columns and rows
+    var cols = this.listener.prefs.get('Cols');
+    var rows = this.listener.prefs.get('Rows');
     this.cols = cols;
     this.rows = rows;
     // curcor position

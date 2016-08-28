@@ -132,25 +132,9 @@ MouseBrowsing.prototype = {
         if (row == this.nowHighlight)
             return;
 
-        //FIXME: Drawing highlight is not implemented now
-        /*
-        if (this.nowHighlight >= 0) {
-            var line = this.listener.buf.lines[this.nowHighlight];
-            for(var i = 0; i < this.listener.buf.cols; ++i)
-                line[i].needUpdate = true;
-        }
-        if (row >= 0) {
-            var line = this.listener.buf.lines[row];
-            for(var i = 0; i < this.listener.buf.cols; ++i)
-                line[i].needUpdate = true;
-        }
-        */
+        var oldRow = this.nowHighlight;
         this.nowHighlight = row;
-
-        /*
-        if (!this.listener.buf.changed)
-            this.listener.buf.view.redraw(false);
-        */
+        this.listener.view.drawHighlight(oldRow, row);
     },
 
     setPageState: function(needUpdate) {

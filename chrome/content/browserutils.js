@@ -144,6 +144,8 @@ BrowserUtils.prototype = {
     findBookmarkTitle: function(url) {
         if (url.search(/.*:\/\/([^\/]*).*/) < 0)
             url = 'telnet://' + url;
+        if (url.lastIndexOf('/') == 8) // no trailing '/'
+            url += '/';
         // Eat any errors
         try {
             var uri = this._ioService.newURI(url, null, null);
@@ -152,7 +154,7 @@ BrowserUtils.prototype = {
             if (bookmarkArray.length > 0) {
                 return this._bookmarkService.getItemTitle(bookmarkArray[0]);
             } else {
-                return uri.host;
+                return uri.hostPort;
             }
         } catch (e) { // fails in e10s
             // The URL might be incorrect >"<
@@ -209,7 +211,7 @@ BrowserUtils.prototype = {
 
     // Fetch title from bookmarks. XXX: Places API can be slow!
     updateTabTitle: function() {
-        this.document.title = this.findBookmarkTitle(this.document.location.href);
+        this.document.title = this.findBookmarkTitle(this.getUrl());
     },
 
     updateTabIcon: function(aStatus) {

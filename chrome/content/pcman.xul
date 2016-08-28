@@ -85,8 +85,10 @@
     <script type="application/x-javascript" src="chrome://pcmanfx2/content/paramikojs/_log.js"/>
 
     <vbox align="center" id='box1'>
+      <html:div>
       <html:canvas id="canvas" width="800" height="480" moz-opaque="true" title=" ">
       </html:canvas>
+      </html:div>
       <hbox id="box3" align="center">
         <label value="&input_proxy.label;"/>
         <textbox id="input_proxy"/>
