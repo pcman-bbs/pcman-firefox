@@ -96,7 +96,7 @@ Conn.prototype={
         this.ins = {
             buffer: '',
             writeBuffer: function(str) {
-                this.buffer += str;
+                this.buffer += atob(str);
             },
             readBytes: function() {
                 var buffer = this.buffer;
@@ -114,10 +114,12 @@ Conn.prototype={
         this.outs = {
             buffer: '',
             write: function(str, length) {
-                this.buffer += str;
+                this.buffer += str.split('').map(function(x) {
+                    return String.fromCharCode(x.charCodeAt(0) % 0x100);
+                }).join('');
             },
             flush: function() {
-                var output = this.buffer;
+                var output = btoa(this.buffer);
                 conn.socket.postMessage({
                     action: "data",
                     content: output

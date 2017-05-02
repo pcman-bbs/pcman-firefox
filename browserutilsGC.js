@@ -69,7 +69,7 @@ function getDetails() {
 }
 
 function socket(socketHandler) {
-    return chrome.runtime.connect(socketHandler);
+    return chrome.runtime.connectNative(socketHandler);
 }
 
 function dump(str) {

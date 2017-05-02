@@ -77,7 +77,11 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     });
 });
 
-var socketAgent = 'icogghjphidkpfkpkloecjooiknfkdbl';
+var socketAgent = 'org.pcman.pcmanfx2.webextensions.socket';
+function initialSocket(callback) {
+    callback();
+}
+/*
 function initialSocket(callback, skipCheckApp) {
     if(!skipCheckApp) {
         chrome.management.get(socketAgent, function(result) {
@@ -112,4 +116,4 @@ chrome.windows.onRemoved.addListener(function(windowId) {
         });
     });
 });
-
+*/
