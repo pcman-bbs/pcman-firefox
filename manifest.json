@@ -2,7 +2,14 @@
   "name": "__MSG_appName__",
   "version": "0.0.7.20170501",
   "manifest_version": 2,
-  "minimum_chrome_version": "28.0",
+  "minimum_chrome_version": "40.0",
+
+  "applications": {
+    "gecko": {
+      "id": "pcmanfx2@pcman.org",
+      "strict_min_version": "54.0"
+    }
+  },
 
   "description": "__MSG_appDesc__",
   "icons": {
@@ -21,7 +28,9 @@
   "omnibox": { "keyword": "telnet" },
   "homepage_url": "http://code.google.com/p/pcmanfx/",
 
-  "options_page": "options.htm",
+  "options_ui": {
+    "page": "options.htm"
+  },
 
   //"update_url": "http://path/to/updateInfo.xml",
 

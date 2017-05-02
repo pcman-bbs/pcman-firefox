@@ -33,7 +33,7 @@ function createMenu(title, func, parentId, id) {
 function openURI(uri, activate, callback) {
     chrome.tabs.create({
         url: uri,
-        selected: activate
+        active: activate
     }, function(tab) {
         if(callback)
             callback(tab);
@@ -51,6 +51,7 @@ function systemClipboard(text) {
         sandbox.parentNode.removeChild(sandbox);
         document.getElementById('input_proxy').focus();
     } else { // get string from system clipboard
+        sandbox.setAttribute("contenteditable", "true"); // For FX 54b3
         sandbox.select();
         document.execCommand('paste');
         text = sandbox.value;
