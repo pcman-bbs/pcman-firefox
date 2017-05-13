@@ -16,8 +16,7 @@ process.stdin
     .pipe(input)
     .pipe(transform)
     .pipe(output)
-    .pipe(process.stdout)
-;
+    .pipe(process.stdout);
 
 input.on('end', function() {
     if (!socket) return;
@@ -27,34 +26,42 @@ input.on('end', function() {
 
 function messageHandler(msg, push, done) {
     switch (msg.action) {
-    case "connect":
-        socket = new net.Socket();
-        socket.connect(msg.port, msg.host, function() {
-            push({ action: "connected" });
-        });
+        case "connect":
+            socket = new net.Socket();
+            socket.connect(msg.port, msg.host, function() {
+                push({
+                    action: "connected"
+                });
+            });
 
-        socket.on('data', function(data) {
-            var str = Buffer.from(data, 'binary').toString('base64');
-            //FIXME: split data for the maximum size of str is 1 MB
-            push({ action: "data", content: str });
-        });
+            socket.on('data', function(data) {
+                var str = Buffer.from(data, 'binary').toString('base64');
+                //FIXME: split data for the maximum size of str is 1 MB
+                push({
+                    action: "data",
+                    content: str
+                });
+            });
 
-        socket.on('close', function() {
-            push({ action: "disconnected" });
-        });
+            socket.on('close', function() {
+                push({
+                    action: "disconnected"
+                });
+            });
 
-        done();
-        break;
-    case "data":
-        var data = Buffer.from(msg.content, 'base64').toString('binary');
-        socket.write(data, 'binary');
-        done();
-        break;
-    case "disconnect":
-        socket.destroy();
-        socket = null;
-        done();
-        break;
-    default:
+            done();
+            break;
+        case "data":
+            var data = Buffer.from(msg.content, 'base64').toString('binary');
+            socket.write(data, 'binary');
+            done();
+            break;
+        case "disconnect":
+            socket.destroy();
+            socket = null;
+            done();
+            break;
+        default:
     }
 }
+

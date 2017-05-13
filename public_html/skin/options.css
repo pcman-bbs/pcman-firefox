@@ -1,0 +1,89 @@
+/*
+ * Modified from http://torqueo.net/files/html5-tabs/
+ * By u881831 < u881831@hotmail.com >
+ * Sub-tabs are additionally supported
+ */
+
+/* required only if no container with fixed size */
+.main {
+    height: 400px;
+    width: 800px;
+}
+/*  If you need a sidebar within tabs,
+    use another container to restrict sub-tab's width  */
+.tabs {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+.tabs section {
+    float: left;
+    z-index: 1;
+}
+.tabs section header {
+    margin: 0 1px 0 0;
+    padding: 3px 10px;
+    font: bold 14px sans-serif;
+    border-radius: 5px 5px 0 0;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #808080;
+    border-bottom: 0px  solid #d9d9d9;
+}
+
+.tabs section.active header { background: #eee; cursor: default; }
+.tabs section.inactive header { background: #d9d9d9; cursor: pointer; }
+
+.tabs section div.content {
+    position: absolute;
+    left: 0;
+    z-index: 2;
+    width: 95%;
+    height: 85%;
+    background: #eee;
+    padding: 5px 10px;
+    font: 14px sans-serif;
+    border: 1px solid #808080;
+}
+
+.tabs section.active div.content { display: block; }
+.tabs section.inactive div.content { display: none; }
+
+aside {
+    float: left;
+}
+aside select {
+    width: 150px;
+}
+
+/* Elements which are not parts of HTML5-TABS */
+input[type="submit"] {
+    margin: 10px;
+}
+
+input[type="number"] {
+    width: 40px;
+}
+
+.table {
+    display: table;
+}
+.table-caption {
+    display: table-caption;
+    text-align: center;
+}
+.table-row {
+    display: table-row;
+}
+.table-cell {
+    display: table-cell;
+    text-align: right;
+}
+.table-cell-th {
+    display: table-cell;
+    text-align: center;
+}
+
+.hide { display: none; }

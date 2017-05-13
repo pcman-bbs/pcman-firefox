@@ -1,0 +1,104 @@
+.menupopup {
+    display: block;
+    position: fixed;
+    top: -1000px; /* hide by default */
+    left: -1000px; /* hide by default */
+    color: #000000;
+    background-color: #FFFFFF;
+    padding: 2px;
+    border: 1px solid #7F7F7F;
+    margin: 0px;
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+}
+
+.menuitem, .submenu {
+    display: block;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    color: inherit;
+    background-color: inherit;
+    padding: 3px 2em;
+    border: 1px solid transparent;
+    margin: 0px;
+}
+
+.menuitem:hover, .submenu:hover, .submenu_opened {
+    display: block;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    color: inherit;
+    background-color: #BFBFFF;
+    padding: 3px 2em;
+    border: 1px solid #7F7FFF;
+    margin: 0px;
+}
+
+.menuitem[disabled], .submenu[disabled] {
+    display: block;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    color: #7F7F7F;
+    background-color: inherit;
+    padding: 3px 2em;
+    border: 1px solid transparent;
+    margin: 0px;
+}
+
+.menuitem[disabled]:hover, .submenu[disabled]:hover {
+    display: block;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    color: #7F7F7F;
+    background-color: #BFBFBF;
+    padding: 3px 2em;
+    border: 1px solid #7F7F7F;
+    margin: 0px;
+}
+
+.submenu::after, .submenu_opened::after {
+    content: ' ';
+    position: absolute;
+    right: 0.5em;
+    width: 0px;
+    height: 0px;
+    margin-top: 0.4em;
+    border-top: 0.3em solid transparent;
+    border-bottom: 0.3em solid transparent;
+    border-left: 0.4em solid #000000;
+}
+
+.submenu[disabled]::after, .submenu_opened[disabled]::after {
+    content: ' ';
+    position: absolute;
+    right: 0.5em;
+    width: 0px;
+    height: 0px;
+    margin-top: 0.4em;
+    border-top: 0.3em solid transparent;
+    border-bottom: 0.3em solid transparent;
+    border-left: 0.4em solid #7F7F7F;
+}
+
+.menuseparator {
+    display: block;
+    box-sizing: border-box;
+    width: 100%
+    height: 0px;
+    padding: 0px;
+    border-top: 1px solid #BFBFBF;
+    margin: 2px 0px;
+}
+
+.hidden {
+    display: none;
+}
+

@@ -22,9 +22,6 @@
   "menu_search": {
     "message": "Search"
   },
-  "menu_fileio": {
-    "message": "File I/O"
-  },
   "menu_loadfile": {
     "message": "Load File"
   },
@@ -33,12 +30,6 @@
   },
   "menu_sitepref": {
     "message": "SitePref"
-  },
-  "save_without_color": {
-    "message": "Download article without ANSI color?"
-  },
-  "download_stopped": {
-    "message": "Downloading article terminated!"
   },
   "options_pcmanoptions": {
     "message": "PCMan Options"
@@ -94,8 +85,8 @@
   "options_detectdbcs": {
     "message": "Detect DBCS words"
   },
-  "options_showconntimer": {
-    "message": "Show connection time"
+  "options_builtingestures": {
+    "message": "Enable built-in gestures"
   },
   "options_mousebrowsing": {
     "message": "Mouse browsing"
@@ -227,7 +218,7 @@
     "message": "A GNU/GPL telnet client extension specifically designed for BBS browsing."
   },
   "options_creator": {
-    "message": "Author: Hong Jen Yee"
+    "message": "Author:"
   },
   "options_committer": {
     "message": "And the committers of the pcmanfx project:"

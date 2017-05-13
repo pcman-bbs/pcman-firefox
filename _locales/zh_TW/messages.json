@@ -22,9 +22,6 @@
   "menu_search": {
     "message": "搜尋"
   },
-  "menu_fileio": {
-    "message": "檔案讀寫"
-  },
   "menu_loadfile": {
     "message": "載入檔案"
   },
@@ -33,12 +30,6 @@
   },
   "menu_sitepref": {
     "message": "站台設定"
-  },
-  "save_without_color": {
-    "message": "下載不包含ANSI彩色的文章？"
-  },
-  "download_stopped": {
-    "message": "下載文章已中斷！"
   },
   "options_pcmanoptions": {
     "message": "PCMan 選項"
@@ -94,8 +85,8 @@
   "options_detectdbcs": {
     "message": "自動偵測雙位元組字集文字"
   },
-  "options_showconntimer": {
-    "message": "顯示連線時間"
+  "options_builtingestures": {
+    "message": "啟用內建滑鼠手勢"
   },
   "options_mousebrowsing": {
     "message": "滑鼠瀏覽"
@@ -227,7 +218,7 @@
     "message": "專為 BBS 瀏覽設計，採 GNU/GPL 授權的 telnet 連線程式套件"
   },
   "options_creator": {
-    "message": "作者：洪任諭"
+    "message": "作者："
   },
   "options_committer": {
     "message": "以及協助開發 pcmanfx 計畫的人員"

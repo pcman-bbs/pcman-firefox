@@ -1,6 +1,6 @@
 function buildSiteList(preDefined) {
     //FIXME: load the list of the site without independent settings
-    if(!preDefined) {
+    if (!preDefined) {
         preDefined = {
             'ptt.cc': 'PTT BBS',
             'ptt2.cc': 'PTT2 BBS',
@@ -8,13 +8,13 @@ function buildSiteList(preDefined) {
         };
     }
     var list = {};
-    for(var key in preDefined)
+    for (var key in preDefined)
         list[key] = preDefined[key];
-    var options = new PCManOptions();
-    var groups = options.getGroupNames();
-    for(var i=1; i<groups.length; ++i) { // discard default group
-        if(!list[groups[i]])
-            list[groups[i]] = groups[i];
+    var options = localStorage['PCManOptions'];
+    var groups = options ? JSON.parse(options) : [];
+    for (var i = 1; i < groups.length; ++i) { // discard default group
+        if (!list[groups[i]._url] && groups[i]._url != 'default')
+            list[groups[i]._url] = groups[i]._url;
         //FIXME: get the title of each group from bookmark or etc.
     }
     return list;
@@ -22,25 +22,24 @@ function buildSiteList(preDefined) {
 
 var url = 'ptt.cc';
 
-chrome.omnibox.onInputStarted.addListener(function() {
-});
+chrome.omnibox.onInputStarted.addListener(function() {});
 
 chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
     url = text;
 
     chrome.omnibox.setDefaultSuggestion({
-        description: '<url>telnet://<match>'+text+'</match></url>'
+        description: '<url>telnet://<match>' + text + '</match></url>'
     });
 
     var list = buildSiteList();
     var suggestions = [];
-    for(var id in list) {
-        if(id.indexOf(text) != 0)
+    for (var id in list) {
+        if (id.indexOf(text) != 0)
             continue;
 
         var suggestion = {
             content: id,
-            description: '<url>telnet://<match>'+id+'</match></url> - <dim>'+list[id]+'</dim>'
+            description: '<url>telnet://<match>' + id + '</match></url> - <dim>' + list[id] + '</dim>'
         };
         suggestions.push(suggestion);
     }
@@ -49,71 +48,31 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 
 chrome.omnibox.onInputEntered.addListener(function(text) {
     url = text;
-    if(!url)
+    if (!url)
         url = 'ptt.cc';
 
-    chrome.tabs.query({active: true}, function(tab) {
+    chrome.tabs.query({
+        active: true
+    }, function(tab) {
         chrome.tabs.update(
-            tab.id,
-            {url: "pcman.htm#" + url},
-            function(tab) {
-            }
+            tab.id, {
+                url: "public_html/index.htm#" + url
+            },
+            function(tab) {}
         );
     });
 });
 
-chrome.omnibox.onInputCancelled.addListener(function() {
-});
+chrome.omnibox.onInputCancelled.addListener(function() {});
 
 // not used since popup.htm is introduced
 chrome.browserAction.onClicked.addListener(function(tab) {
-    if(!url)
+    if (!url)
         url = 'ptt.cc';
 
     chrome.tabs.create({
-        url: "pcman.htm#" + url,
+        url: "public_html/index.htm#" + url,
         active: true
-    }, function(tab) {
-    });
+    }, function(tab) {});
 });
 
-var socketAgent = 'org.pcman.pcmanfx2.webextensions.socket';
-function initialSocket(callback) {
-    callback();
-}
-/*
-function initialSocket(callback, skipCheckApp) {
-    if(!skipCheckApp) {
-        chrome.management.get(socketAgent, function(result) {
-            if(result) {
-                if(result.enabled) {
-                    if(result.version.split('.').pop() >= 168)
-                        initialSocket(callback, true);
-                    else
-                        callback('upgrade_app');
-                } else
-                    callback('enable_app');
-            } else
-                callback('install_app');
-        });
-        return;
-    }
-    chrome.runtime.sendMessage(socketAgent, {action: 'wake'}, function(response) {
-        if(response && response.action == 'waked')
-            callback();
-        else
-            setTimeout(function() { initialSocket(callback, true); }, 100);
-    });
-}
-initialSocket(function() {});
-
-chrome.windows.onRemoved.addListener(function(windowId) {
-    chrome.windows.getAll(function(windows) {
-        if(windows.length > 0) // Not all browser windows are closed
-            return;
-        chrome.runtime.sendMessage(socketAgent, {action: 'close'}, function(response) {
-            //if(response.action == 'closing');
-        });
-    });
-});
-*/

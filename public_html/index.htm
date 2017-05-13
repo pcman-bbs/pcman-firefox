@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC
+"-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="zh-TW">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <link rel="icon" href="skin/PCMan.png"/>
+    <link rel="stylesheet" type="text/css" href="skin/pcman.css" />
+    <link rel="stylesheet" type="text/css" href="skin/contextmenu.css" />
+    <script type="text/javascript" src="pcman.js"></script>
+    <script type="text/javascript" src="browserconv.js"></script>
+    <script type="text/javascript" src="browserutils.js"></script>
+    <script type="text/javascript" src="browserstorage.js"></script>
+    <script type="text/javascript" src="browsermenus.js"></script>
+    <script type="text/javascript" src="contextmenu.js"></script>
+    <script type="text/javascript" src="browsercomm.js"></script>
+    <script type="text/javascript" src="prefdefault.js"></script>
+    <script type="text/javascript" src="preferences.js"></script>
+    <script type="text/javascript" src="prefhandler.js"></script>
+    <script type="text/javascript" src="conn.js"></script>
+    <script type="text/javascript" src="termview.js"></script>
+    <script type="text/javascript" src="termsel.js"></script>
+    <script type="text/javascript" src="termbuf.js"></script>
+    <script type="text/javascript" src="ansiparser.js"></script>
+    <script type="text/javascript" src="robot.js"></script>
+    <script type="text/javascript" src="mousebrowsing.js"></script>
+    <script type="text/javascript" src="mousegestures.js"></script>
+    <script type="text/javascript" src="ssh.js"></script>
+
+    <script type="text/javascript" src="paramikojs/_compatibility.js"></script>
+ 
+    <script type="text/javascript" src="paramikojs/kryptos/kryptos.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Cipher/AES.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Cipher/Blowfish.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Cipher/DES3.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Cipher/ARC4.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Hash/baseHash.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Hash/SHA.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Hash/SHA256.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Hash/MD5.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Hash/HMAC.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/PublicKey/RSA.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/PublicKey/DSA.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Random/_UserFriendlyRNG.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Random/Fortuna/SHAd256.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Random/Fortuna/FortunaAccumulator.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Random/Fortuna/FortunaGenerator.js"></script>
+    <script type="text/javascript" src="paramikojs/kryptos/Random/OSRNG/browser.js"></script>
+ 
+    <script type="text/javascript" src="paramikojs/common.js"></script>
+    <script type="text/javascript" src="paramikojs/python_shim.js"></script>
+    <script type="text/javascript" src="paramikojs/BigInteger.js"></script>
+ 
+    <script type="text/javascript" src="paramikojs/agent.js"></script>
+    <script type="text/javascript" src="paramikojs/auth_handler.js"></script>
+    <script type="text/javascript" src="paramikojs/ber.js"></script>
+    <script type="text/javascript" src="paramikojs/channel.js"></script>
+    <script type="text/javascript" src="paramikojs/client.js"></script>
+    <script type="text/javascript" src="paramikojs/compress.js"></script>
+    <script type="text/javascript" src="paramikojs/dsskey.js"></script>
+    <script type="text/javascript" src="paramikojs/file.js"></script>
+    <script type="text/javascript" src="paramikojs/hostkeys.js"></script>
+    <script type="text/javascript" src="paramikojs/kex_gex.js"></script>
+    <script type="text/javascript" src="paramikojs/kex_group1.js"></script>
+    <script type="text/javascript" src="paramikojs/kex_group14.js"></script>
+    <script type="text/javascript" src="paramikojs/message.js"></script>
+    <script type="text/javascript" src="paramikojs/packet.js"></script>
+    <script type="text/javascript" src="paramikojs/pkey.js"></script>
+    <script type="text/javascript" src="paramikojs/rsakey.js"></script>
+    <script type="text/javascript" src="paramikojs/sftp_attr.js"></script>
+    <script type="text/javascript" src="paramikojs/sftp_client.js"></script>
+    <script type="text/javascript" src="paramikojs/sftp_file.js"></script>
+    <script type="text/javascript" src="paramikojs/sftp.js"></script>
+    <script type="text/javascript" src="paramikojs/ssh_exception.js"></script>
+    <script type="text/javascript" src="paramikojs/transport.js"></script>
+    <script type="text/javascript" src="paramikojs/unknown_key.js"></script>
+    <script type="text/javascript" src="paramikojs/util.js"></script>
+    <!-- <script type="text/javascript" src="paramikojs/win_pageant.js"></script> -->
+    <script type="text/javascript" src="paramikojs/_win_pageant.js"></script>
+
+    <script type="text/javascript" src="paramikojs/_log.js"></script>
+
+  </head>
+
+  <body id="topwin">
+    <div id="box1" align="center">
+      <canvas id="canvas" width="800" height="480"></canvas>
+      <div id="box3" align="center">
+        <textarea id="input_proxy" rows="1" cols="10"></textarea>
+      </div>
+      <a id="linkhover"></a>
+    </div>
+    <!-- context menu -->
+    <div class="menupopup" id="contextmenu">
+        <div class="menuitem" id="menu_copy"><label></label></div>
+        <div class="menuitem" id="menu_coloredCopy"><label></label></div>
+        <div class="menuitem" id="menu_paste"><label></label></div>
+        <div class="menuitem" id="menu_selAll"><label></label></div>
+        <div class="submenu" id="menu_search"><label></label>
+            <div class="menupopup" id="searchmenu">
+                <div class="menuitem" id="search_google">Google</div>
+                <div class="menuitem" id="search_yahoo">Yahoo!</div>
+                <div class="menuitem" id="search_bing">Bing</div>
+            </div>
+        </div>
+        <div class="menuseparator"></div>
+        <div class="menuitem" id="menu_loadfile"><label></label></div>
+        <input type="file" id="filepicker" class="hidden">
+        <div class="submenu" id="menu_savefile"><label></label>
+            <div class="menupopup" id="savemenu">
+                <div class="menuitem" id="save_txt">TXT</div>
+                <div class="menuitem" id="save_ans">ANS</div>
+            </div>
+        </div>
+        <a id="downloader" class="hidden"></a>
+        <div class="menuitem" id="menu_sitepref"><label></label></div>
+    </div>
+    <script type="text/javascript" src="eventHandler.js"></script>
+  </body>
+</html>

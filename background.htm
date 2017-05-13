@@ -1,14 +1,13 @@
 <html>
 <head>
-    <script type="text/javascript" src="prefdefault.js"></script>
-    <script type="text/javascript" src="localStoragePref.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <script type="text/javascript" src="background.js"></script>
-    <script type="text/javascript" src="charset/converter.js"></script>
+    <script type="text/javascript" src="charset/charset.js"></script>
 </head>
 <body>
-<form id="u2b_form" action="charset/u2b.htm#u2b_form" target="u2b_frame">
-    <input id="u2b_ustr" name="u2b_ustr">
-</form>
-<iframe name="u2b_frame"></iframe>
+    <form id="u2b_form" action="charset/u2b.htm" target="u2b_frame">
+        <input type="hidden" id="u2b_ustr" name="u2b_ustr">
+    </form>
+    <iframe id="u2b_frame" name="u2b_frame" style="display:none;"></iframe>
 </body>
 </html>
