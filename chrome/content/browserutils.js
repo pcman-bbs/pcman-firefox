@@ -4,6 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["BrowserUtils"];
 
+if (typeof(chrome) == 'undefined')
+    var chrome = null;
+
 if (typeof(Components) == 'undefined')
     var Components = null;
 
@@ -81,6 +84,8 @@ BrowserUtils.prototype = {
             AddonManager.getAddonByID('pcmanfx2@pcman.org', function(addon) {
                 callback(addon.version);
             });
+        } else if (chrome && chrome.extension) { // GC Extension
+            callback(chrome.runtime.getManifest().version);
         } else { // normal web pages
             this.read('/version', function(ret) {
                 callback(ret);
@@ -139,6 +144,18 @@ BrowserUtils.prototype = {
                 ret += bins.readBytes(bins.available());
             bins.close();
             return callback ? callback(ret) : ret;
+        }
+        if (chrome && chrome.extension) { // GC Extension
+            if (url.indexOf('/charset/') == 0) {
+                var type = url.substr(9, 3);
+                var charset = url.substr(25);
+                var bg = chrome.extension.getBackgroundPage();
+                return bg[type + 'Cache'](charset, function(table) {
+                    callback(table);
+                });
+            } else if (url.indexOf('/uao/') == 0) {
+                url = url.substr(1);
+            }
         }
         // normal web pages
         var req = new XMLHttpRequest();
@@ -202,6 +219,8 @@ BrowserUtils.prototype = {
                 return '';
             }
         }
+        if (chrome && chrome.extension) // GC Extension
+            return chrome.i18n.getMessage(str);
         if (this.locale) { // normal web page
             return this.locale[str].message;
         }

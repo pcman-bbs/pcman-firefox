@@ -19,12 +19,18 @@ BrowserComm.prototype.onload = function() {
         this.onunload = this.onunloadXUL;
         this.copy = this.copyXUL;
         this.paste = this.pasteXUL;
-    } else {
+    } else if (!chrome || !chrome.extension) {
         this.connect = this.connectWebSocket;
         this.send = this.sendWebSocket;
         this.onunload = this.onunloadWebSocket;
         this.copy = this.copyWebSocket;
         this.paste = this.pasteWebSocket;
+    } else {
+        this.connect = this.connectNative;
+        this.send = this.sendNative;
+        this.onunload = this.onunloadNative;
+        this.copy = this.copyNative;
+        this.paste = this.pasteNative;
     }
 };
 
@@ -212,5 +218,99 @@ BrowserComm.prototype.pasteWebSocket = function(callback) {
         return;
     this.send('', 'pas');
     this.pasteCallback = callback;
+};
+
+BrowserComm.prototype.connectNative = function(conn, host, port) {
+    if (this.ws)
+        this.onunload();
+
+    var wsUri = 'org.pcman.pcmanfx2.webextensions.socket';
+    var ws = chrome.runtime.connectNative(wsUri);
+
+    ws.onMessage.addListener(function(msg) {
+        switch (msg.action) {
+            case "connected":
+                conn.onStartRequest();
+                break;
+            case "data":
+                conn.onDataAvailable(atob(msg.content));
+                break;
+            case "disconnected":
+                ws = null;
+                if (conn.socket.ws) // socket abnormal close
+                    conn.onStopRequest();
+                break;
+            default:
+        }
+    });
+
+    ws.postMessage({
+        action: "connect",
+        host: host,
+        port: port
+    });
+
+    this.ws = ws;
+};
+
+BrowserComm.prototype.sendNative = function(output, action) {
+    if (!this.ws)
+        return;
+    this.ws.postMessage({
+        action: "data",
+        content: btoa(output.split('').map(function(x) {
+            return String.fromCharCode(x.charCodeAt(0) % 0x100);
+        }).join(''))
+    });
+
+};
+
+BrowserComm.prototype.onunloadNative = function() {
+    if (!this.ws)
+        return;
+    this.ws.postMessage({
+        action: "disconnect"
+    });
+    this.ws.disconnect();
+    this.ws = null;
+};
+
+BrowserComm.prototype.copyNative = function(text, callback) {
+    /*if(!this.ws)
+        return;*/
+    this.systemClipboard(text);
+    if (callback)
+        callback();
+};
+
+BrowserComm.prototype.pasteNative = function(callback) {
+    /*if(!this.ws)
+        return;*/
+    var text = this.systemClipboard();
+    if (callback)
+        callback(text);
+    else
+        return text;
+};
+
+BrowserComm.prototype.systemClipboard = function(text) {
+    var sandbox = this.listener.ui.document.createElement('textarea');
+    sandbox.style = "position:absolute; left: -100px;";
+    this.listener.view.input.parentNode.appendChild(sandbox);
+    if (text) { // copy string to system clipboard
+        sandbox.value = text;
+        sandbox.select();
+        this.listener.ui.document.execCommand('copy');
+        sandbox.parentNode.removeChild(sandbox);
+        this.listener.view.input.focus();
+    } else { // get string from system clipboard
+        sandbox.setAttribute("contenteditable", "true"); // For FX 54b3
+        sandbox.select();
+        this.listener.ui.document.execCommand('paste');
+        text = sandbox.value;
+        sandbox.parentNode.removeChild(sandbox);
+        this.listener.view.input.focus();
+        return text;
+    }
 };
 
