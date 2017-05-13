@@ -12,10 +12,23 @@ function BrowserComm(ui) {
 
 BrowserComm.prototype.onload = function() {
     if (this.ws)
-        this.onunload();
+        return this.onunload();
+    if (Components && Components.classes) {
+        this.connect = this.connectXUL;
+        this.send = this.sendXUL;
+        this.onunload = this.onunloadXUL;
+        this.copy = this.copyXUL;
+        this.paste = this.pasteXUL;
+    } else {
+        this.connect = this.connectWebSocket;
+        this.send = this.sendWebSocket;
+        this.onunload = this.onunloadWebSocket;
+        this.copy = this.copyWebSocket;
+        this.paste = this.pasteWebSocket;
+    }
 };
 
-BrowserComm.prototype.connect = function(conn, host, port) {
+BrowserComm.prototype.connectXUL = function(conn, host, port) {
     if (this.ws)
         this.onunload();
 
@@ -60,14 +73,14 @@ BrowserComm.prototype.connect = function(conn, host, port) {
     this.ws.ipump = pump;
 };
 
-BrowserComm.prototype.send = function(output) {
+BrowserComm.prototype.sendXUL = function(output) {
     if (!this.ws)
         return;
     this.ws.outs.write(output, output.length);
     this.ws.outs.flush();
 };
 
-BrowserComm.prototype.onunload = function() {
+BrowserComm.prototype.onunloadXUL = function() {
     if (!this.ws)
         return;
     this.ws.ins.close();
@@ -75,7 +88,7 @@ BrowserComm.prototype.onunload = function() {
     this.ws = null;
 };
 
-BrowserComm.prototype.copy = function(text, callback) {
+BrowserComm.prototype.copyXUL = function(text, callback) {
     /*if(!this.ws)
         return;*/
     var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
@@ -85,7 +98,7 @@ BrowserComm.prototype.copy = function(text, callback) {
         callback();
 };
 
-BrowserComm.prototype.paste = function(callback) {
+BrowserComm.prototype.pasteXUL = function(callback) {
     /*if(!this.ws)
         return;*/
     // From: https://developer.mozilla.org/en/Using_the_Clipboard
@@ -110,5 +123,94 @@ BrowserComm.prototype.paste = function(callback) {
         callback(s);
     else
         return s;
+};
+
+BrowserComm.prototype.connectWebSocket = function(conn, host, port) {
+    if (this.ws)
+        this.onunload();
+
+    var wsUri = window.location.href.replace('http', 'ws');
+    if (wsUri.indexOf('#') >= 0)
+        wsUri = wsUri.substr(0, wsUri.indexOf('#'));
+    if (wsUri.indexOf('?') >= 0)
+        wsUri = wsUri.substr(0, wsUri.indexOf('?'));
+    var ws = new WebSocket(wsUri);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = function(event) {
+        if (ws.readyState == 1)
+            conn.socket.send(host + ':' + port, 'con');
+    };
+    ws.onclose = function(event) {
+        ws = null;
+        if (conn.socket.ws) // socket abnormal close
+            conn.onStopRequest();
+    };
+    ws.onerror = function(event) {
+        //conn.listener.ui.debug(event.data);
+        ws = null;
+        conn.onStopRequest();
+    };
+    ws.onmessage = function(event) {
+        var data = String.fromCharCode.apply(null, new Uint8Array(event.data));
+        var action = data.substr(0, 3);
+        var content = data.substr(3);
+        switch (action) {
+            case "con":
+                conn.onStartRequest();
+                break;
+            case "dat":
+                conn.onDataAvailable(content);
+                break;
+            case "dis":
+                conn.onStopRequest();
+                break;
+            case "cop":
+                conn.socket.copyCallback();
+                break;
+            case "pas":
+                conn.socket.pasteCallback(decodeURIComponent(escape(content)));
+                break;
+            default:
+        }
+    };
+    this.ws = ws;
+};
+
+BrowserComm.prototype.sendWebSocket = function(output, action) {
+    if (!this.ws)
+        return;
+    if (this.ws.readyState != 1)
+        return;
+    if (!action)
+        action = 'dat';
+    this.ws.send((new Uint8Array(Array.prototype.map.call(
+        action + output,
+        function(x) {
+            return x.charCodeAt(0);
+        }
+    ))).buffer);
+};
+
+BrowserComm.prototype.onunloadWebSocket = function() {
+    if (!this.ws)
+        return;
+    this.send('', 'dis');
+    this.ws.close();
+    this.ws = null;
+};
+
+BrowserComm.prototype.copyWebSocket = function(text, callback) {
+    if (!this.ws)
+        return;
+    this.send(unescape(encodeURIComponent(text)), 'cop');
+    this.copyCallback = callback;
+};
+
+BrowserComm.prototype.pasteWebSocket = function(callback) {
+    if (!this.ws)
+        return;
+    this.send('', 'pas');
+    this.pasteCallback = callback;
 };
 

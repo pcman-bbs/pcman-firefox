@@ -8,7 +8,7 @@ var RegisterModule = {
   path: "chrome://pcmanfx2/content/",
 
   import: function(target) {
-    Components.utils.import(this.path + "uao/uao.js", target);
+    Components.utils.import(this.path + "browserconv.js", target);
     Components.utils.import(this.path + "browserutils.js", target);
     Components.utils.import(this.path + "browserstorage.js", target);
     Components.utils.import(this.path + "browsermenus.js", target);
@@ -29,7 +29,7 @@ var RegisterModule = {
   },
 
   unload: function(target) {
-    Components.utils.unload(this.path + "uao/uao.js", target);
+    Components.utils.unload(this.path + "browserconv.js", target);
     Components.utils.unload(this.path + "browserutils.js", target);
     Components.utils.unload(this.path + "browserstorage.js", target);
     Components.utils.unload(this.path + "browsermenus.js", target);

@@ -10,11 +10,11 @@ function PCManOptions(global) {
 
     this.siteList = this.ui.getElementById('siteList');
 
-    //this.prefs = new Preferences(this, PrefDefaults);
-    //this.load();
     var _this = this;
-    var prefs = new Preferences(this, PrefDefaults, function(prefs) {
-        _this.load(prefs);
+    this.ui.loadL10n(function() {
+        var prefs = new Preferences(_this, PrefDefaults, function(prefs) {
+            _this.load(prefs);
+        });
     });
 }
 

@@ -746,7 +746,10 @@ TermView.prototype = {
             row = this.buf.rows - 1;
 
         // FIXME: we shouldn't select half of a DBCS character
-        return { col: col, row: row };
+        return {
+            col: col,
+            row: row
+        };
     },
 
     getURI: function(cursor) {

@@ -23,7 +23,8 @@ function BrowserUtils(listener) {
         this.e10sEnabled = true;
     }
 
-    this.uaoConv = listener.global.uaoConv;
+    this.locale = null;
+    this.converter = null;
     this.storage = null;
     this.menu = null;
     this.socket = null;
@@ -81,14 +82,9 @@ BrowserUtils.prototype = {
                 callback(addon.version);
             });
         } else { // normal web pages
-            var req = new XMLHttpRequest();
-            req.open('GET', '/version', true);
-            req.onreadystatechange = function(event) {
-                if (req.readyState != 4 || req.status != 200)
-                    return;
-                callback(req.response);
-            };
-            req.send();
+            this.read('/version', function(ret) {
+                callback(ret);
+            });
         }
     },
 
@@ -118,6 +114,82 @@ BrowserUtils.prototype = {
         return 1; // turn off temporarily
     },
 
+    read: function(url, callback) {
+        var ret = '';
+        if (Cc) { // FX extension
+            var ioService = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService);
+            // load from resource:// instead of file path
+            //var channel = ioService.newChannel('chrome://pcmanfx2/content/uao/' + type + '.tab', null, null);
+            var channel = ioService.newChannel2(
+                'chrome://pcmanfx2/content' + url, //aSpec
+                null, //aOriginCharse
+                null, //aBaseURI
+                null, //aLoadingNode
+                Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager).getSystemPrincipal(), //aLoadingPrincipal
+                null, //aTriggeringPrincipal
+                Ci.nsILoadInfo.SEC_NORMAL, //aSecurityFlags
+                Ci.nsIContentPolicy.TYPE_OTHER //aContentPolicyType
+            );
+            var ins = channel.open();
+            var bins = Cc["@mozilla.org/binaryinputstream;1"]
+                .createInstance(Ci.nsIBinaryInputStream);
+            bins.setInputStream(ins);
+            while (bins.available())
+                ret += bins.readBytes(bins.available());
+            bins.close();
+            return callback ? callback(ret) : ret;
+        }
+        // normal web pages
+        var req = new XMLHttpRequest();
+        req.open('GET', url, !!callback);
+        if (callback) {
+            req.responseType = 'arraybuffer';
+            req.onreadystatechange = function(event) {
+                if (req.readyState != 4)
+                    return;
+                if (req.status == 200) {
+                    ret = Array.prototype.map.call(
+                        new Uint8Array(req.response),
+                        function(x) {
+                            return String.fromCharCode(x);
+                        }
+                    ).join('');
+                }
+                callback(ret);
+            };
+            req.send();
+            return;
+        }
+        req.overrideMimeType('text\/plain; charset=x-user-defined'); // IE fails
+        req.send();
+        return req.responseText.split('').map(function(x) {
+            return String.fromCharCode(x.charCodeAt(0) % 0x100);
+        }).join('');
+    },
+
+    loadL10n: function(callback) {
+        if (Cc)
+            return callback();
+        var language = this.listener.global.navigator.language;
+        if (['en', 'es', 'pt', 'zh'].indexOf(language.substr(0, 2)) >= 0) {
+            language = language.replace('-', '_');
+        } else {
+            language = language.substr(0, 2);
+        }
+        var _this = this;
+        this.read('/_locales/' + language + '/messages.json', function(str) {
+            if (str) {
+                _this.locale = JSON.parse(decodeURIComponent(escape(str)));
+                return callback();
+            }
+            _this.read('/_locales/en_US/messages.json', function(ENstr) {
+                _this.locale = JSON.parse(ENstr);
+                return callback();
+            });
+        });
+    },
+
     l10n: function(str) {
         var global = this.listener.global;
         if (!str)
@@ -130,13 +202,8 @@ BrowserUtils.prototype = {
                 return '';
             }
         }
-        switch (global.navigator.language) { // normal web page
-            case 'zh-TW':
-                if (global.locale_zh_TW && global.locale_zh_TW[str])
-                    return global.locale_zh_TW[str].message;
-            default:
-                if (global.locale_en_US && global.locale_en_US[str])
-                    return global.locale_en_US[str].message;
+        if (this.locale) { // normal web page
+            return this.locale[str].message;
         }
         return '';
     },
@@ -163,15 +230,15 @@ BrowserUtils.prototype = {
     },
 
     setConverter: function(callback) {
-        this.listener.view.conv = this.uaoConv;
-        this.listener.conn.oconv = this.uaoConv;
+        this.listener.view.conv = this.converter;
+        this.listener.conn.oconv = this.converter;
         if (!callback)
             return;
-        if (this.uaoConv.buildCache) {
-            var uaoConv = this.uaoConv;
+        if (!Cc) {
+            var converter = this.converter;
             var Encoding = this.listener.prefs.get('Encoding');
-            uaoConv.buildCache('a2u', Encoding, function(b2ustatus) {
-                uaoConv.buildCache('u2a', Encoding, function(u2bstatus) {
+            converter.buildCache('a2u', Encoding, function() {
+                converter.buildCache('u2a', Encoding, function() {
                     callback();
                 });
             });
@@ -339,7 +406,9 @@ BrowserUtils.prototype = {
             ia[i] = data.charCodeAt(i);
         }
         var Blob = this.listener.global.Blob;
-        var bb = new Blob([ia], { "type": "application/octet-stream" });
+        var bb = new Blob([ia], {
+            "type": "application/octet-stream"
+        });
 
         if (this.listener.global.navigator.msSaveOrOpenBlob) // for IE
             return this.listener.global.navigator.msSaveOrOpenBlob(bb, filename);
@@ -368,7 +437,9 @@ BrowserUtils.prototype = {
             oscillator.type = 'sine';
             oscillator.frequency.value = 2500; // value in hertz
             oscillator.start();
-            this.setTimer(false, function() { oscillator.stop(); }, 250);
+            this.setTimer(false, function() {
+                oscillator.stop();
+            }, 250);
             return;
         }
         var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);

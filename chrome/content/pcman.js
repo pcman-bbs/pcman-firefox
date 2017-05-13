@@ -7,11 +7,11 @@ function PCMan(global) {
 
     this.ui = new BrowserUtils(this);
     this.ui.storage = new BrowserStorage(this.ui);
-    //this.prefs = new Preferences(this, PrefDefaults);
-    //this.onload();
     var _this = this;
-    var prefs = new Preferences(this, PrefDefaults, function(prefs) {
-        _this.onload(prefs);
+    this.ui.loadL10n(function() {
+        var prefs = new Preferences(_this, PrefDefaults, function(prefs) {
+            _this.onload(prefs);
+        });
     });
 }
 
@@ -33,6 +33,7 @@ PCMan.prototype = {
         if (MouseGestures)
             this.gestures = new MouseGestures(this);
 
+        this.ui.converter = new BrowserConv(this.ui);
         var _this = this;
         this.ui.setConverter(function() {
             _this.connect(_this.ui.getUrl());

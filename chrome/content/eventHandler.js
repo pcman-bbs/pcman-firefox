@@ -12,14 +12,16 @@ function eventHandler(event) {
     switch (event.type) {
         case 'load':
             pcman = new PCMan(window);
-            pcman.view.input.addEventListener('compositionstart', eventHandler, false);
-            pcman.view.input.addEventListener('compositionend', eventHandler, false);
+            var input = document.getElementById('input_proxy');
+            input.addEventListener('compositionstart', eventHandler, false);
+            input.addEventListener('compositionend', eventHandler, false);
             return;
         case 'beforeunload':
             return pcman.onbeforeunload(event);
         case 'unload':
-            pcman.view.input.removeEventListener('compositionstart', eventHandler, false);
-            pcman.view.input.removeEventListener('compositionend', eventHandler, false);
+            var input = document.getElementById('input_proxy');
+            input.removeEventListener('compositionstart', eventHandler, false);
+            input.removeEventListener('compositionend', eventHandler, false);
             pcman.close();
             pcman = null;
             return;
