@@ -1,28 +1,25 @@
-function a2uCache(charset, callback) {
-    var byteArray = new Array((0xFFFF - 0x8001 + 1) * 3);
-    var idx = 0;
+function a2uCache(charset, callback, decode) {
+    if (!callback)
+        return;
+
+    var byteArray = new Uint8Array((0xFFFF - 0x8001 + 1) * 3 - 1);
+    var idx = -1;
     for (var code = 0x8001; code <= 0xFFFF; code++) {
         if (code % 0x100 < 0x40) { // not valid char
-            byteArray[idx] = 0xFF;
-            byteArray[idx + 1] = 0xFD;
-            byteArray[idx + 2] = 0x20;
+            if (idx > -1)
+                byteArray[idx] = 0x20;
+            byteArray[idx + 1] = 0xFF;
+            byteArray[idx + 2] = 0xFD;
         } else {
-            byteArray[idx] = Math.floor(code / 0x100);
-            byteArray[idx + 1] = code % 0x100;
-            byteArray[idx + 2] = 0x20;
+            byteArray[idx] = 0x20;
+            byteArray[idx + 1] = Math.floor(code / 0x100);
+            byteArray[idx + 2] = code % 0x100;
         }
         idx += 3;
     }
-    byteArray.pop();
-    var bb = new Blob(
-        [new Uint8Array(byteArray)], {
-            "type": "text/plain"
-        }
-    );
 
-    var handler = function(response) {
-        var text = response.replace(/[^ ]\x3F/g, '\xFF\xFD '); // For MSIE
-        var cache = text.split(' ').map(function(x) {
+    var handler = function(text) {
+        callback(text.split(' ').map(function(x) {
             if (x.length != 1 || x.charCodeAt(0) < 0x81) {
                 return '\xFF\xFD';
             } else {
@@ -30,12 +27,15 @@ function a2uCache(charset, callback) {
                 var strCode = [Math.floor(code / 0x100), code % 0x100];
                 return String.fromCharCode(strCode[0], strCode[1]);
             }
-        }).join('');
-        if (callback)
-            callback(cache);
+        }).join(''));
     };
 
-    var url = URL.createObjectURL(bb);
+    if (decode)
+        return handler(decode(byteArray, charset));
+
+    var url = URL.createObjectURL(new Blob([byteArray], {
+        "type": "text/plain"
+    }));
     var req = new XMLHttpRequest();
     req.open("GET", url, true);
     req.overrideMimeType("text/plain;charset=" + charset);
@@ -43,12 +43,29 @@ function a2uCache(charset, callback) {
         if (req.readyState != 4)
             return;
         URL.revokeObjectURL(url);
-        handler(req.response);
+        var text = req.response.replace(/[^ ]\x3F/g, '\xFF\xFD '); // For MSIE
+        handler(text);
     };
     req.send();
 }
 
-function u2aCache(charset, callback) {
+function u2aCache(charset, callback, encode) {
+    if (!callback)
+        return;
+
+    var str = '';
+    for (var i = 0x81; i <= 0xFFFF; i++) {
+        str += String.fromCharCode(i) + ' ';
+    }
+    str = str.slice(0, -1); // remove the last ' '
+
+    if (encode) {
+        var data = String.fromCharCode.apply(null, encode(str, charset));
+        return callback(data.split(' ').map(function(x) {
+            return (x.length != 2) ? '\xFF\xFD' : x;
+        }).join(''));
+    }
+
     var converter = document.getElementById("u2b_form");
     if (converter.hasAttribute("locked"))
         return setTimeout(function() {
@@ -56,28 +73,8 @@ function u2aCache(charset, callback) {
         }, 500);
     converter.setAttribute("locked", "true");
 
-    var str = '';
-    for (var i = 0x81; i <= 0xFFFF; i++) {
-        str += String.fromCharCode(i) + ' ';
-    }
-    str = str.substr(0, str.length - 1);
     if (charset.match(/^gb/i) && navigator.userAgent.indexOf('Firefox') >= 0)
         str = str.replace('\u20AC', '\uFFFD'); // Hack for GB2312 in FX
-
-    var handler = function(search) {
-        var data = unescape(search.substr(10));
-        data = data.replace(/&#[0-9]+;/g, '\xFF\xFD');
-        var cache = data.split('+').map(function(x) {
-            if (x.length != 2) {
-                return '\xFF\xFD';
-            } else {
-                return x;
-            }
-        }).join('');
-        if (callback)
-            callback(cache);
-    };
-
     var isIE = (navigator.userAgent.indexOf('Trident') >= 0);
     document.getElementById("u2b_ustr").value = str;
     converter.setAttribute("accept-charset", charset);
@@ -85,10 +82,21 @@ function u2aCache(charset, callback) {
         if (isIE) document.charset = 'utf-8';
         removeEventListener("message", converter.callback, false);
         converter.removeAttribute("locked");
-        handler(event.data);
+        var data = unescape(event.data.substr(10));
+        data = data.replace(/&#[0-9]+;/g, '\xFF\xFD');
+        callback(data.split('+').map(function(x) {
+            return (x.length != 2) ? '\xFF\xFD' : x;
+        }).join(''));
     }
     addEventListener("message", converter.callback, false);
     if (isIE) document.charset = charset;
     converter.submit();
+}
+
+if (typeof(module) == 'object') { // in Node.js environment
+    module.exports = {
+        a2uCache: a2uCache,
+        u2aCache: u2aCache,
+    };
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.7.20170514",
+  "version": "0.0.7.20170530",
   "manifest_version": 2,
   "minimum_chrome_version": "40.0",
 
@@ -31,8 +31,6 @@
   "options_ui": {
     "page": "public_html/options.htm"
   },
-
-  //"update_url": "http://path/to/updateInfo.xml",
 
   "permissions": [
     "clipboardRead",
