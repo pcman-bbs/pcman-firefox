@@ -3,7 +3,7 @@
 // Might be good to use an explicit path to node on the shebang line in case
 // it isn't in PATH when launched by Chrome.
 
-var net = require('net');
+var net = require('net'); // Node.js v0.11.13+
 var socket = null;
 
 var nativeMessage = require('./chrome-native-messaging.js');
@@ -27,41 +27,44 @@ input.on('end', function() {
 function messageHandler(msg, push, done) {
     switch (msg.action) {
         case "connect":
-            socket = new net.Socket();
-            socket.connect(msg.port, msg.host, function() {
+            socket = net.createConnection(msg.port, msg.host, function() {
                 push({
                     action: "connected"
                 });
-            });
-
-            socket.on('data', function(data) {
+            }).on('data', function(data) {
                 var str = Buffer.from(data, 'binary').toString('base64');
                 //FIXME: split data for the maximum size of str is 1 MB
                 push({
                     action: "data",
                     content: str
                 });
-            });
-
-            socket.on('close', function() {
+            }).on('error', function(error) {
+                // 'close' event will be called directly following this event 
+                //console.error(error);
+            }).on('close', function(had_error) {
+                if (!socket) // input got EOF
+                    return;
                 push({
                     action: "disconnected"
                 });
             });
-
-            done();
             break;
         case "data":
             var data = Buffer.from(msg.content, 'base64').toString('binary');
             socket.write(data, 'binary');
-            done();
             break;
         case "disconnect":
             socket.destroy();
             socket = null;
-            done();
             break;
         default:
     }
+    done();
+}
+
+if (!Buffer.from) { // before Node.js v4.5.0
+    Buffer.from = function(str, encoding) {
+        return new Buffer(str, encoding); // deprecated from Node.js v6.x
+    };
 }
 
