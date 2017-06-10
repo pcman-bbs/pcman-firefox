@@ -92,11 +92,13 @@ Conn.prototype = {
                     _this.onStopRequest();
                     break;
                 case 'recv':
-                    _this.onDataAvailable(message);
+                    _this.listener.onData(_this, message);
                     break;
                 case 'send':
-                default:
-                    _this.send(message);
+                    _this.socket.send(message);
+                    break;
+                default: // use unencrypted connection
+                    _this.onDataAvailable(message);
             }
         };
 
@@ -174,12 +176,11 @@ Conn.prototype = {
     },
 
     onDataAvailable: function(content) {
+        if (content && this.ssh.recv(content))
+            return;
+
         var data = '';
         var n = content.length;
-        if (this.ssh.enable) { // use SSH
-            data = this.ssh.input(content);
-            n = 0; // bypass IAC
-        }
         for (var i = 0; i < n; ++i) {
             var ch = content[i];
             switch (this.state) {
@@ -271,7 +272,8 @@ Conn.prototype = {
         var rows = this.listener.buf.rows;
         var nawsStr = String.fromCharCode(cols >> 8, cols % 256, rows >> 8, rows % 256).replace(/(\xff)/g, '\xff\xff');
         var rep = IAC + SB + NAWS + nawsStr + IAC + SE;
-        this.send(this.ssh.sendNaws(rep));
+        if (!this.ssh.sendNaws(rep))
+            this.send(rep);
     },
 
     send: function(str) {
@@ -282,11 +284,10 @@ Conn.prototype = {
         if (this.idleTimeout)
             this.idleTimeout.cancel();
 
-        if (this.ssh.enable && !this.ssh.client)
+        if (this.ssh.enable && !this.ssh.client) // ssh login prompt
             str = str.replace(this.listener.prefs.get('EnterKey'), '\r');
-        str = this.ssh.output(str);
 
-        if (str)
+        if (str && !this.ssh.send(str))
             this.socket.send(str)
 
         var AntiIdleTime = this.listener.prefs.get('AntiIdleTime');
