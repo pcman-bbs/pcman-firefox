@@ -75,6 +75,8 @@ Conn.prototype = {
                 case 'ptt3.cc':
                     this.ssh.login = 'bbs';
                     this.ssh.password = 'bbs';
+                    if (this.listener.prefs.get('Encoding') == 'utf-8')
+                        this.ssh.login = 'bbsu';
                     break;
                 default:
             }
@@ -306,7 +308,7 @@ Conn.prototype = {
         var LineWrap = this.listener.prefs.get('LineWrap');
         if (text.indexOf('\x1b') > -1) // don't wrap ansi text
             LineWrap = 0;
-        text = this.wrapText(text, LineWrap, EnterKey);
+        text = this.wrapText(text, LineWrap, EnterKey, charset);
 
         this.oconv.charset = charset;
         var s = this.oconv.ConvertFromUnicode(text);
@@ -325,7 +327,7 @@ Conn.prototype = {
 
     // Wrap text within maxLen without hyphenating English words,
     // where the maxLen is generally the screen width.
-    wrapText: function(str, maxLen, enterChar) {
+    wrapText: function(str, maxLen, enterChar, charset) {
         // Divide string into non-hyphenated groups
         // classified as \r, \n, single full-width character, an English word,
         // and space characters in the beginning of original line. (indent)
@@ -336,22 +338,37 @@ Conn.prototype = {
             return str;
 
         var pattern = /\r|\n|([^\x00-\x7f][,.?!:;]?[\t ]*)|([\x00-\x08\x0b\x0c\x0e-\x1f\x21-\x7f]+[\t ]*)|[\t ]+/g;
-        var splited = str.match(pattern);
+        var group = str.match(pattern);
 
+        this.oconv.charset = charset;
+
+        var _this = this;
         var result = '';
         var len = 0;
-        for (var i = 0; i < splited.length; ++i) {
+        for (var i = 0; i < group.length; ++i) {
             // Convert special characters to spaces with the same width
             // and then we can get the width by the length of converted string
-            var grouplen = splited[i].replace(/[^\x00-\x7f]/g, "  ").replace(/\t/, "    ").replace(/\r|\n/, "").length;
+            var grouplen = group[i].split('').map(function(x) {
+                switch (x) {
+                    case '\t':
+                        return '    ';
+                    case '\r':
+                    case '\n':
+                        return '';
+                    default:
+                        if (_this.oconv.isFullWidth(x))
+                            return '  ';
+                        return ' ';
+                }
+            }).join('').length;
 
-            if (splited[i] == '\r' || splited[i] == '\n')
+            if (group[i] == '\r' || group[i] == '\n')
                 len = 0;
             if (len + grouplen > maxLen) {
                 result += enterChar;
                 len = 0;
             }
-            result += splited[i];
+            result += group[i];
             len += grouplen;
         }
         return result;

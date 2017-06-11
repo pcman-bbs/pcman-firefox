@@ -21,9 +21,19 @@ PrefHandler.prototype = {
     getter: function(key, value) {
         switch (key) {
             case 'Encoding':
-                if (value == 'system') {
-                    var language = this.listener.ui.l10n();
-                    value = (language == 'zh-CN' ? 'gb2312' : 'big5');
+                switch (value) {
+                    case 'system':
+                        var language = this.listener.ui.l10n();
+                        value = (language == 'zh-CN' ? 'gb2312' : 'big5');
+                        break;
+                    case 'utf-8':
+                        this.listener.ui.converter.forceFullWidth = false;
+                        break;
+                    case 'utf-8_FullWidth':
+                        this.listener.ui.converter.forceFullWidth = true;
+                        value = 'utf-8';
+                        break;
+                    default:
                 }
                 return value;
             case 'AntiIdleTime':

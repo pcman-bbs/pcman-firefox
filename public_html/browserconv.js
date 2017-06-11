@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = ["BrowserConv"];
 
 function BrowserConv(ui) {
     this.ui = ui;
+    this.forceFullWidth = false; // show UTF8 half-width chars as full-width
 }
 
 BrowserConv.prototype = {
@@ -33,6 +34,11 @@ BrowserConv.prototype = {
 
     conv: null,
     convertStringToUTF8: function(data, charset, skipCheck, allowSubstitution) {
+        if (charset.toLowerCase() == 'utf-8')
+            return data;
+
+        this.charset = charset;
+
         if (Components && Components.classes && charset.toLowerCase() != 'big5') {
             if (!this.conv) {
                 this.conv = Components.classes["@mozilla.org/intl/utf8converterservice;1"]
@@ -66,6 +72,9 @@ BrowserConv.prototype = {
     ConvertFromUnicode: function(str) {
         var charset = this.charset;
 
+        if (charset.toLowerCase() == 'utf-8')
+            return this.StringToUTF8(str);
+
         if (Components && Components.classes && charset.toLowerCase() != 'big5') {
             if (!this.oconv) {
                 this.oconv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -95,6 +104,53 @@ BrowserConv.prototype = {
             }
         }
         return ret;
+    },
+
+    preprocess: function(data) {
+        var charset = this.charset;
+
+        if (charset.toLowerCase() == 'utf-8')
+            return this.UTF8ToString(data);
+        return data;
+    },
+    isFillDummy: function(str) {
+        var charset = this.charset;
+
+        if (charset.toLowerCase() == 'utf-8')
+            return this.isFullWidth(str);
+        return false;
+    },
+
+    utf8Buffer: '',
+    UTF8ToString: function(data) {
+        var str = '';
+        var utf8 = this.utf8Buffer + data.replace(/[\xC0-\xDF]$/, '')
+            .replace(/[\xE0-\xEF][\x80-\xBF]?$/, '')
+            .replace(/[\xF0-\xF7][\x80-\xBF]{0,2}$/, '')
+            .replace(/[\xF8-\xFB][\x80-\xBF]{0,3}$/, '')
+            .replace(/[\xFC-\xFD][\x80-\xBF]{0,4}$/, '');
+        this.utf8Buffer = data.substr(utf8.length - this.utf8Buffer.length);
+        try {
+            str = decodeURIComponent(escape(utf8));
+        } catch (e) { // not a valid utf8
+            str = data; // hiding this may result in disorder of termbuf
+        }
+        return str;
+    },
+    StringToUTF8: function(str) {
+        return unescape(encodeURIComponent(str));
+    },
+    isFullWidth: function(str) {
+        var charset = this.charset;
+
+        var table = '[\u1100-\u115f\u2329-\u232a\u2e80-\u303e\u3040-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe6f\uff00-\uff60\uffe0-\uffe6]';
+        if (!str)
+            return table;
+
+        var code = str.charCodeAt(0);
+        if (charset.toLowerCase() != 'utf-8' || this.forceFullWidth)
+            return (code > 0x7f);
+        return (new RegExp(table)).test(str[0]);
     }
 };
 
