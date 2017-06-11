@@ -6,12 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["SSH"];
 
-function SSH(conn) {
-    if (!conn) // use unencrypted connection
+function SSH(conn, force) {
+    if (force == 'ssh') // use ssh connection directly
+        this.skipCheck = true;
+    else if (force == 'telnet') // use unencrypted connection
         return;
+
     this.enable = true;
-    this.sendRaw = false;
-    this.recvRaw = false;
     this.callback = null;
 
     this.host = conn.host;
@@ -56,9 +57,9 @@ SSH.prototype = {
         };
 
         var write = function(str) {
-            self.sendRaw = true;
+            if (!str)
+                return;
             self.callback('send', str);
-            self.sendRaw = false;
         };
 
         this.transport = this.client.connect({
@@ -73,24 +74,6 @@ SSH.prototype = {
             this.login, this.password, null, this.privatekey);
     },
 
-    recv: function() { // for asyncRead, not used yet
-        var str = this.input();
-        if (!str)
-            return;
-        this.recvRaw = true;
-        this.callback('recv', str);
-        this.recvRaw = false;
-    },
-
-    send: function() { // for asyncWrite, not used yet
-        var str = this.output();
-        if (!str)
-            return;
-        this.sendRaw = true;
-        this.callback('send', str);
-        this.sendRaw = false;
-    },
-
     isUserPassReady: function(s) {
         if (this.login && this.password) {
             this.bufferOut += s;
@@ -99,11 +82,9 @@ SSH.prototype = {
 
         var _this = this;
         var screen = function(str) {
-            if (s.length > 1)
+            if (s.length > 1 || !str)
                 return;
-            _this.recvRaw = true;
             _this.callback('recv', str);
-            _this.recvRaw = false;
         };
 
         if (!this.login) {
@@ -155,6 +136,9 @@ SSH.prototype = {
     },
 
     isSSH: function(str) {
+        if (this.skipCheck)
+            return str;
+
         this.banner += str;
         str = this.banner;
         if (!str)
@@ -167,19 +151,19 @@ SSH.prototype = {
         }
         if (str.indexOf('SSH-2.0-') != 0 && str.indexOf('SSH-1.99-') != 0) {
             this.enable = false; // use unencrypted connection
-            this.callback('recv', str);
+            this.callback('telnet', str);
             return '';
         }
         return str;
     },
 
-    input: function(str) {
-        if (!this.enable || this.recvRaw)
-            return str;
+    recv: function(str) {
+        if (!this.enable)
+            return false;
         if (!this.client) {
             str = this.isSSH(str);
             if (!str || !this.isUserPassReady(''))
-                return ''; // waiting next message or unencrypted connection
+                return true; // waiting next message or unencrypted connection
             this.banner = '';
             this.initial();
         }
@@ -194,29 +178,29 @@ SSH.prototype = {
                 this.transport.run();
 
             if (!this.shell) // authorizing
-                return '';
+                return true;
         } catch (ex) {
             if (ex instanceof this.lib.ssh_exception.AuthenticationException) {
                 this.client.legitClose = true;
                 this.callback('loginDenied', ex.message); // userPass denied
-                return '';
+                return true;
             }
             this.callback('onDisconnect');
-            return '';
+            return true;
         }
 
         var stdin = '';
         try {
             if (!this.shell || this.shell.closed) {
                 this.callback('onDisconnect');
-                return '';
+                return true;
             }
             stdin = this.shell.recv(65536);
             while (this.shell.recv_ready()) // break as data are read thoroughly
                 stdin += this.shell.recv(65536);
         } catch (ex) {
             if (ex instanceof this.lib.ssh_exception.WaitException) {
-                // fall through to get stderr message
+                // wait server response, which should retrigger this function
             } else {
                 throw (ex);
             }
@@ -229,7 +213,7 @@ SSH.prototype = {
                 stderr += this.shell.recv_stderr(65536);
         } catch (ex) {
             if (ex instanceof this.lib.ssh_exception.WaitException) {
-                // fall through for data are read thoroughly
+                // wait server response, which should retrigger this function
             } else {
                 throw (ex);
             }
@@ -244,18 +228,20 @@ SSH.prototype = {
         // the last part may flush this.shell.in_buffer
 
         if (stdin && this.bufferOut) // client ready and buffer unflushed
-            this.callback('send', ''); // flush bufferOut
+            this.send(''); // flush bufferOut
 
-        return stdin ? stdin : '';
+        if (stdin)
+            this.callback('recv', stdin);
+        return true;
     },
 
-    output: function(str) {
-        if (!this.enable || this.sendRaw)
-            return str;
+    send: function(str) {
+        if (!this.enable)
+            return false;
         if (!this.client) {
             if (this.isUserPassReady(str))
-                this.input('');
-            return '';
+                this.recv('');
+            return true;
         }
         this.bufferOut += str;
         while (this.bufferOut.length > 0) {
@@ -291,16 +277,16 @@ SSH.prototype = {
             }
             this.bufferOut = this.bufferOut.substring(n);
         }
-        return '';
+        return true;
     },
 
     sendNaws: function(str) {
         if (!this.enable)
-            return str;
+            return false;
         var cols = str.charCodeAt(3) * 256 + str.charCodeAt(4);
         var rows = str.charCodeAt(5) * 256 + str.charCodeAt(6);
         this.shell.resize_pty(cols, rows);
-        return '';
+        return true;
     },
 
     close: function(legitClose) {
