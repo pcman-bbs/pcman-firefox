@@ -212,14 +212,17 @@ TermSel.prototype = {
         var splitter = null;
         var chByte = 1;
 
+        var table = this.view.listener.conn.oconv.isFullWidth();
         if (line[col].isLeadByte || (col > 0 && line[col - 1].isLeadByte)) { // DBCS, we should select DBCS text
             if (!line[col].isLeadByte)
                 col--; // adjust cursor col, make selection start from leadByte of DBCS
-            splitter = /[\x00-\x7E]/;
+            splitter = new RegExp('[^' + table.substr(1));
             chByte = 2;
         } else {
             if (line[col].ch == ' ')
                 return null;
+            else if (line[col].ch.charCodeAt(0) >= 129) // half-width utf8
+                splitter = new RegExp('[\\x00-\\x7F' + table.substr(1));
             else if (line[col].ch.match(/\w/)) // should select [A-Za-z0-9_]
                 splitter = /\s|\W|\b/;
             else // punctuation marks, select nearby punctuations

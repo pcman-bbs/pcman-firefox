@@ -84,6 +84,11 @@ TermBuf.prototype = {
     puts: function(str) {
         if (!str)
             return;
+
+        var oconv = this.listener.conn.oconv;
+        oconv.charset = this.listener.prefs.get('Encoding');
+        str = oconv.preprocess(str);
+
         var cols = this.cols;
         var rows = this.rows;
         var lines = this.lines;
@@ -134,6 +139,16 @@ TermBuf.prototype = {
                     ch2.copyAttr(this.attr);
                     ch2.needUpdate = true;
                     ++this.curX;
+
+                    // full-width utf-8 char
+                    if (oconv.isFillDummy(ch) && this.curX < cols) {
+                        ch2 = line[this.curX];
+                        ch2.ch = '';
+                        ch2.copyAttr(this.attr);
+                        ch2.needUpdate = true;
+                        ++this.curX;
+                    }
+
                     this.changed = true;
                     this.posChanged = true;
             }
@@ -141,6 +156,9 @@ TermBuf.prototype = {
     },
 
     updateCharAttr: function() {
+        var oconv = this.listener.conn.oconv;
+        oconv.charset = this.listener.prefs.get('Encoding');
+
         var cols = this.cols;
         var rows = this.rows;
         var lines = this.lines;
@@ -154,7 +172,7 @@ TermBuf.prototype = {
                     needUpdate[row] = true;
                 // all chars > ASCII code are regarded as lead byte of DBCS.
                 // FIXME: this is not correct, but works most of the times.
-                if (ch.ch.charCodeAt(0) > 128 && (col + 1) < cols) {
+                if (oconv.isFullWidth(ch.ch) && (col + 1) < cols) {
                     ch.isLeadByte = true;
                     ++col;
                     var ch0 = ch;
@@ -184,8 +202,12 @@ TermBuf.prototype = {
                     line.uris = null;
                 }
                 var s = '';
-                for (var col = 0; col < cols; ++col)
-                    s += line[col].ch;
+                for (var col = 0; col < cols; ++col) {
+                    if (!line[col].ch && col > 0) // UTF-8 format
+                        s += ' '; // keep s.length == char's quantity
+                    else
+                        s += line[col].ch;
+                }
                 var res;
                 var uris = null;
                 // pairs of URI start and end positions are stored in line.uri.
