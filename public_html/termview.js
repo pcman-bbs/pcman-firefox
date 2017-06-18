@@ -396,24 +396,26 @@ TermView.prototype = {
 
         // give keypress control back to Firefox
         if (!conn.isConnected)
-            return;
+            return '';
 
         if (this.listener.robot.downloadArticle.stopDownload())
-            return;
+            return '';
 
         // Don't handle Shift Ctrl Alt keys for speed
-        if (e.keyCode > 15 && e.keyCode < 19) return;
+        if (e.keyCode > 15 && e.keyCode < 19) return '';
+
+        var hotkey = '';
 
         // Control characters
         if (e.ctrlKey && !e.altKey && !e.shiftKey) {
             if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
                 if (e.keyCode == 67 && this.selection.hasSelection())
-                    conn.listener.copy(); // ctrl+c
+                    hotkey = 'copy'; // ctrl+c
                 else
                     conn.send(String.fromCharCode(e.keyCode - 64));
             } else if (e.keyCode >= 219 && e.keyCode <= 221) { // [ \ ]
                 conn.send(String.fromCharCode(e.keyCode - 192));
-            } else return; // don't stopPropagation
+            } else return ''; // don't stopPropagation
             e.preventDefault();
             e.stopPropagation();
         } else if (e.ctrlKey && !e.altKey && e.shiftKey) {
@@ -432,14 +434,14 @@ TermView.prototype = {
                     break;
                 case 65: // ctrl+shift+a
                 case 97: // ctrl+shift+A
-                    conn.listener.selAll();
+                    hotkey = 'selAll';
                     break;
                 case 86: // ctrl+shift+v
                 case 118: // ctrl+shift+V
-                    conn.listener.paste();
+                    hotkey = 'paste';
                     break;
                 default:
-                    return; // don't stopPropagation
+                    return ''; // don't stopPropagation
             }
             e.preventDefault();
             e.stopPropagation();
@@ -493,6 +495,7 @@ TermView.prototype = {
                     break;
             }
         }
+        return hotkey;
     },
 
     detectDBCS: function(back, key) {

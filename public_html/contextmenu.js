@@ -15,6 +15,12 @@ function ContextMenu(listener, elem) {
         var doc = listener.ui.document;
         this.elem = doc.getElementById('contextmenu');
         this.body = doc.body || doc.getElementById('topwin');
+        this.clicked = '';
+        this.getClicked = function() {
+            var clicked = this.clicked;
+            this.clicked = '';
+            return clicked;
+        }
         // externally call this.initial();
     } else {
         this.root = listener.root;
@@ -99,7 +105,7 @@ ContextMenu.prototype.onclick = function(event) {
     for (var itemId in this.items) {
         var item = this.items[itemId];
         if (item instanceof SubMenu) {
-            if (item.menu.onclick(x, y))
+            if (item.menu.onclick(event))
                 return true; // click on its submenu
         }
     }
@@ -192,7 +198,6 @@ function MenuItem(parentMenu, elem) {
     this.root = parentMenu.root;
     this.elem = elem;
     this.disabled = false;
-    this.action = function() {};
     this.timer = null;
     this.setEventListener();
 }
@@ -219,7 +224,7 @@ MenuItem.prototype.setEventListener = function() {
             return;
         // collapse context menu, but it doesn't work on invisible HTML elements
         _this.parentMenu.hide(true);
-        _this.action();
+        _this.root.clicked = _this.elem.id;
     };
 };
 

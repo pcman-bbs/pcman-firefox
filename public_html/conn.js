@@ -302,6 +302,8 @@ Conn.prototype = {
     },
 
     convSend: function(unicode_str, charset) {
+        if (!unicode_str)
+            return;
         var text = this.listener.ui.formatCRLF('paste', unicode_str);
         var EnterKey = this.listener.prefs.get('EnterKey');
         text = text.replace(/\r/g, EnterKey);

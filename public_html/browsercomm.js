@@ -23,14 +23,14 @@ BrowserComm.prototype.onload = function() {
         this.connect = this.connectWebSocket;
         this.send = this.sendWebSocket;
         this.onunload = this.onunloadWebSocket;
-        this.copy = this.copyWebSocket;
+        this.copy = this.copyWebSocket; // not used
         this.paste = this.pasteWebSocket;
     } else {
         this.connect = this.connectNative;
         this.send = this.sendNative;
         this.onunload = this.onunloadNative;
-        this.copy = this.copyNative;
-        this.paste = this.pasteNative;
+        this.copy = this.copyNative; // not used
+        this.paste = this.pasteNative; // not used
     }
 };
 
@@ -278,7 +278,9 @@ BrowserComm.prototype.onunloadNative = function() {
 BrowserComm.prototype.copyNative = function(text, callback) {
     /*if(!this.ws)
         return;*/
-    this.systemClipboard(text);
+    var helper = this.systemClipboard(text);
+    this.listener.ui.document.execCommand('copy');
+    this.systemClipboard(text, helper);
     if (callback)
         callback();
 };
@@ -286,31 +288,70 @@ BrowserComm.prototype.copyNative = function(text, callback) {
 BrowserComm.prototype.pasteNative = function(callback) {
     /*if(!this.ws)
         return;*/
-    var text = this.systemClipboard();
+    var helper = this.systemClipboard();
+    this.listener.ui.document.execCommand('paste');
+    var text = this.systemClipboard('', helper);
     if (callback)
         callback(text);
     else
         return text;
 };
 
-BrowserComm.prototype.systemClipboard = function(text) {
-    var sandbox = this.listener.ui.document.createElement('textarea');
-    sandbox.style = "position:absolute; left: -100px;";
-    this.listener.view.input.parentNode.appendChild(sandbox);
-    if (text) { // copy string to system clipboard
+BrowserComm.prototype.systemClipboard = function(text, sandbox) {
+    var initial = !sandbox;
+    if (initial) {
+        sandbox = this.listener.ui.document.createElement('textarea');
+        sandbox.style.position = 'absolute';
+        sandbox.style.left = '-100px';
+        this.listener.view.input.parentNode.appendChild(sandbox);
+    }
+    if (text && initial) { // prepare copying string to system clipboard
         sandbox.value = text;
         sandbox.select();
-        this.listener.ui.document.execCommand('copy');
+        return sandbox;
+    } else if (text) { // finalize copying
         sandbox.parentNode.removeChild(sandbox);
         this.listener.view.input.focus();
-    } else { // get string from system clipboard
-        sandbox.setAttribute("contenteditable", "true"); // For FX 54b3
+    } else if (initial) { // prepare pasting string from system clipboard
+        sandbox.contentEditable = 'true'; // For Firefox
         sandbox.select();
-        this.listener.ui.document.execCommand('paste');
+        return sandbox;
+    } else { // finalize pasting
         text = sandbox.value;
         sandbox.parentNode.removeChild(sandbox);
         this.listener.view.input.focus();
         return text;
     }
+};
+
+BrowserComm.prototype.pasteEnabled = function(event) {
+    if (event.type == 'keydown') {
+        var enabled = false;
+        var preventDefault = true;
+        if (chrome && chrome.extension) { // GC Extensions or WebExtensions
+            enabled = true;
+        } else if (chrome && chrome.runtime) { // normal web pages in GC
+            preventDefault = false; // use browser default hotkey
+            enabled = true; // document.execCommand('paste') should do nothing
+        } else {
+            try {
+                var doc = this.listener.ui.document;
+                enabled = doc.queryCommandSupported('paste') && doc.queryCommandEnabled('paste'); // true in IE and error before FX 41
+            } catch (e) {}
+        }
+        if (preventDefault) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        return enabled;
+    }
+    // event.type == 'click'
+    if (chrome && chrome.extension) // GC Extensions or WebExtensions
+        return true;
+    try {
+        var doc = this.listener.ui.document;
+        return (doc.queryCommandSupported('paste') && doc.queryCommandEnabled('paste')); // true in IE and error before FX 41
+    } catch (e) {}
+    return false;
 };
 

@@ -30,7 +30,30 @@ function eventHandler(event) {
         case 'resize':
             return pcman.view.onResize(event);
         case 'keydown':
-            return pcman.view.onkeyDown(event);
+            var hotkey = pcman.view.onkeyDown(event);
+            if (hotkey == 'copy' && document.execCommand) { // not XUL
+                var helper = pcman.copy(false, 'external');
+                // supported in semi-trusted scripts of normal web pages
+                document.execCommand('copy');
+                pcman.copy(false, helper);
+            } else if (hotkey == 'paste' && document.execCommand) { // not XUL
+                if (!chrome || !chrome.extension) { // normal web pages
+                    pcman.paste(); // paste by websocket server
+                    return hotkey;
+                }
+                var helper = pcman.paste('external');
+                // not supported in normal web pages except IE
+                document.execCommand('paste');
+                pcman.paste(helper);
+            } else if (hotkey) {
+                eventHandler({
+                    type: 'command',
+                    target: {
+                        id: 'popup-' + hotkey
+                    }
+                });
+            }
+            return hotkey;
         case 'compositionstart':
             return pcman.view.onCompositionStart(event);
         case 'compositionend':
@@ -58,12 +81,46 @@ function eventHandler(event) {
             }
             return document.getElementById('input_proxy').focus();
         case 'click':
-            if (pcman.ui.menu.contextmenu && pcman.ui.menu.contextmenu.onclick(event))
+            if (this.id == 'box1') {
+                if (pcman.ui.menu.contextmenu && pcman.ui.menu.contextmenu.onclick(event))
+                    return;
+                return pcman.view.onClick(event);
+            }
+            if (!pcman.ui.menu.contextmenu)
                 return;
-            return pcman.view.onClick(event);
+            var clicked = pcman.ui.menu.contextmenu.getClicked();
+            if (clicked == 'menu_copy' && document.execCommand) { // not XUL
+                var helper = pcman.copy(false, 'external');
+                // supported in semi-trusted scripts of normal web pages
+                document.execCommand('copy');
+                pcman.copy(false, helper);
+            } else if (clicked == 'menu_coloredCopy' && document.execCommand) { // not XUL
+                var helper = pcman.copy(true, 'external');
+                // supported in semi-trusted scripts of normal web pages
+                document.execCommand('copy');
+                pcman.copy(true, helper);
+            } else if (clicked == 'menu_paste' && document.execCommand) { // not XUL
+                if (!chrome || !chrome.extension) { // normal web pages
+                    pcman.paste(); // paste by websocket server
+                    return;
+                }
+                var helper = pcman.paste('external');
+                // not supported in normal web pages except IE
+                document.execCommand('paste');
+                pcman.paste(helper);
+            } else if (clicked && clicked.indexOf('SubMenu_') != 0) {
+                clicked = clicked.replace('menu_', 'popup-');
+                eventHandler({
+                    type: 'command',
+                    target: {
+                        id: clicked.replace('_', '-')
+                    }
+                });
+            }
+            return;
         case 'dblclick':
             return pcman.view.onDblClick(event);
-        case 'command': // only xul use it
+        case 'command':
             switch (event.target.id) {
                 case 'popup-copy': // this == window in xul
                     return pcman.copy();
@@ -73,6 +130,12 @@ function eventHandler(event) {
                     return pcman.paste();
                 case 'popup-selAll': // this == window in xul
                     return pcman.selAll();
+                case 'search-google':
+                    return pcman.ui.menu.search();
+                case 'search-yahoo':
+                    return pcman.ui.menu.search('Yahoo!');
+                case 'search-bing':
+                    return pcman.ui.menu.search('Bing');
                 case 'popup-loadfile': // this == window in xul
                     return document.getElementById('filepicker').click();
                 case 'save-txt': // this == window in xul
@@ -106,6 +169,8 @@ document.getElementById('box1').onmousemove = eventHandler; // box1/canvas
 document.getElementById('box1').onmouseup = eventHandler; // box1/canvas
 document.getElementById('box1').onclick = eventHandler; // box1/canvas
 document.getElementById('box1').ondblclick = eventHandler; // box1/canvas
+
+document.getElementById('contextmenu').onclick = eventHandler;
 
 document.getElementById('input_proxy').oninput = eventHandler;
 document.getElementById('filepicker').onchange = eventHandler;

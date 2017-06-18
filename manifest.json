@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "0.0.7.20170611",
+  "version": "0.0.7.20170618",
   "manifest_version": 2,
   "minimum_chrome_version": "40.0",
 
@@ -20,6 +20,7 @@
   "default_locale": "en_US",
   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDTGlzyoAFp//1XQdRAdE2Anks15eQFNtbSl44Fx2iMSZk0QCMB676/u1Hux7RJ4la36jlRWA/7qIMsV0Bkr1BN6hoWAABFUBv+PLDtsDo+q6i/c1g/VmVqzet954WWVj8IVNn8n3BliEKleClUu6h4VJjYUHBas8Yh4gKsPqmirQIDAQAB",
   "browser_action": {
+    "browser_style": true,
     "default_icon": "icon/icon16.png",
     "default_popup": "popup.htm"
   },
@@ -32,15 +33,20 @@
     "page": "public_html/options.htm"
   },
 
+  "protocol_handlers": [
+    {
+      "protocol": "ssh",
+      "name": "PCMan Extension",
+      "uriTemplate": "public_html/index.htm#%s"
+    }
+  ],
+
   "permissions": [
     "clipboardRead",
     "clipboardWrite",
-    "contextMenus",
     "nativeMessaging",
     "notifications",
     "storage",
-    "tabs",
-    "tts",
-    "unlimitedStorage"
+    "tabs"
   ]
 }
