@@ -85,25 +85,39 @@ PCMan.prototype = {
         this.ui.updateTabIcon(this.conn.connectFailed ? 'fail' : 'disconnect');
     },
 
-    copy: function(ansi) {
+    copy: function(ansi, external) {
         if (!this.view.selection.hasSelection())
-            return;
+            return '';
         var text = this.view.selection.getText(ansi);
 
-        var _this = this;
-        this.conn.socket.copy(this.ui.formatCRLF('copy', text), function() {
-            _this.ui.dispatchCopyEvent(_this.view.input);
-        });
+        if (typeof(external) == 'string') { // initialize
+            return this.ui.socket.systemClipboard(text);
+        } else if (!external) {
+            var _this = this;
+            this.conn.socket.copy(this.ui.formatCRLF('copy', text), function() {
+                _this.ui.dispatchCopyEvent(_this.view.input);
+            });
+        } else {
+            this.ui.socket.systemClipboard(text, external); // helper
+        }
+
         if (this.prefs.get('ClearCopiedSel'))
             this.view.selection.cancelSel(true);
     },
 
-    paste: function() {
+    paste: function(external) {
         var _this = this;
-        this.conn.socket.paste(function(text) {
+        var doPaste = function(text) {
             var charset = _this.prefs.get('Encoding');
             _this.conn.convSend(text, charset);
-        });
+        };
+
+        if (typeof(external) == 'string') // initialize
+            return this.ui.socket.systemClipboard('');
+        else if (!external)
+            this.conn.socket.paste(doPaste);
+        else
+            doPaste(this.ui.socket.systemClipboard('', external)); // helper
     },
 
     selAll: function() {

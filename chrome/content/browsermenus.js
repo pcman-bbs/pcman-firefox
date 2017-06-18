@@ -167,52 +167,20 @@ BrowserMenus.prototype = {
         menu.initial();
         this.contextmenu = menu;
         var _this = this;
-        var set = function(items, id, func) {
-            if (items[id].elem.firstChild.tagName) { // not a text node
+        var i10n = function(items) {
+            for (var id in items) {
+                if (!items[id].elem.firstChild.tagName) // a text node
+                    continue;
                 var value = _this.ui.l10n(id);
                 var elem = _this.ui.getElementById(id.replace('menu_', 'popup-'));
                 if (elem)
                     value = elem.getAttribute('label');
                 items[id].elem.firstChild.textContent = value;
+                if (items[id].menu) // SubMenu
+                    i10n(items[id].menu.items);
             }
-            if (func)
-                items[id].action = func;
         };
-        set(menu.items, 'menu_copy', function() {
-            _this.listener.copy();
-        });
-        set(menu.items, 'menu_coloredCopy', function() {
-            _this.listener.copy(true);
-        });
-        set(menu.items, 'menu_paste', function() {
-            _this.listener.paste();
-        });
-        set(menu.items, 'menu_selAll', function() {
-            _this.listener.selAll();
-        });
-        set(menu.items, 'menu_search');
-        set(menu.items['menu_search'].menu.items, 'search_google', function() {
-            _this.search();
-        });
-        set(menu.items['menu_search'].menu.items, 'search_yahoo', function() {
-            _this.search('Yahoo!');
-        });
-        set(menu.items['menu_search'].menu.items, 'search_bing', function() {
-            _this.search('Bing');
-        });
-        set(menu.items, 'menu_loadfile', function() {
-            _this.ui.getElementById('filepicker').click();
-        });
-        set(menu.items, 'menu_savefile');
-        set(menu.items['menu_savefile'].menu.items, 'save_txt', function() {
-            _this.listener.save();
-        });
-        set(menu.items['menu_savefile'].menu.items, 'save_ans', function() {
-            _this.listener.save('ansi');
-        });
-        set(menu.items, 'menu_sitepref', function() {
-            _this.ui.sitepref();
-        });
+        i10n(menu.items);
 
         menu.oncontextmenu = function(event) {
             var isSel = _this.listener.view.selection.hasSelection();
