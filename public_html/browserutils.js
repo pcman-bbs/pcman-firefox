@@ -60,10 +60,46 @@ BrowserUtils.prototype = {
         return this.document.getElementById(id);
     },
 
-    getUrl: function() {
+    getUrl: function(getDetail) {
         var loc = this.document.location;
-        var url = Cc ? loc.host : loc.hash.substr(1); // web pages use hash
-        return url || 'ptt.cc';
+        if (Cc)
+            return getDetail ? loc : loc.host;
+        var url = decodeURIComponent(loc.hash.substr(1)); // web pages use hash
+        var detail = {};
+        if (url.indexOf('//') > -1) { // full url
+            detail.href = url;
+            detail.protocol = url.split('//').shift();
+            url = url.substr(detail.protocol.length + 2);
+            var userPass = url.split('@');
+            if (userPass[1]) {
+                url = userPass[1];
+                userPass = userPass[0].split(':')
+                detail.username = userPass[0];
+                detail.password = userPass[1];
+            }
+            detail.host = url.split('/').shift();
+            url = url.substr(detail.host.length);
+            var hostPort = detail.host.split(':');
+            detail.hostname = hostPort[0];
+            detail.port = hostPort[1];
+            detail.pathname = url.split('?').shift();
+            url = url.substr(detail.pathname.length);
+            detail.search = url.split('#').shift();
+            detail.hash = url.substr(detail.search.length);
+            detail.origin = detail.protocol + '//' + detail.host;
+        } else { // host
+            detail.host = url;
+            var hostPort = detail.host.split(':');
+            detail.hostname = hostPort[0];
+            detail.port = hostPort[1];
+        }
+        if (!detail.hostname)
+            detail.host = detail.hostname = 'ptt.cc';
+        if (detail.protocol == 'ssh:' && !detail.port) {
+            detail.host += ':22';
+            detail.port = '22';
+        }
+        return getDetail ? detail : detail.host;
     },
 
     getSearch: function(key) {
