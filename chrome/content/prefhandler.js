@@ -26,14 +26,11 @@ PrefHandler.prototype = {
                         var language = this.listener.ui.l10n();
                         value = (language == 'zh-CN' ? 'gb2312' : 'big5');
                         break;
-                    case 'utf-8':
-                        this.listener.ui.converter.forceFullWidth = false;
-                        break;
-                    case 'utf-8_FullWidth':
-                        this.listener.ui.converter.forceFullWidth = true;
-                        value = 'utf-8';
-                        break;
                     default:
+                        if (value.indexOf('utf-8') != 0)
+                            break;
+                        this.listener.ui.converter.fontWidth = value.substr(6);
+                        value = 'utf-8';
                 }
                 return value;
             case 'AntiIdleTime':

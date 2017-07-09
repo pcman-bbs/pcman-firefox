@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["BrowserConv"];
 
 function BrowserConv(ui) {
     this.ui = ui;
-    this.forceFullWidth = false; // show UTF8 half-width chars as full-width
+    this.fontWidth = ''; // show UTF8 half-width chars as full-width
 }
 
 BrowserConv.prototype = {
@@ -149,17 +149,18 @@ BrowserConv.prototype = {
         //FIXME: check the context to determine the width of ambiguous chars
         // without context information, they are set as narrow chars by default
         var table = '[' + this.wideFullwidth + ']';
-        //table = '[' + this.ambiguous + table.substr(1);
+        if (this.fontWidth == 'EastAsian')
+            table = '[' + this.ambiguous + table.substr(1);
         if (!str)
             return table;
 
         var code = str.charCodeAt(0);
-        if (charset.toLowerCase() != 'utf-8' || this.forceFullWidth)
+        if (charset.toLowerCase() != 'utf-8' || this.fontWidth == 'FullWidth')
             return (code > 0x7f);
         return (new RegExp(table)).test(str[0]);
     },
 
-    // Unicode Standard 9.0.0
+    // Unicode Standard 10.0.0
     // from http://www.unicode.org/reports/tr11/
     wideFullwidth: [
         '\u1100-\u115f',
@@ -204,7 +205,7 @@ BrowserConv.prototype = {
         '\u3000-\u303e',
         '\u3041-\u3096',
         '\u3099-\u30ff',
-        '\u3105-\u312d',
+        '\u3105-\u312e',
         '\u3131-\u318e',
         '\u3190-\u31ba',
         '\u31c0-\u31e3',
