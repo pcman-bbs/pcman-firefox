@@ -439,7 +439,7 @@ TermView.prototype = {
                 case 86: // ctrl+shift+v
                 case 118: // ctrl+shift+V
                     hotkey = 'paste';
-                    break;
+                    return hotkey; // don't stopPropagation;
                 default:
                     return ''; // don't stopPropagation
             }
@@ -518,8 +518,13 @@ TermView.prototype = {
         var rows = this.buf ? this.buf.rows : 24;
         this.topwin.style.height = this.listener.global.innerHeight + 'px';
         this.container.style.height = this.topwin.style.height;
-        this.canvas.height = this.topwin.clientHeight;
-        this.chh = Math.floor(this.canvas.height / rows);
+
+        // Fix the blur from page zooming partially
+        // In ctx.fillText(text, x, y, maxWidth), y is automatically rounded,
+        // causing texts shift and blur slightly with non-integer ratio
+        var ratio = this.listener.ui.getDevicePixelRatio();
+        this.canvas.height = this.topwin.clientHeight * ratio;
+        this.chh = Math.floor(this.canvas.height / rows) / ratio;
         var ctx = this.ctx;
         var fontFamily = 'monospace';
         var textBaseline = 'top';
@@ -534,18 +539,16 @@ TermView.prototype = {
         }
 
         m = ctx.measureText('\u3000'); //全形空白
-        this.chw = Math.round(m.width / 2);
+        this.chw = Math.round(m.width / 2 * ratio) / ratio;
 
         // if overflow, resize canvas again
         if (this.chw * cols > this.topwin.clientWidth) {
-            this.canvas.width = this.topwin.clientWidth;
-            this.chw = Math.floor(this.canvas.width / cols);
+            this.canvas.width = this.topwin.clientWidth * ratio;
+            this.chw = Math.floor(this.canvas.width / cols) / ratio;
             this.chh = this.chw * 2; // is it necessary to measureText?
             ctx.font = this.chh + 'px ' + fontFamily;
         }
 
-        // Fix the blur from page zooming partially and vertical word stretch
-        var ratio = this.listener.ui.getDevicePixelRatio();
         var left = this.listener.prefs.get('HAlignCenter') ?
             ((this.topwin.clientWidth - this.chw * cols) / 2) : 0;
         this.canvas.width = this.chw * cols * ratio;

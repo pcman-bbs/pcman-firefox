@@ -142,17 +142,15 @@ BrowserUtils.prototype = {
     },
 
     getDevicePixelRatio: function() {
-        /*
         //XXX: untested in High DPI display
         if (Ci && Ci.nsIInterfaceRequestor) { // FX extension
-            // this.listener.global.devicePixelRatio may be unreliable
             return this.listener.global.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).screenPixelsPerCSSPixel || 1;
         }
-        //FIXME: get the devicePixelRatio independent of zoom in web pages
         return this.listener.global.devicePixelRatio || 1;
-        */
 
+        /*
         return 1; // turn off temporarily
+        */
     },
 
     read: function(url, callback) {
