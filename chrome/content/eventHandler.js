@@ -37,7 +37,7 @@ function eventHandler(event) {
                 document.execCommand('copy');
                 pcman.copy(false, helper);
             } else if (hotkey == 'paste' && document.execCommand) { // not XUL
-                if (!chrome || !chrome.extension) { // normal web pages
+                if (!pcman.ui.socket.pasteEnabled(event)) { // normal web pages
                     pcman.paste(); // paste by websocket server
                     return hotkey;
                 }
@@ -100,7 +100,7 @@ function eventHandler(event) {
                 document.execCommand('copy');
                 pcman.copy(true, helper);
             } else if (clicked == 'menu_paste' && document.execCommand) { // not XUL
-                if (!chrome || !chrome.extension) { // normal web pages
+                if (!pcman.ui.socket.pasteEnabled(event)) { // normal web pages
                     pcman.paste(); // paste by websocket server
                     return;
                 }
