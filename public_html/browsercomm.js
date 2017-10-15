@@ -127,16 +127,18 @@ BrowserComm.prototype.pasteXUL = function(callback) {
         return s;
 };
 
-BrowserComm.prototype.connectWebSocket = function(conn, host, port) {
+BrowserComm.prototype.connectWebSocket = function(conn, host, port, wsUri) {
     if (this.ws)
         this.onunload();
 
-    var wsUri = window.location.href.replace('http', 'ws');
-    if (wsUri.indexOf('#') >= 0)
-        wsUri = wsUri.substr(0, wsUri.indexOf('#'));
-    if (wsUri.indexOf('?') >= 0)
-        wsUri = wsUri.substr(0, wsUri.indexOf('?'));
-    wsUri = wsUri.replace(/\/$/, '') + '/hostPort_' + host + ':' + port;
+    if (!wsUri) {
+        wsUri = window.location.href.replace('http', 'ws');
+        if (wsUri.indexOf('#') >= 0)
+            wsUri = wsUri.substr(0, wsUri.indexOf('#'));
+        if (wsUri.indexOf('?') >= 0)
+            wsUri = wsUri.substr(0, wsUri.indexOf('?'));
+        wsUri = wsUri.replace(/\/$/, '') + '/hostPort_' + host + ':' + port;
+    }
     var ws = new WebSocket(wsUri);
     ws.binaryType = 'arraybuffer';
 
@@ -203,11 +205,18 @@ BrowserComm.prototype.pasteWebSocket = function(callback) {
     });
 };
 
-BrowserComm.prototype.connectNative = function(conn, host, port) {
+BrowserComm.prototype.connectNative = function(conn, host, port, wsUri) {
     if (this.ws)
         this.onunload();
 
-    var wsUri = 'org.pcman.pcmanfx2.webextensions.socket';
+    if (wsUri) {
+        this.connect = this.connectWebSocket;
+        this.send = this.sendWebSocket;
+        this.onunload = this.onunloadWebSocket;
+        return this.connect(conn, host, port, wsUri);
+    }
+
+    wsUri = 'org.pcman.pcmanfx2.webextensions.socket';
     var ws = chrome.runtime.connectNative(wsUri);
 
     ws.onMessage.addListener(function(msg) {
