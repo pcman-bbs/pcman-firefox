@@ -136,12 +136,14 @@ BrowserComm.prototype.connectWebSocket = function(conn, host, port) {
         wsUri = wsUri.substr(0, wsUri.indexOf('#'));
     if (wsUri.indexOf('?') >= 0)
         wsUri = wsUri.substr(0, wsUri.indexOf('?'));
+    wsUri = wsUri.replace(/\/$/, '') + '/hostPort_' + host + ':' + port;
     var ws = new WebSocket(wsUri);
     ws.binaryType = 'arraybuffer';
 
+    var remoteConnected = false;
     ws.onopen = function(event) {
         if (ws.readyState == 1)
-            conn.socket.send(host + ':' + port, 'con');
+            remoteConnected = false;
     };
     ws.onclose = function(event) {
         ws = null;
@@ -154,44 +156,28 @@ BrowserComm.prototype.connectWebSocket = function(conn, host, port) {
         conn.onStopRequest();
     };
     ws.onmessage = function(event) {
+        if (!remoteConnected)
+            conn.onStartRequest();
+        remoteConnected = true;
         var data = String.fromCharCode.apply(null, new Uint8Array(event.data));
-        var action = data.substr(0, 3);
-        var content = data.substr(3);
-        switch (action) {
-            case "con":
-                conn.onStartRequest();
-                break;
-            case "dat":
-                conn.onDataAvailable(content);
-                break;
-            case "dis":
-                conn.onStopRequest();
-                break;
-            default:
-        }
+        conn.onDataAvailable(data);
     };
     this.ws = ws;
 };
 
-BrowserComm.prototype.sendWebSocket = function(output, action) {
+BrowserComm.prototype.sendWebSocket = function(output) {
     if (!this.ws)
         return;
     if (this.ws.readyState != 1)
         return;
-    if (!action)
-        action = 'dat';
-    this.ws.send((new Uint8Array(Array.prototype.map.call(
-        action + output,
-        function(x) {
-            return x.charCodeAt(0);
-        }
-    ))).buffer);
+    this.ws.send((new Uint8Array(Array.prototype.map.call(output, function(x) {
+        return x.charCodeAt(0);
+    }))).buffer);
 };
 
 BrowserComm.prototype.onunloadWebSocket = function() {
     if (!this.ws)
         return;
-    this.send('', 'dis');
     this.ws.close();
     this.ws = null;
 };
