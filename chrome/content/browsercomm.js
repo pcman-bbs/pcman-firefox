@@ -95,8 +95,6 @@ BrowserComm.prototype.onunloadXUL = function() {
 };
 
 BrowserComm.prototype.copyXUL = function(text, callback) {
-    /*if(!this.ws)
-        return;*/
     var clipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
         .getService(Components.interfaces.nsIClipboardHelper);
     clipboardHelper.copyString(text);
@@ -105,8 +103,6 @@ BrowserComm.prototype.copyXUL = function(text, callback) {
 };
 
 BrowserComm.prototype.pasteXUL = function(callback) {
-    /*if(!this.ws)
-        return;*/
     // From: https://developer.mozilla.org/en/Using_the_Clipboard
     var clip = Components.classes["@mozilla.org/widget/clipboard;1"]
         .getService(Components.interfaces.nsIClipboard);
@@ -171,12 +167,6 @@ BrowserComm.prototype.connectWebSocket = function(conn, host, port) {
             case "dis":
                 conn.onStopRequest();
                 break;
-            case "cop":
-                conn.socket.copyCallback();
-                break;
-            case "pas":
-                conn.socket.pasteCallback(decodeURIComponent(escape(content)));
-                break;
             default:
         }
     };
@@ -207,17 +197,24 @@ BrowserComm.prototype.onunloadWebSocket = function() {
 };
 
 BrowserComm.prototype.copyWebSocket = function(text, callback) {
-    if (!this.ws)
-        return;
-    this.send(unescape(encodeURIComponent(text)), 'cop');
-    this.copyCallback = callback;
+    var _this = this;
+    var split = 100;
+    var copy = function(data) {
+        var url = '/clipboard?' + (data == text ? 'copy' : 'appe') + '=';
+        url += encodeURIComponent(data.substr(0, split));
+        _this.listener.ui.read(url, function(msg) {
+            if (!data.substr(split))
+                return callback(msg);
+            copy(data.substr(split));
+        });
+    };
+    copy(text);
 };
 
 BrowserComm.prototype.pasteWebSocket = function(callback) {
-    if (!this.ws)
-        return;
-    this.send('', 'pas');
-    this.pasteCallback = callback;
+    this.listener.ui.read('/clipboard', function(text) {
+        callback(decodeURIComponent(text));
+    });
 };
 
 BrowserComm.prototype.connectNative = function(conn, host, port) {
@@ -276,8 +273,6 @@ BrowserComm.prototype.onunloadNative = function() {
 };
 
 BrowserComm.prototype.copyNative = function(text, callback) {
-    /*if(!this.ws)
-        return;*/
     var helper = this.systemClipboard(text);
     this.listener.ui.document.execCommand('copy');
     this.systemClipboard(text, helper);
@@ -286,8 +281,6 @@ BrowserComm.prototype.copyNative = function(text, callback) {
 };
 
 BrowserComm.prototype.pasteNative = function(callback) {
-    /*if(!this.ws)
-        return;*/
     var helper = this.systemClipboard();
     this.listener.ui.document.execCommand('paste');
     var text = this.systemClipboard('', helper);
