@@ -36,16 +36,18 @@ PCMan.prototype = {
         this.ui.converter = new BrowserConv(this.ui);
         var _this = this;
         this.ui.setConverter(function() {
-            _this.connect(_this.ui.getUrl());
+            _this.connect(_this.ui.getUrl(true));
         });
     },
 
-    connect: function(url) {
+    connect: function(loc) {
+        var ws = (loc.protocol && loc.protocol.indexOf('ws') == 0) ? loc : {};
+        var url = loc.host;
         var parts = url.split(':');
         var port = 23;
         if (parts.length > 1)
             port = parseInt(parts[1], 10);
-        this.conn.connect(parts[0], port);
+        this.conn.connect(parts[0], port, ws.href);
 
         this.ui.updateTabTitle();
         this.view.onResize();

@@ -59,7 +59,7 @@ function Conn(listener) {
 Conn.prototype = {
     oconv: null,
 
-    connect: function(host, port) {
+    connect: function(host, port, wsUri) {
         if (host) {
             this.host = host;
             this.port = port;
@@ -104,7 +104,7 @@ Conn.prototype = {
             }
         };
 
-        this.socket.connect(this, this.host, this.port);
+        this.socket.connect(this, this.host, this.port, wsUri);
 
         this.listener.robot.initialAutoLogin();
 
